@@ -1,0 +1,17 @@
+{
+  "name": "fieldops-control-plane",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11 <12"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @fieldops/web-console dev",
+    "build:web": "pnpm --filter @fieldops/web-console build",
+    "lint:web": "pnpm --filter @fieldops/web-console lint",
+    "test:web": "pnpm --filter @fieldops/web-console test",
+    "verify:repo": "python scripts/verify_repository_baseline.py"
+  }
+}

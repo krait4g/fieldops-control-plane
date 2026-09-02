@@ -1,0 +1,56 @@
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.iml
+
+# Java / Gradle
+.gradle/
+**/build/
+out/
+*.class
+hs_err_pid*
+
+# Node / Next.js
+node_modules/
+.pnpm-store/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Test and benchmark output
+playwright-report/
+test-results/
+k6-results/
+benchmarks/generated/
+evidence/generated/
+
+# Runtime data
+.data/
+data/
+logs/
+*.log
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+
+# Local infrastructure
+infra/compose/volumes/
+
+# Temporary files
+.tmp/
+tmp/
+*.swp
+*.swo
+*~
