@@ -9,6 +9,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SELF = Path(__file__).resolve()
 
 REQUIRED = [
     "README.md",
@@ -123,11 +124,14 @@ for path in ROOT.rglob("*"):
     ):
         errors.append(f"possible hard-coded credential: {rel}")
 
-    if re.search(r"(?i)fieldops-control-plane-workbench", text):
-        errors.append(f"private repository name leaked into public content: {rel}")
+    # The validator contains the forbidden patterns as rule definitions. Scan
+    # repository content, but do not make the rule source fail on its literals.
+    if path.resolve() != SELF:
+        if re.search(r"(?i)fieldops-control-plane-workbench", text):
+            errors.append(f"private repository name leaked into public content: {rel}")
 
-    if re.search(r"(?i)(codex|agent handoff|internal prompt)", text):
-        errors.append(f"internal agent context may be present in public content: {rel}")
+        if re.search(r"(?i)(codex|agent handoff|internal prompt)", text):
+            errors.append(f"internal agent context may be present in public content: {rel}")
 
 
 def parse_env(path: Path) -> dict[str, str]:
