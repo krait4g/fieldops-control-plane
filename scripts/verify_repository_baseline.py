@@ -118,8 +118,11 @@ for path in ROOT.rglob("*"):
     if path.suffix.lower() == ".md" and text.count("```") % 2:
         errors.append(f"unbalanced markdown fence: {rel}")
 
+    # Restrict whitespace to the current line. A multiline `\s*` would turn an
+    # intentionally blank `API_KEY=` example into a false positive by reading
+    # the next environment-variable name as its value.
     if re.search(
-        r"(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{20,}",
+        r"(?i)(api[_-]?key|secret|token|password)[ \t]*[:=][ \t]*['\"]?[A-Za-z0-9_\-]{20,}",
         text,
     ):
         errors.append(f"possible hard-coded credential: {rel}")
