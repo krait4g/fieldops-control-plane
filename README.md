@@ -1,111 +1,135 @@
 # FieldOps Control Plane
 
 > **Event-driven control plane for real-world devices**  
-> 이기종 현장 장비의 Telemetry를 수집·표준화하고, 최신 상태와 이상 상황을 실시간으로 관리하며, 승인된 제어 명령을 안전하게 실행하는 운영 플랫폼
+> MQTT·TCP·Polling·ONVIF로 연결되는 현장 장비를 공통 상태와 제어 모델로 통합하고, 운영자가 상태 확인부터 안전한 조치와 결과 검증까지 수행하도록 지원하는 Backend Platform
 
-[![Status](https://img.shields.io/badge/status-repository%20baseline-6c757d)](docs/project-status.md)
-[![Java](https://img.shields.io/badge/Java-21-007396)](#technology-stack)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)](#technology-stack)
-[![Kafka](https://img.shields.io/badge/Apache%20Kafka-event%20backbone-231F20)](#architecture)
-[![Redis](https://img.shields.io/badge/Redis-hot%20state-DC382D)](#data-responsibilities)
-[![Next.js](https://img.shields.io/badge/Next.js-operations%20console-000000)](#web-console)
+[![Status](https://img.shields.io/badge/status-v0.5%20design%20baseline-6c757d)](docs/project-status.md)
+[![Java](https://img.shields.io/badge/Java-21-007396)](#technology-baseline)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1%20baseline-6DB33F)](#technology-baseline)
+[![Kafka](https://img.shields.io/badge/Apache%20Kafka-event%20backbone-231F20)](#data-responsibilities)
+[![Redis](https://img.shields.io/badge/Redis-rebuildable%20hot%20state-DC382D)](#data-responsibilities)
+[![Next.js](https://img.shields.io/badge/Next.js-operations%20console-000000)](#frontend-and-backend)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+## Project status
+
+This repository currently contains a curated **v0.5 product, architecture and monorepo baseline**. Executable backend/frontend applications and product capabilities are not yet claimed as verified.
+
+See [`docs/project-status.md`](docs/project-status.md) before interpreting future-state diagrams as implementation results.
 
 ## Overview
 
-FieldOps Control Plane은 농장, 공장, 물류 거점, 빌딩과 같이 물리 장비가 분산된 현장에서 다음 흐름을 하나의 Backend Platform으로 연결합니다.
+FieldOps Control Plane connects a real-world operations journey rather than presenting disconnected technology demos.
 
 ```text
-Device Telemetry
-  → Protocol Adaptation
-  → Event Normalization
-  → Realtime State
-  → Rule / Alarm / Incident
-  → AI-assisted Recommendation
-  → Human Approval
-  → Safe Command Execution
-  → Usage Metering
+Connect
+  → Observe
+  → Understand
+  → Decide
+  → Approve
+  → Control
+  → Verify
 ```
 
-첫 Reference Profile은 **Smart Farm**입니다. 토양 수분 센서, 온·습도 센서, 기상 장비, 관수 펌프와 밸브를 이용해 실시간 상태 관리와 안전 제어 시나리오를 구현합니다. 농업 전용 기능은 Profile로 분리하고, Telemetry·상태·알람·명령·사용량은 FieldOps Core가 제공합니다.
+The first reference profile is **Smart Farm**. Soil, weather, pump, valve and camera devices make the platform easy to understand, while the FieldOps Core remains reusable for factories, logistics sites, energy facilities and buildings.
+
+```text
+MQTT / TCP / HTTP Polling / ONVIF Devices
+  → Protocol Adaptation
+  → Canonical Telemetry and State
+  → Kafka / PostgreSQL / Redis
+  → Dashboard / Alarm / Incident
+  → Recommendation / Human Approval
+  → Safe Command Execution
+  → ACK / Reported State / Audit
+```
 
 ## Problems to solve
 
-- 제조사와 Protocol마다 다른 Payload를 Canonical Event로 변환
-- 네트워크 지연, 재전송, 장비 재부팅으로 생기는 중복·역순 Event 처리
-- 대량 이력과 저지연 Latest State 조회의 책임 분리
-- 일정 시간 데이터가 없는 장비의 안정적인 Offline 판정
-- Threshold 주변 값 변화로 발생하는 Alarm Storm 억제
-- API Retry와 ACK 유실 상황에서 안전한 물리 명령 실행
-- AI Recommendation이 권한과 승인 정책을 우회하지 못하도록 제한
-- Tenant별 데이터 격리와 재현 가능한 Usage Metering
+- vendor and protocol payloads must converge to one product model
+- duplicate, delayed and out-of-order events are normal operating conditions
+- durable history and low-latency current state have different lifecycles
+- device silence must become a reliable offline state
+- threshold flapping must not create an alarm storm
+- retries and lost acknowledgements must not execute unsafe commands twice
+- realtime PTZ input and durable commands need different delivery semantics
+- AI may recommend an action but must not bypass deterministic policy and approval
+- tenant scope must remain consistent across REST, SSE, WebSocket, events, storage and cache
 
-## Core capabilities
+## Product experience
 
-| Capability | Description |
-|---|---|
-| Multi-tenant Registry | Tenant, Site, Zone, Device와 Capability 관리 |
-| Telemetry Ingestion | MQTT·HTTP 수집, 인증, Schema 검증, Canonical 변환 |
-| Realtime Device State | 장비별 Latest State, Last Seen, Online·Offline 조회 |
-| Rule & Alarm | Threshold, Duration, Hysteresis, Cooldown 기반 이상 탐지 |
-| Incident Management | 관련 Alarm과 대응 이력을 Incident로 관리 |
-| Safe Command Orchestration | Idempotency, 승인, 순서, Timeout, ACK, Audit |
-| AI-assisted Operations | Evidence 기반 Recommendation과 Policy Validation |
-| Usage Metering | Telemetry, Active Device, Command, AI Usage Ledger |
-| Observability | Trace, Metric, Structured Log 기반 E2E 추적 |
+The primary hero journey is:
+
+1. sign in through OIDC
+2. select a tenant and site
+3. identify an offline device or critical alarm on the overview
+4. inspect current state and recent trend
+5. check a related camera preview
+6. review an incident and recommended action
+7. request a pump or valve command
+8. approve the command when policy requires it
+9. observe dispatch, acknowledgement and reported state
+10. confirm alarm recovery and audit history
+
+The UI exposes `Loading`, `Empty`, `Partial failure`, `Stale`, `Reconnecting`, `Offline` and `UNKNOWN` instead of hiding uncertainty.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    D[Device / Simulator] -->|MQTT · HTTP| G[Ingestion Gateway]
-    G --> KR[(Kafka<br/>telemetry.raw)]
-    KR --> N[Normalizer]
-    N --> KN[(Kafka<br/>telemetry.normalized)]
-    KN --> H[History Writer]
-    H --> PG[(PostgreSQL<br/>History & Ledger)]
-    KN --> S[State Projector]
-    S --> RD[(Redis<br/>Latest State & Deadline)]
-    RD --> R[Rule Engine]
-    R --> A[Alarm / Incident]
-    A --> AI[AI Recommendation]
-    AI --> AP[Human Approval]
-    AP --> C[Command Orchestrator]
-    C --> KC[(Kafka<br/>command.requested)]
-    KC --> DG[Device Command Gateway]
-    DG --> D
-    KN --> U[Usage Meter]
-    U --> PG
+    OP[Operator / Approver / Admin] --> WEB[Next.js Web Console]
+    WEB -->|REST · SSE · WebSocket| API[FieldOps Server]
+
+    MQTT[MQTT Sensor] --> GW[Device Gateway]
+    TCP[TCP/Binary Sensor] --> GW
+    POLL[Polling Device] --> GW
+    CAM[ONVIF Camera] --> GW
+    CAM -->|RTSP| MEDIA[Media Plane]
+    MEDIA --> WEB
+
+    GW --> KR[(Kafka)]
+    KR --> W[FieldOps Worker]
+    W --> PG[(PostgreSQL)]
+    W --> RD[(Redis)]
+
+    API --> PG
+    API --> RD
+    API --> KR
+    KR --> GW
 ```
 
-History Writer와 Redis State Projector는 같은 Canonical Event를 서로 다른 Consumer Group으로 처리합니다. Redis 장애가 발생해도 PostgreSQL History 저장은 독립적으로 지속되고, State Projector는 복구 후 Kafka Backlog를 처리해 최신 상태로 수렴합니다.
+RTSP stays in a media plane. Camera joystick input is not replayed through the durable command path.
+
+Detailed rationale: [`docs/architecture.md`](docs/architecture.md)
+
+## Runtime boundaries
+
+| Runtime | Responsibility |
+|---|---|
+| `fieldops-server` | REST/SSE/WebSocket, OIDC session, product query and mutation |
+| `device-gateway` | MQTT/TCP/Polling/ONVIF, connection health, command and camera adapters |
+| `fieldops-worker` | normalization, history, Redis projection, offline and workflows |
+| `simulator` | deterministic synthetic devices and failure scenarios |
+| `billing-job` | usage aggregation and reconciliation in the extension milestone |
+| `web-console` | Next.js operations console |
+
+Runtime separation represents code and failure boundaries. It does not claim that every logical module is a separate microservice from the first milestone.
 
 ## Data responsibilities
 
-| Component | Primary responsibility | Not used for |
+| Component | Owns | Does not own |
 |---|---|---|
-| PostgreSQL | Registry, Telemetry History, Alarm·Incident·Command·Usage Ledger, Audit | Latest State API의 주 조회 경로 |
-| Kafka | Durable Event Delivery, Replay, Consumer Scaling, Same-key Ordering | 업무 원장, 직접 상태 조회 |
-| Redis | Rebuildable Latest State, Offline Deadline, atomic Freshness CAS, Cooldown/Result Cache | 영구 이력, Billing Ledger, Kafka 대체 |
+| PostgreSQL | registry, history, alarm/incident/command/usage ledger and audit | primary latest-state read path |
+| Kafka | durable event delivery, replay, consumer isolation and same-key ordering | business source of truth or query API |
+| Redis | rebuildable latest state, freshness CAS, offline deadline, cooldown and short lease/fencing state | permanent history, command or billing ledger |
 
 ```text
 PostgreSQL = System of Record
 Kafka       = Durable Event Backbone
-Redis       = Rebuildable Hot State Projection
+Redis       = Rebuildable Hot State and Short-lived Coordination
 ```
 
-### Redis design
-
-Redis는 M1 Realtime Telemetry의 핵심 구성입니다.
-
-- Hash 기반 Latest Device State
-- Lua 기반 Session·Sequence·OccurredAt 원자적 비교
-- Sorted Set 기반 Offline Deadline
-- Alarm Cooldown과 Rule Runtime State
-- Command/AI의 단기 Result Cache 또는 Single-flight
-- PostgreSQL Snapshot과 Kafka Replay를 통한 재구축
-
-Redis Distributed Lock 하나에 물리 명령의 안전성을 의존하지 않으며, 영구 원장은 PostgreSQL에 유지합니다.
+The consistency model is at-least-once delivery with idempotent convergence. The project does not claim distributed exactly-once across Kafka and PostgreSQL.
 
 ## Safe command model
 
@@ -122,31 +146,35 @@ Alternative terminal states:
 REJECTED / FAILED / TIMED_OUT / CANCELLED / UNKNOWN
 ```
 
-Command API는 Idempotency-Key, PostgreSQL Unique Constraint, Expected State Version, Device별 순서, Deadline, 승인과 Audit을 사용합니다. Device 실행 결과가 불확실한 비멱등 명령은 성공으로 추정하거나 무조건 재시도하지 않고 `UNKNOWN`으로 관리합니다.
+A command uses an idempotency key, durable database state, approval/capability policy, expected state version, deadline, ordered dispatch and audit. An uncertain non-idempotent device result is not guessed as success.
 
-## Web console
+Realtime PTZ control uses a separate short-lived session with one owner, lease, fencing token, input sequence, heartbeat and dead-man stop.
 
-운영 화면은 **Next.js App Router + TypeScript**로 개발합니다.
+## Frontend and backend
 
-- Site/Zone Overview
-- Device List와 실시간 상태
-- Telemetry Trend
-- Alarm/Incident Workflow
-- Command 승인과 실행 Timeline
-- AI Recommendation과 Evidence
-- Usage와 Platform Health
+Frontend and backend live in one product repository but use separate build graphs.
 
-Next.js는 Presentation, Session, Query Cache와 SSE 상호작용을 담당합니다. Tenant 권한, Rule, Command State, AI Policy와 Usage 계산의 최종 판단은 Spring Boot Backend가 수행합니다.
+```text
+Java / Gradle
+  = backend runtimes and modules
+
+Next.js / pnpm
+  = web console
+
+OpenAPI / AsyncAPI / JSON Schema
+  = shared source contracts
+```
+
+The web console owns presentation, browser session interaction, query caching and failure-state rendering. Spring Boot remains authoritative for tenant access, state transitions, rule evaluation, command safety, AI policy and usage calculation.
 
 ## Monorepo
 
 ```text
 .
 ├─ apps/
-│  ├─ fieldops-api/
-│  ├─ ingestion-gateway/
-│  ├─ telemetry-worker/
-│  ├─ automation-worker/
+│  ├─ fieldops-server/
+│  ├─ device-gateway/
+│  ├─ fieldops-worker/
 │  ├─ billing-job/
 │  ├─ simulator/
 │  └─ web-console/
@@ -154,10 +182,13 @@ Next.js는 Presentation, Session, Query Cache와 SSE 상호작용을 담당합�
 │  ├─ common-kernel/
 │  ├─ tenancy/
 │  ├─ registry/
+│  ├─ device-integration/
 │  ├─ telemetry-domain/
 │  ├─ telemetry-application/
 │  ├─ telemetry-infrastructure/
 │  ├─ state-projection/
+│  ├─ dashboard-query/
+│  ├─ camera-control/
 │  ├─ rule-engine/
 │  ├─ alarm-incident/
 │  ├─ command-domain/
@@ -166,23 +197,30 @@ Next.js는 Presentation, Session, Query Cache와 SSE 상호작용을 담당합�
 │  ├─ usage-billing/
 │  ├─ audit/
 │  └─ observability/
-├─ contracts/              # OpenAPI, AsyncAPI, JSON Schema
+├─ contracts/              # OpenAPI, AsyncAPI and JSON Schema
 ├─ db/migration/           # Flyway
-├─ infra/                  # Compose and observability
-├─ tests/                  # Contract, E2E, performance, fault
-└─ docs/                   # Architecture, decisions, roadmap, status
+├─ infra/                  # local platform and observability
+├─ scripts/                # verification and developer workflow
+├─ tests/                  # integration, E2E, performance and fault
+└─ docs/                   # architecture, decisions, roadmap and status
 ```
 
-Frontend와 Backend는 하나의 제품 계약을 공유하므로 같은 Repository에 두되 Java는 Gradle, Web은 pnpm으로 빌드 그래프를 분리합니다.
+Module dependency direction:
 
-## Technology stack
+```text
+Domain ← Application ← Infrastructure ← Runtime
+```
+
+## Technology baseline
+
+The following versions are the M0 design baseline and become implementation claims only after verification.
 
 | Area | Technology |
 |---|---|
 | Backend | Java 21, Spring Boot 4.1, Spring Security, Spring Data, Spring Kafka, Spring Batch, Spring AI |
-| Event & IoT | Apache Kafka 4.3, MQTT 5, Eclipse Mosquitto |
+| Event and IoT | Apache Kafka 4.3, MQTT 5, Eclipse Mosquitto |
 | Data | PostgreSQL 18, Redis 8, Flyway |
-| Frontend | Node.js 24 LTS, Next.js 16 App Router, TypeScript 7, pnpm 11, TanStack Query, SSE |
+| Frontend | Node.js 24 LTS, Next.js 16 App Router, TypeScript 7, pnpm 11, TanStack Query |
 | Identity | Keycloak, OAuth 2.0, OpenID Connect, JWT, RBAC |
 | Observability | Micrometer, OpenTelemetry, Prometheus, Grafana, Tempo, Loki |
 | Verification | JUnit 5, Testcontainers, ArchUnit, Playwright, k6, Toxiproxy |
@@ -190,29 +228,48 @@ Frontend와 Backend는 하나의 제품 계약을 공유하므로 같은 Reposit
 
 ## Roadmap
 
-| Milestone | Scope | Status |
+| Milestone | Scope | Current status |
 |---|---|---|
-| M0 | Monorepo, build, local platform, CI | Repository baseline |
-| M1 | Registry, Telemetry, PostgreSQL History, Redis State, Offline | Designed |
-| M2 | Rule, Alarm, Incident, Safe Command | Designed |
-| M3 | Policy-validated AI Recommendation | Designed |
-| M4 | Usage Ledger, Batch, Billing Preview | Designed |
-| M5 | Load, fault recovery, reproducible evidence | Designed |
+| M0 | build, runtime skeletons, local platform, contracts and CI | repository baseline |
+| M1 | OIDC, registry, MQTT, history, Redis state, overview/device/SSE | designed |
+| M2 | TCP, polling, ONVIF/RTSP, camera UI and realtime PTZ | designed |
+| M3 | rule, alarm, incident, approval and durable command | designed |
+| M4 | policy-validated AI recommendation | designed |
+| M5 | usage, resilience, measurements and public release | designed |
 
-진행 상태와 실제 완료 항목은 [`docs/project-status.md`](docs/project-status.md)에서 관리합니다.
+See [`docs/roadmap.md`](docs/roadmap.md).
+
+## Local development
+
+Executable setup commands will be published after the M0 foundation passes clean-clone verification. The current repository does not document commands that have not been verified.
+
+Default local host ports are reserved as follows:
+
+- web console 3000
+- fieldops server 8080
+- device gateway 8081
+- Keycloak 8180
+- PostgreSQL 5432
+- Redis 6379
+- Kafka 9092
+- MQTT 1883
 
 ## Documentation
 
 - [`Architecture`](docs/architecture.md)
+- [`Frontend and backend`](docs/frontend-backend.md)
 - [`Roadmap`](docs/roadmap.md)
 - [`Project status`](docs/project-status.md)
 - [`Architecture decisions`](docs/decisions/README.md)
 - [`Contributing`](CONTRIBUTING.md)
 - [`Security`](SECURITY.md)
 
-## Local development
+## Scope limits
 
-현재 저장소에는 Repository와 설계 Baseline이 먼저 반영되어 있습니다. M0에서 Gradle Wrapper, Next.js Application과 Docker Compose 실행 구성이 추가된 뒤 검증된 실행 명령을 이 절에 게시합니다. 구현되지 않은 명령이나 결과를 먼저 문서화하지 않습니다.
+- This is a portfolio project, not a certified safety-control product.
+- It does not currently claim Kubernetes or multi-region production operation.
+- AI and usage/billing are later milestones.
+- No real company, customer, device credential, private network or production log is used.
 
 ## License
 
