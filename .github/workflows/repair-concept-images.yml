@@ -31,18 +31,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(stat -c%s docs/assets/product-vision-hero.webp)" = "27500"
-          test "$(stat -c%s docs/assets/capability-overview-concept.webp)" = "30780"
-          test "$(stat -c%s docs/assets/screen-concept.webp)" = "22920"
+          test "$(stat -c%s docs/assets/product-vision-hero.webp)" = "147212"
+          test "$(stat -c%s docs/assets/capability-overview-concept.webp)" = "159518"
+          test "$(stat -c%s docs/assets/screen-concept.webp)" = "133838"
 
           printf '%s  %s\n' \
-            '58e69dc591938b7272ee1a3883b19e0463657121a58709507548fe39b704654b' \
+            'b8292ca3208c2a552430553d03424276c3122b6813c90f28ee34688a500699ca' \
             'docs/assets/product-vision-hero.webp' | sha256sum --check --strict
           printf '%s  %s\n' \
-            '5f35570f33d8da92cda7130673efb610c812b851f0c63153a5684abac060aafd' \
+            'aafe7400ea9fc310c8fd9b43ed4742d244e429a08e162f1dceb80550ef58219d' \
             'docs/assets/capability-overview-concept.webp' | sha256sum --check --strict
           printf '%s  %s\n' \
-            'ee7ed4d5fc78a2fee76688c93920ad7e2d295ad561557a3e5933b72c99ae8a78' \
+            '2178dbe64cbbbb32da0cde148f4fd00fd1139560624a8e68010cf04bfa15f223' \
             'docs/assets/screen-concept.webp' | sha256sum --check --strict
 
       - name: Verify WebP containers
