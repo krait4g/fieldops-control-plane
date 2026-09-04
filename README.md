@@ -14,7 +14,7 @@
 > 이 저장소는 제품 정의, PRD, UX, 아키텍처와 공개용 저장소 기준선을 우선 제공합니다. 아래 이미지는 **구현 완료 스크린샷이 아니라 목표 제품 경험을 설명하는 콘셉트 이미지**입니다. 실제 화면과 실행 코드는 검증된 마일스톤 단위로 교체·공개합니다.
 
 <p align="center">
-  <img src="docs/assets/product-vision-hero.webp" alt="FieldOps Control Plane 제품 비전" width="100%">
+  <img src="docs/assets/product-vision-hero.svg" alt="FieldOps Control Plane 제품 비전" width="100%">
 </p>
 
 ## 제품 한눈에 보기
@@ -36,7 +36,7 @@ FieldOps Control Plane은 센서·펌프·밸브·카메라처럼 연결 방식�
 첫 Reference Profile은 Smart Farm입니다. 토양 센서, 기상 센서, 관수 펌프, 밸브, PTZ Camera를 사용해 제품을 이해하기 쉽게 구성하되, Core Domain은 제조·물류·에너지·시설 운영에도 재사용할 수 있도록 산업 중립적으로 설계합니다.
 
 <p align="center">
-  <img src="docs/assets/capability-overview-concept.webp" alt="FieldOps 기능 개요 콘셉트" width="100%">
+  <img src="docs/assets/capability-overview-concept.svg" alt="FieldOps 기능 개요 콘셉트" width="100%">
 </p>
 
 ## 해결하려는 문제
@@ -82,7 +82,7 @@ Connect
 8. Alarm 회복과 Audit Timeline을 확인함
 
 <p align="center">
-  <img src="docs/assets/screen-concept.webp" alt="FieldOps 주요 화면 콘셉트" width="100%">
+  <img src="docs/assets/screen-concept.svg" alt="FieldOps 주요 화면 콘셉트" width="100%">
 </p>
 
 ## 제품 우선순위
