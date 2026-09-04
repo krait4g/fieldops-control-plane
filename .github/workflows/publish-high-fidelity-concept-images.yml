@@ -65,4 +65,4 @@ jobs:
                   docs/assets/capability-overview-concept.webp \
                   docs/assets/screen-concept.webp
           git commit -m 'fix: restore high-fidelity concept images'
-          git push --force-with-lease origin HEAD:fix/high-fidelity-concept-images
+          git push -u origin HEAD:fix/high-fidelity-concept-images
