@@ -1,76 +1,74 @@
-# Project Status
+# 현재 공개 상태
 
-Last updated: 2026-09-03
+> 마지막 업데이트: 2026-09-04  
+> 공개 문서 기준 버전: Product Design `v0.6`, PRD `0.6.0`
 
-## Current phase
+## 상태 요약
 
-**v0.5 repository and architecture baseline**
+| 영역 | 상태 | 설명 |
+|---|---|---|
+| 제품 문제·사용자·가치 | 공개 | 한국어 PRD로 정리 |
+| UX와 사용자 검증 계획 | 공개 | 클릭 가능한 Prototype과 실제 검증은 후속 |
+| Architecture | 공개 | 목표 구조와 책임 경계 |
+| M1 REST·Realtime 계약 | 설계 완료 | 구현·검증 코드 공개 전 |
+| 실행 가능한 통합 제품 | 미공개 | 검증된 마일스톤 단위로 순차 공개 |
+| 실제 Screenshot·성능 수치 | 미공개 | Concept Image와 구분 |
+| AI Recommendation·Billing | 후순위 | Portfolio Core 완료를 막지 않음 |
 
-The public repository contains the curated monorepo directory contract, product architecture, milestone roadmap, application/module boundaries, build-version baseline and repository verification workflow.
+## 공개 진척도
 
-Executable backend and frontend applications, local infrastructure and product capabilities have **not yet been verified**. Future-state diagrams and README sections are design intent, not implementation claims.
+```text
+제품 정의·PRD
+[██████████] 100%
 
-## Repository baseline
+UX 설계
+[████████░░] 80% — Interactive Prototype·사용자 검증 전
 
-| Item | State |
-|---|---|
-| Product and architecture design | DESIGNED |
-| FE/BE monorepo boundary | IMPLEMENTED |
-| Runtime/module directory boundary | IMPLEMENTED |
-| Repository hygiene workflow | IMPLEMENTED; execution status tracked in GitHub Actions |
-| Gradle wrapper and clean build | NOT YET VERIFIED |
-| Spring Boot runtime skeletons | NOT YET VERIFIED |
-| Next.js application skeleton | NOT YET VERIFIED |
-| Local PostgreSQL/Kafka/Redis/MQTT/Keycloak | NOT YET VERIFIED |
-| Infrastructure smoke tests | NOT YET VERIFIED |
-| Public M0 release | NOT RELEASED |
+M1 API·Realtime 계약
+[██████████] 100% — 구현 검증 전 설계 계약
 
-## Capability status
+실행 가능한 공개 제품
+[░░░░░░░░░░] 0% — 검증된 코드 Snapshot 공개 전
 
-| Capability | Designed | Implemented | Verified | Measured | Released |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Repository/build foundation | ✓ | partial |  |  |  |
-| Frontend/backend contract | ✓ |  |  |  |  |
-| Tenant/Site/Device registry | ✓ |  |  |  |  |
-| Telemetry ingestion/history | ✓ |  |  |  |  |
-| Redis latest state/offline | ✓ |  |  |  |  |
-| TCP/Polling/ONVIF integration | ✓ |  |  |  |  |
-| Camera preview/PTZ session | ✓ |  |  |  |  |
-| Rule/alarm/incident | ✓ |  |  |  |  |
-| Safe command workflow | ✓ |  |  |  |  |
-| AI-assisted recommendation | ✓ |  |  |  |  |
-| Usage/billing preview | ✓ |  |  |  |  |
-| Performance/fault evidence | ✓ |  |  |  |  |
+P1 장비·Camera·Safe Command
+[░░░░░░░░░░] 0% 구현 — 상세 설계 단계
 
-## Current runtime names
+AI Recommendation·Billing
+[░░░░░░░░░░] Deferred
+```
 
-- `fieldops-server`
-- `device-gateway`
-- `fieldops-worker`
-- `simulator`
-- `billing-job`
-- `web-console`
+## 현재 공개되는 것
 
-Earlier runtime names such as `fieldops-api`, `ingestion-gateway`, `telemetry-worker` and `automation-worker` are superseded by the v0.5 boundary.
+- 한국어 README
+- 제품 비전과 기능 Concept Image
+- PRD, UX, 우선순위, Product Building 방식
+- Architecture와 Frontend·Backend 경계
+- 공개용 Monorepo 구조
+- 향후 구현 Roadmap
 
-## Next release gate
+## 아직 완료로 주장하지 않는 것
 
-M0 will add and verify:
+- Next.js 실제 Dashboard
+- MQTT→Kafka→PostgreSQL/Redis 실제 통합
+- SSE Remote Integration
+- TCP·Polling·ONVIF·RTSP·PTZ
+- Alarm·Incident·Safe Command
+- Load·Fault·Recovery Measurement
+- 실제 사용자 검증
+- AI Recommendation
+- Usage·Billing
 
-1. Gradle 9.7.1 wrapper and Java 21 builds
-2. Spring Boot runtime skeletons
-3. Next.js App Router skeleton
-4. local PostgreSQL, Kafka, Redis, MQTT and Keycloak
-5. machine-readable contract validation
-6. Testcontainers infrastructure smoke
-7. backend/web/contract/security CI
-8. clean-clone quick start
+## 공개 정책
 
-Status will advance only after the documented commands pass from a clean checkout. Product features begin in M1 and are not part of the current public implementation claim.
+코드는 다음 단계를 통과한 뒤 공개합니다.
 
-## Known scope limits
+```text
+설계
+  → 구현
+  → 자동 Test
+  → 재현 Evidence
+  → 외부 정보·Secret 검수
+  → 독립 Public Commit
+```
 
-- This is a portfolio project, not a certified safety-control product.
-- Kubernetes and multi-region operation are not current implementation claims.
-- AI and usage/billing are later milestones.
-- No production device credentials, customer data or operational logs are used.
+Concept Image는 제품 방향을 설명하는 자료이며 실제 구현 화면과 혼동하지 않도록 명시합니다.

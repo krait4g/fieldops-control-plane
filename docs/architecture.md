@@ -1,45 +1,35 @@
-# FieldOps Control Plane Architecture
+# FieldOps Control Plane 아키텍처
 
-> Status: design baseline. This document describes the intended architecture; implementation status is tracked separately in [`project-status.md`](project-status.md).
+## 1. 설계 목표
 
-## System intent
+FieldOps는 다음 문제를 동시에 해결하도록 설계합니다.
 
-FieldOps Control Plane normalizes heterogeneous device signals into a common model, keeps current state independent from durable history, turns policy violations into alarms and incidents, and executes approved commands through auditable state transitions.
+- 서로 다른 Protocol과 Vendor 장비를 공통 Product Model로 통합
+- 실시간 Latest State와 영구 History의 책임 분리
+- 중복·지연·역순 Event에서도 상태 수렴
+- 일부 구성 장애의 영향 격리
+- 승인·멱등성·불확실성을 포함한 안전한 제어
+- Dashboard·Camera·Command를 하나의 운영 Journey로 연결
 
-The first reference profile is Smart Farm, but the core model remains independent from agricultural device names.
-
-## Product flow
-
-```text
-Connect
-  → Observe
-  → Understand
-  → Decide
-  → Approve
-  → Control
-  → Verify
-```
-
-A feature is considered complete through an operator journey, not because one broker message or one CRUD endpoint exists.
-
-## System context
+## 2. 전체 구조
 
 ```mermaid
 flowchart LR
-    OP[Operator / Approver / Admin] --> WEB[Next.js Web Console]
-    WEB -->|REST / SSE / WebSocket| API[FieldOps Server]
+    USER[Operator / Approver / Admin] --> WEB[Next.js Web Console]
+    WEB -->|REST · SSE · WebSocket| API[FieldOps Server]
 
     MQTT[MQTT Sensor] --> GW[Device Gateway]
-    TCP[TCP/Binary Sensor] --> GW
+    TCP[TCP/Binary Device] --> GW
     POLL[HTTP Polling Device] --> GW
     CAM[ONVIF Camera] --> GW
     CAM -->|RTSP| MEDIA[Media Plane]
     MEDIA --> WEB
 
     GW --> K[(Kafka)]
-    K --> W[FieldOps Worker]
-    W --> PG[(PostgreSQL)]
-    W --> RD[(Redis)]
+    K --> WORKER[FieldOps Worker]
+
+    WORKER --> PG[(PostgreSQL)]
+    WORKER --> RD[(Redis)]
 
     API --> PG
     API --> RD
@@ -47,206 +37,218 @@ flowchart LR
     K --> GW
 ```
 
-RTSP media is not sent through Kafka. Device telemetry, durable command and realtime PTZ control use different contracts.
+## 3. Plane 구분
 
-## Runtime boundaries
+### Southbound Integration Plane
 
-| Runtime | Responsibility |
+장비별 연결과 실패 처리를 담당합니다.
+
+- MQTT: QoS, Session, Duplicate, Retained Message, Reconnect
+- TCP/Binary: Framing, Split/Combined Packet, Length, CRC, Idle
+- HTTP Polling: Jitter, Timeout, Backoff, Circuit Breaker
+- ONVIF: Capability, Status, PTZ, Preset
+- RTSP: Preview Source와 Stream Health
+
+Protocol Payload를 Core Domain에 직접 전달하지 않고 Canonical Event와 State로 변환합니다.
+
+### Canonical Device Plane
+
+공통 개념:
+
+- Tenant, Site, Zone
+- Device Identity
+- Device Type
+- Capability
+- Observation
+- Reported State
+- Connectivity
+- Readiness
+- Freshness
+- State Version
+
+새 Protocol을 추가하더라도 Dashboard와 Rule은 이 공통 모델을 사용합니다.
+
+### Event and Data Plane
+
+```text
+PostgreSQL
+  = Registry, History, Alarm·Incident·Command·Audit 원장
+
+Kafka
+  = 내구성 Event 전달, Replay, 동일 Key 순서, Consumer 격리
+
+Redis
+  = Latest State, Freshness CAS, Offline Deadline,
+    Alarm Cooldown, PTZ Lease·Fencing
+```
+
+### Operations Control Plane
+
+- Rule
+- Alarm
+- Incident
+- Command Request
+- Approval
+- Dispatch
+- ACK·Reported State
+- Audit
+
+### Northbound Product Plane
+
+- REST: Snapshot과 Query
+- SSE: 단방향 Incremental Update
+- WebSocket: PTZ Control Session
+- Next.js: Dashboard, Chart, Device, Camera, Incident, Command UX
+
+## 4. Runtime 경계
+
+| Runtime | 책임 |
 |---|---|
-| `fieldops-server` | REST/SSE/WebSocket, OIDC session, tenant/site authorization, dashboard and product APIs |
-| `device-gateway` | MQTT/TCP/Polling/ONVIF adapters, connection health, command dispatch and realtime camera control |
-| `fieldops-worker` | normalization, PostgreSQL history, Redis projection, offline detection and workflows |
-| `simulator` | deterministic synthetic devices and fault scenarios |
-| `billing-job` | usage aggregation and reconciliation in the extension milestone |
-| `web-console` | Next.js operations console |
+| `fieldops-server` | REST, SSE, WebSocket, OIDC Session, Product Query·Mutation |
+| `device-gateway` | MQTT, TCP, Polling, ONVIF, Command·Camera Adapter |
+| `fieldops-worker` | Normalize, History, Redis Projection, Offline, Workflow |
+| `simulator` | Synthetic Device와 Failure Scenario |
+| `web-console` | Next.js Operations Console |
+| `billing-job` | 후순위 Usage Aggregate·Reconciliation |
 
-These are code and failure boundaries. They do not imply that every logical module is deployed as a separate microservice from the first release.
+Runtime 분리는 책임과 Failure Boundary를 표현합니다. 모든 논리 모듈을 첫 단계부터 개별 Microservice로 배포한다는 의미는 아닙니다.
 
-Runtime applications do not depend directly on one another. They collaborate through approved modules, persistence and versioned contracts.
-
-## Module dependency
+## 5. Telemetry 흐름
 
 ```text
-Domain ← Application ← Infrastructure ← Runtime
+Device Event
+  → Protocol Validation
+  → Raw Event
+  → Canonical Normalization
+  → Kafka
+      ├─ PostgreSQL History Consumer
+      ├─ Redis State Projection Consumer
+      └─ Rule Evaluation Consumer
 ```
 
-- Domain modules do not depend on Spring Web, Kafka, Redis, JPA/SQL mappers or protocol clients.
-- Application modules define use cases and ports.
-- Infrastructure modules implement persistence, broker and protocol adapters.
-- Runtime applications provide wiring and lifecycle.
+동일 Device의 Ordering이 필요한 Topic은 `tenantId + deviceId`를 Partition Key로 사용합니다.
 
-Additional v0.5 boundaries include:
-
-- `device-integration`: protocol-neutral adapter contracts and health
-- `dashboard-query`: UI read models without mutation
-- `camera-control`: preview, capability and control-session policy
-
-## Frontend and backend
-
-Frontend and backend live in one repository because they share product milestones and machine-readable contracts.
+## 6. 중복·역순 처리
 
 ```text
-Java / Gradle
-  = backend runtimes and modules
+History
+  → PostgreSQL Unique Constraint
+  → 동일 Event 재처리 수렴
 
-Next.js / pnpm
-  = operations console
-
-OpenAPI / AsyncAPI / JSON Schema
-  = shared contracts
+Latest State
+  → Redis Lua CAS
+  → sessionId / sequence / occurredAt / version 비교
+  → 낮거나 같은 상태 갱신 거부
 ```
 
-The web console owns presentation, browser session interaction, query caching and failure-state rendering. Spring Boot remains authoritative for tenant access, state transitions, rule evaluation, command safety, AI policy and usage calculation.
+전체 시스템의 Exactly-once를 주장하지 않습니다. `At-least-once + Idempotent Convergence`를 사용합니다.
 
-The browser does not connect directly to PostgreSQL, Kafka, Redis, device protocols or raw RTSP credentials.
+## 7. Redis 복구
 
-## Integration planes
+Redis는 영구 원장이 아닙니다.
 
 ```text
-Southbound Integration Plane
-  MQTT / TCP / HTTP Polling / ONVIF
-        ↓
-Canonical Device Plane
-        ↓
-Event and Data Plane
-  Kafka / PostgreSQL / Redis
-        ↓
-Operations Control Plane
-  Rule / Alarm / Incident / Command
-        ↓
-Northbound Plane
-  REST / SSE / WebSocket / Next.js
-
-Camera RTSP
-  → separate Media Plane
+Redis Loss
+  → PostgreSQL History·Command·Alarm 지속
+  → UI는 Database Snapshot과 Stale 표시
+  → Snapshot Seed
+  → Kafka Replay
+  → Latest State 재구축
 ```
 
-Protocol-specific DTOs do not become core domain models. Adapters normalize source identity, timestamp, sequence, metrics, capability, health and command result.
+새 PTZ 제어권 획득은 Redis Lease를 사용할 수 없을 때 차단합니다.
 
-## Data responsibilities
+## 8. Command 경로
 
-### PostgreSQL
+### Durable Command
 
-Durable system of record for:
-
-- tenant, site, zone and device registry
-- membership, scope and invitation
-- telemetry history and state snapshots
-- rule, alarm, incident and timeline
-- command, approval, attempt and cursor
-- usage and audit
-- outbox/inbox
-
-Unique constraints and database transactions provide final business idempotency.
-
-### Kafka
-
-Durable event backbone for:
-
-- raw and canonical telemetry delivery
-- consumer failure-boundary separation
-- replay
-- same-key ordering
-- transactional-outbox publication
-- durable command dispatch
-
-The project does not claim global ordering or distributed exactly-once across Kafka and PostgreSQL.
-
-### Redis
-
-Rebuildable hot state and short-lived coordination:
-
-- latest device state
-- atomic session/sequence/event-time freshness comparison
-- offline deadlines
-- rule runtime and alarm cooldown
-- control-session lease and fencing
-- bounded result cache or single-flight where appropriate
-
-Redis is not the permanent telemetry, alarm, command or billing ledger. A Redis loss must not erase durable history.
-
-## Consistency model
-
-- Event delivery is treated as at-least-once.
-- Consumers converge idempotently after duplicates, restart and replay.
-- Current state rejects older session/sequence/event-time updates.
-- History persistence and Redis state projection use independent consumer groups and failure policies.
-- Mutations use database transactions and transactional outbox where external delivery follows state change.
-- UI surfaces stale, partial and reconnecting states instead of pretending strong consistency.
-
-## Northbound protocols
-
-### REST
-
-Snapshot, search and durable mutation.
-
-### SSE
-
-Incremental device, alarm, incident and command state changes. Clients compare resource versions and reload a snapshot when replay is unavailable.
-
-### WebSocket
-
-Realtime PTZ control session with owner, lease, fencing token, sequence and dead-man stop.
-
-Joystick input is not replayed as a durable command.
-
-## Command safety
-
-HTTP acceptance, durable command creation, broker dispatch, device ACK and physical completion are separate states.
-
-The command model uses:
-
-- `Idempotency-Key`
-- durable command and attempt records
-- tenant, role, capability and approval policy
-- expected device-state version
-- deadline
-- same-device ordering
-- device-side deduplication/fencing where supported
-- explicit `UNKNOWN` for uncertain non-idempotent execution
-- complete audit timeline
-
-## Authentication and tenant isolation
+Pump, Valve, Preset처럼 감사와 재처리가 필요한 명령:
 
 ```text
-Keycloak
-  = identity, credential, login and OIDC
-
-FieldOps
-  = tenant membership, role, site scope and audit
+REST Request
+  → Idempotency-Key
+  → PostgreSQL Command Ledger
+  → Approval·Safety Validation
+  → Transactional Outbox
+  → Kafka
+  → Device Gateway
+  → ACK
+  → Reported State
 ```
 
-Client-supplied tenant identifiers are never the sole authorization source. REST, SSE and WebSocket boundaries require cross-tenant negative tests.
+`ACKNOWLEDGED`는 장비가 명령을 수신했다는 의미이며 `SUCCEEDED`와 동일하지 않습니다. 비멱등 Command의 결과가 불확실하면 `UNKNOWN`으로 남깁니다.
 
-## AI boundary
+### Realtime PTZ
 
-AI is a recommendation component, not an autonomous command executor.
+```text
+WebSocket
+  → Control Owner
+  → Redis Lease·Fencing Token
+  → Sequence Validation
+  → Latest Input Coalescing
+  → ONVIF ContinuousMove
+  → Heartbeat / Dead-man Stop
+```
 
-- reads approved context through bounded tools
-- returns structured recommendation and evidence references
-- passes deterministic tenant/capability/risk/freshness validation
-- requires human approval for risky commands
-- cannot directly access SQL, Redis, Kafka or device protocols
-- is optional to core operation
+PTZ Joystick의 과거 입력을 Kafka Lag 이후 재생하지 않습니다.
 
-## Observability
+## 9. Camera Media 경계
 
-All runtimes will expose health, structured logs, metrics and trace context appropriate to their milestone.
+```text
+ONVIF
+  = Device Information, Capability, Status, PTZ
 
-Key views include:
+RTSP
+  = 원본 Media Source
 
-- ingress accepted/rejected events
-- broker lag and DLQ
-- history and state-projection delay
-- Redis freshness/CAS/rebuild
-- offline-detection delay
-- alarm suppression
-- command state duration, timeout and unknown
-- adapter and camera health
-- usage reconciliation
+Media Gateway
+  = Browser-compatible Preview
 
-Unbounded device/event identifiers are not used as metric labels.
+Kafka
+  = Camera 상태 Event만 처리
+```
 
-## Current implementation boundary
+원본 영상은 Kafka나 PostgreSQL에 저장하지 않습니다.
 
-The public repository currently contains the repository and architecture baseline. Executable backend/frontend applications, local infrastructure and product features are not yet claimed as verified. See [`project-status.md`](project-status.md).
+## 10. Frontend·Backend 권위
+
+Frontend:
+
+- 정보 구조와 화면 표현
+- Query Cache
+- Loading·Empty·Permission·Partial·Stale·Reconnecting
+- 사용자 입력과 확인
+- OpenAPI 기반 Type
+
+Backend:
+
+- Tenant·Site Authorization
+- Device·Command State Machine
+- Rule와 Safety Policy
+- Idempotency
+- Command Result
+- Audit
+
+Frontend는 Backend의 Safety Rule을 복제하지 않습니다.
+
+## 11. Observability
+
+핵심 Signal:
+
+- Telemetry Accepted·Rejected
+- Kafka Consumer Lag
+- History Persist Latency
+- Redis Projection Lag
+- Stale Sequence Rejection
+- Redis Rebuild Progress
+- SSE Connection·Reconnect
+- Command State·ACK Latency
+- Camera Preview Health
+- PTZ Lease Expiration
+
+## 12. 범위 제한
+
+- 실제 안전 인증 제품이 아님
+- Multi-region·Kubernetes는 초기 범위가 아님
+- 모든 Camera Vendor 호환을 보장하지 않음
+- AI가 Command를 직접 실행하지 않음
