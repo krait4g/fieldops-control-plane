@@ -14,7 +14,7 @@
 > 현재 저장소에는 제품 정의, UX, 아키텍처와 구현 계획이 공개되어 있습니다. 아래 이미지는 실제 구현 화면이 아니라 목표 제품 경험을 설명하기 위한 콘셉트 이미지입니다. 실행 가능한 기능과 실제 스크린샷은 검증이 끝난 마일스톤부터 순차적으로 공개합니다.
 
 <p align="center">
-  <img src="docs/assets/product-vision-hero.svg" alt="FieldOps Control Plane 제품 비전" width="100%">
+  <img src="docs/assets/product-vision-hero.webp" alt="FieldOps Control Plane 제품 비전" width="100%">
 </p>
 
 ## 무엇을 만드는 프로젝트인가
@@ -36,7 +36,7 @@ FieldOps Control Plane은 센서, 펌프, 밸브, 카메라처럼 **연결 방�
 ```
 
 <p align="center">
-  <img src="docs/assets/capability-overview-concept.svg" alt="FieldOps 기능 개요" width="100%">
+  <img src="docs/assets/capability-overview.webp" alt="FieldOps 기능 개요" width="100%">
 </p>
 
 ## 해결하려는 문제
@@ -63,7 +63,7 @@ FieldOps Control Plane은 센서, 펌프, 밸브, 카메라처럼 **연결 방�
 8. 알람 해제 여부와 명령·조치 이력을 확인해 정상화를 검증합니다.
 
 <p align="center">
-  <img src="docs/assets/screen-concept.svg" alt="FieldOps 주요 화면 콘셉트" width="100%">
+  <img src="docs/assets/screen-overview.webp" alt="FieldOps 주요 화면 콘셉트" width="100%">
 </p>
 
 ## 핵심 설계 결정
