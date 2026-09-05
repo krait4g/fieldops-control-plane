@@ -1,254 +1,63 @@
-# FieldOps Control Plane 아키텍처
+# FieldOps 아키텍처
 
-## 1. 설계 목표
+상태: 목표 설계, 실제 통합 검증 전. 첫 원격 버전은 단일 실행 환경과 제한된 복구를 선택합니다. 이 문서의 설계 선택을 구현 보장으로 읽지 않습니다.
 
-FieldOps는 다음 문제를 동시에 해결하도록 설계합니다.
-
-- 서로 다른 Protocol과 Vendor 장비를 공통 Product Model로 통합
-- 실시간 Latest State와 영구 History의 책임 분리
-- 중복·지연·역순 Event에서도 상태 수렴
-- 일부 구성 장애의 영향 격리
-- 승인·멱등성·불확실성을 포함한 안전한 제어
-- Dashboard·Camera·Command를 하나의 운영 Journey로 연결
-
-## 2. 전체 구조
-
-```mermaid
-flowchart LR
-    USER[Operator / Approver / Admin] --> WEB[Next.js Web Console]
-    WEB -->|REST · SSE · WebSocket| API[FieldOps Server]
-
-    MQTT[MQTT Sensor] --> GW[Device Gateway]
-    TCP[TCP/Binary Device] --> GW
-    POLL[HTTP Polling Device] --> GW
-    CAM[ONVIF Camera] --> GW
-    CAM -->|RTSP| MEDIA[Media Plane]
-    MEDIA --> WEB
-
-    GW --> K[(Kafka)]
-    K --> WORKER[FieldOps Worker]
-
-    WORKER --> PG[(PostgreSQL)]
-    WORKER --> RD[(Redis)]
-
-    API --> PG
-    API --> RD
-    API --> K
-    K --> GW
-```
-
-## 3. Plane 구분
-
-### Southbound Integration Plane
-
-장비별 연결과 실패 처리를 담당합니다.
-
-- MQTT: QoS, Session, Duplicate, Retained Message, Reconnect
-- TCP/Binary: Framing, Split/Combined Packet, Length, CRC, Idle
-- HTTP Polling: Jitter, Timeout, Backoff, Circuit Breaker
-- ONVIF: Capability, Status, PTZ, Preset
-- RTSP: Preview Source와 Stream Health
-
-Protocol Payload를 Core Domain에 직접 전달하지 않고 Canonical Event와 State로 변환합니다.
-
-### Canonical Device Plane
-
-공통 개념:
-
-- Tenant, Site, Zone
-- Device Identity
-- Device Type
-- Capability
-- Observation
-- Reported State
-- Connectivity
-- Readiness
-- Freshness
-- State Version
-
-새 Protocol을 추가하더라도 Dashboard와 Rule은 이 공통 모델을 사용합니다.
-
-### Event and Data Plane
+## 1. 핵심 책임
 
 ```text
-PostgreSQL
-  = Registry, History, Alarm·Incident·Command·Audit 원장
-
-Kafka
-  = 내구성 Event 전달, Replay, 동일 Key 순서, Consumer 격리
-
-Redis
-  = Latest State, Freshness CAS, Offline Deadline,
-    Alarm Cooldown, PTZ Lease·Fencing
+MQTT Sensor → Device Gateway → Kafka
+                              ├─ History Writer → PostgreSQL
+                              └─ State Projector → Redis
+Next.js Console → FieldOps Server → Snapshot / SSE
 ```
 
-### Operations Control Plane
-
-- Rule
-- Alarm
-- Incident
-- Command Request
-- Approval
-- Dispatch
-- ACK·Reported State
-- Audit
-
-### Northbound Product Plane
-
-- REST: Snapshot과 Query
-- SSE: 단방향 Incremental Update
-- WebSocket: PTZ Control Session
-- Next.js: Dashboard, Chart, Device, Camera, Incident, Command UX
-
-## 4. Runtime 경계
+장비 Protocol DTO는 Adapter에서 공통 Device/Metric/State로 변환합니다. TCP/Polling/ONVIF는 이후 한 종류씩 추가합니다. 영상은 RTSP→Media 경로이며 Kafka/Telemetry에 원본을 저장하지 않습니다.
 
 | Runtime | 책임 |
 |---|---|
-| `fieldops-server` | REST, SSE, WebSocket, OIDC Session, Product Query·Mutation |
-| `device-gateway` | MQTT, TCP, Polling, ONVIF, Command·Camera Adapter |
-| `fieldops-worker` | Normalize, History, Redis Projection, Offline, Workflow |
-| `simulator` | Synthetic Device와 Failure Scenario |
-| `web-console` | Next.js Operations Console |
-| `billing-job` | 후순위 Usage Aggregate·Reconciliation |
+| fieldops-server | REST/SSE, 인증·권한, 후속 제어 API |
+| device-gateway | 장비 연결/수집과 지원한 명령 Adapter |
+| fieldops-worker | Normalize, History, State, 이후 Workflow |
+| simulator | Synthetic 데이터와 실패 재현 |
+| web-console | 같은 API 경계를 쓰는 Fixture/Remote 화면 |
+| billing-job | 선택 후속, 초기 필수 실행 아님 |
 
-Runtime 분리는 책임과 Failure Boundary를 표현합니다. 모든 논리 모듈을 첫 단계부터 개별 Microservice로 배포한다는 의미는 아닙니다.
+논리 모듈을 모두 개별 Microservice로 배포하지 않습니다. History와 Redis Consumer의 Retry/Thread/Group을 나누되 Kafka·공유 프로세스 장애까지 독립적이라고 과장하지 않습니다.
 
-## 5. Telemetry 흐름
+## 2. 원장·순서·중복
 
-```text
-Device Event
-  → Protocol Validation
-  → Raw Event
-  → Canonical Normalization
-  → Kafka
-      ├─ PostgreSQL History Consumer
-      ├─ Redis State Projection Consumer
-      └─ Rule Evaluation Consumer
-```
+PostgreSQL은 기준정보·영구 이력·업무 원장, Kafka는 내구성 이벤트, Redis는 재구축 가능한 최신 상태입니다. 재전달에도 유지되는 Event ID 또는 검증된 Session+Sequence를 사용하고, History의 Unique와 Projector CAS를 적용합니다. Retained/과거 데이터를 지금의 생존 신호로 오인하지 않습니다.
 
-동일 Device의 Ordering이 필요한 Topic은 `tenantId + deviceId`를 Partition Key로 사용합니다.
+같은 Key의 순서는 동일 Topic/Partition 안에서 해석합니다. 다른 Topic의 전역 순서나 같은 Consumer Group의 다중 서버 Broadcast를 가정하지 않습니다. 초기 SSE Server는 단일 인스턴스입니다.
 
-## 6. 중복·역순 처리
+## 3. 인증과 Context
 
-```text
-History
-  → PostgreSQL Unique Constraint
-  → 동일 Event 재처리 수렴
+실제 원격 버전은 Keycloak OIDC와 서버 소유 Session을 사용합니다. 선택 Tenant를 요청에 명시하고 서버가 Membership·Site·Device를 교차 검증합니다. 공유 Session의 가변 전역 Tenant에 의존해 탭끼리 Context를 바꾸지 않습니다.
 
-Latest State
-  → Redis Lua CAS
-  → sessionId / sequence / occurredAt / version 비교
-  → 낮거나 같은 상태 갱신 거부
-```
+Stream 권한은 전달하는 실제 Metric 범위를 덮어야 합니다. 첫 프로파일은 필요한 Read 권한을 모두 가진 Session에만 Stream을 허용하고 연결 중 철회도 처리합니다. 화면에서 숨기는 것으로 서버 검증을 대체하지 않습니다. 정확한 파라미터·필드는 버전이 명시된 Remote 계약에 반영한 후 구현합니다.
 
-전체 시스템의 Exactly-once를 주장하지 않습니다. `At-least-once + Idempotent Convergence`를 사용합니다.
+## 4. Snapshot과 실시간 상태의 수렴
 
-## 7. Redis 복구
+초기 Snapshot 뒤 Stream을 열 때 생길 수 있는 변경 누락을 연결 후 재조회와 버전 병합으로 확인합니다. 동기화 중 이벤트 버퍼는 제한하고, 초과·실패에는 Stale/Retry로 돌아갑니다. 보조적으로 Visible 화면의 필요한 최신 상태를 주기 재검증합니다. History 차트를 이벤트마다 재조회하지 않습니다.
 
-Redis는 영구 원장이 아닙니다.
+REST와 SSE 모두 같은 상태 세대의 증가 Revision을 비교합니다. 늦은 REST가 최신 SSE를 덮지 않아야 합니다. Registry Version과 State Revision은 구별하고 재구축 세대는 REST로 재동기화합니다. Sparse Lifecycle은 초기에 상태 전체를 Patch하지 않고 관련 조회 무효화로 처리합니다. Filter 포함·페이지가 바뀌는 이벤트 역시 목록을 재조회합니다.
 
-```text
-Redis Loss
-  → PostgreSQL History·Command·Alarm 지속
-  → UI는 Database Snapshot과 Stale 표시
-  → Snapshot Seed
-  → Kafka Replay
-  → Latest State 재구축
-```
+연결 성공은 데이터 최신성의 보장이 아닙니다. 완전한 무손실 Replay, 분산 Exactly-once, 무조건 1초 반영 같은 SLA는 주장하지 않습니다.
 
-새 PTZ 제어권 획득은 Redis Lease를 사용할 수 없을 때 차단합니다.
+## 5. 발행과 복구
 
-## 8. Command 경로
+Redis 적용 직후 종료 또는 Kafka 발행 실패를 입력 Offset Commit과 함께 검증합니다. Duplicate라고 미발행 결과를 생략하거나 예외를 로그만 남기고 성공 처리하지 않습니다. 초기 상태 이벤트는 조회 갱신 힌트이며 업무 원장의 유일한 근거가 아닙니다. 업무 이벤트의 내구성은 후속 원장/Outbox 경계에서 별도로 다룹니다.
 
-### Durable Command
+첫 Redis 복구는 유지보수 모드입니다. 마지막 DB Snapshot을 Stale로 제공하고 Projector 소유권·새 상태 세대·Replay 입력 범위·목표 Offset을 확인해 재구축합니다. 보관 범위가 부족하면 복구 불가를 명시하며 빈 상태를 정상으로 서비스하지 않습니다. Snapshot 최적화와 무중단 교체는 실제 비용이 문제가 될 때 추가합니다.
 
-Pump, Valve, Preset처럼 감사와 재처리가 필요한 명령:
+## 6. 후속 Command와 PTZ
 
-```text
-REST Request
-  → Idempotency-Key
-  → PostgreSQL Command Ledger
-  → Approval·Safety Validation
-  → Transactional Outbox
-  → Kafka
-  → Device Gateway
-  → ACK
-  → Reported State
-```
+일반 명령은 한 종류의 멱등 Set부터 구현하고 승인·원장·Outbox·중복·Deadline·결과 확인을 검증합니다. 같은 키의 다른 Payload는 충돌입니다. 승인 후 실제 Dispatch 직전에 상태와 권한을 재검증합니다. ACK와 Reported State를 구분하고 불확실한 결과는 UNKNOWN으로 남깁니다.
 
-`ACKNOWLEDGED`는 장비가 명령을 수신했다는 의미이며 `SUCCEEDED`와 동일하지 않습니다. 비멱등 Command의 결과가 불확실하면 `UNKNOWN`으로 남깁니다.
+PTZ는 오래된 입력을 Durable Queue로 Replay하지 않습니다. Owner/Lease/Fencing/Sequence와 최종 Gateway 전송 순서를 확인하며 지연된 과거 Stop도 처리합니다. 지원 장비의 Timeout/Watchdog가 확인되지 않은 환경에 물리적 정지 보장을 주장하지 않습니다. 초기에는 단일 Gateway/Simulator 또는 검증된 장비로 제한합니다.
 
-### Realtime PTZ
+## 7. 확인할 증거
 
-```text
-WebSocket
-  → Control Owner
-  → Redis Lease·Fencing Token
-  → Sequence Validation
-  → Latest Input Coalescing
-  → ONVIF ContinuousMove
-  → Heartbeat / Dead-man Stop
-```
+첫 관측 제품은 MQTT→History/State/UI, Cross-tenant 차단, Snapshot-구독 사이 단발 변경, REST/SSE 역전, 중복, Redis 장애 중 History 지속과 제한된 복구로 검증합니다. 기본 처리·오류·지연 지표를 기록합니다. 고가용성·종합 부하·모든 Vendor 테스트는 첫 완료 조건이 아닙니다.
 
-PTZ Joystick의 과거 입력을 Kafka Lag 이후 재생하지 않습니다.
-
-## 9. Camera Media 경계
-
-```text
-ONVIF
-  = Device Information, Capability, Status, PTZ
-
-RTSP
-  = 원본 Media Source
-
-Media Gateway
-  = Browser-compatible Preview
-
-Kafka
-  = Camera 상태 Event만 처리
-```
-
-원본 영상은 Kafka나 PostgreSQL에 저장하지 않습니다.
-
-## 10. Frontend·Backend 권위
-
-Frontend:
-
-- 정보 구조와 화면 표현
-- Query Cache
-- Loading·Empty·Permission·Partial·Stale·Reconnecting
-- 사용자 입력과 확인
-- OpenAPI 기반 Type
-
-Backend:
-
-- Tenant·Site Authorization
-- Device·Command State Machine
-- Rule와 Safety Policy
-- Idempotency
-- Command Result
-- Audit
-
-Frontend는 Backend의 Safety Rule을 복제하지 않습니다.
-
-## 11. Observability
-
-핵심 Signal:
-
-- Telemetry Accepted·Rejected
-- Kafka Consumer Lag
-- History Persist Latency
-- Redis Projection Lag
-- Stale Sequence Rejection
-- Redis Rebuild Progress
-- SSE Connection·Reconnect
-- Command State·ACK Latency
-- Camera Preview Health
-- PTZ Lease Expiration
-
-## 12. 범위 제한
-
-- 실제 안전 인증 제품이 아님
-- Multi-region·Kubernetes는 초기 범위가 아님
-- 모든 Camera Vendor 호환을 보장하지 않음
-- AI가 Command를 직접 실행하지 않음
+[Frontend/Backend](frontend-backend.md) · [로드맵](product/ROADMAP.ko.md) · [현재 상태](project-status.md)

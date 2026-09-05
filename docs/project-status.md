@@ -1,74 +1,27 @@
 # 현재 공개 상태
 
-> 마지막 업데이트: 2026-09-04  
-> 공개 문서 기준 버전: Product Design `v0.6`, PRD `0.6.0`
+마지막 업데이트: 2026-09-05. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
 
-## 상태 요약
+| 영역 | 실제 공개 상태 |
+|---|---|
+| 제품 정의·UX·아키텍처 | 설계 문서 공개 |
+| M1 API·Realtime | 계약 설계 단계, 실제 Remote 통합 검증 전 |
+| 실행 가능한 통합 제품 | 아직 공개하지 않음 |
+| UI Preview 소스·실제 Capture | 검증 후 별도 공개 예정 |
+| MQTT/History/Redis/REST/SSE 통합 | 공개 검증 결과 없음 |
+| 장비 제어·Camera·AI·과금 | 후속 또는 선택 범위 |
+| 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
 
-| 영역 | 상태 | 설명 |
-|---|---|---|
-| 제품 문제·사용자·가치 | 공개 | 한국어 PRD로 정리 |
-| UX와 사용자 검증 계획 | 공개 | 클릭 가능한 Prototype과 실제 검증은 후속 |
-| Architecture | 공개 | 목표 구조와 책임 경계 |
-| M1 REST·Realtime 계약 | 설계 완료 | 구현·검증 코드 공개 전 |
-| 실행 가능한 통합 제품 | 미공개 | 검증된 마일스톤 단위로 순차 공개 |
-| 실제 Screenshot·성능 수치 | 미공개 | Concept Image와 구분 |
-| AI Recommendation·Billing | 후순위 | Portfolio Core 완료를 막지 않음 |
+임의의 설계 진척률이나 문서 수로 구현 완료를 추정하지 않습니다. Concept 이미지는 구현 완료 스크린샷이 아닙니다.
 
-## 공개 진척도
+## 출시 계획과 구별
 
-```text
-제품 정의·PRD
-[██████████] 100%
+v0.1은 development-only Fixture UI Preview, v0.2는 실제 인증과 Synthetic MQTT 관측 통합을 목표로 합니다. v0.3 이후 장비·제어 기능은 작은 증분으로 추가합니다. 계획 버전이며 아직 해당 Tag/실행 소스가 공개됐다는 의미는 아닙니다.
 
-UX 설계
-[████████░░] 80% — Interactive Prototype·사용자 검증 전
+UI Preview를 Backend 통합 완료로 부르지 않습니다. 각 공개 버전에는 실제 실행 방법, 검증 범위, 알려진 제한을 붙입니다. 관련 없는 후속 기능·전체 브라우저 행렬·AI·과금을 기다려 공개를 늦추지 않습니다.
 
-M1 API·Realtime 계약
-[██████████] 100% — 구현 검증 전 설계 계약
+## 공개 근거
 
-실행 가능한 공개 제품
-[░░░░░░░░░░] 0% — 검증된 코드 Snapshot 공개 전
+문서-only 갱신은 링크·기밀 경계·상태와 문서 CI를 확인합니다. 제품 소스 공개는 해당 범위의 깨끗한 설치·실행·핵심 테스트와 실제 Capture가 준비됐을 때 별도 수행합니다. 제품을 실행하지 않은 문서 CI를 제품 테스트로 표시하지 않습니다.
 
-P1 장비·Camera·Safe Command
-[░░░░░░░░░░] 0% 구현 — 상세 설계 단계
-
-AI Recommendation·Billing
-[░░░░░░░░░░] Deferred
-```
-
-## 현재 공개되는 것
-
-- 한국어 README
-- 제품 비전과 기능 Concept Image
-- PRD, UX, 우선순위, Product Building 방식
-- Architecture와 Frontend·Backend 경계
-- 공개용 Monorepo 구조
-- 향후 구현 Roadmap
-
-## 아직 완료로 주장하지 않는 것
-
-- Next.js 실제 Dashboard
-- MQTT→Kafka→PostgreSQL/Redis 실제 통합
-- SSE Remote Integration
-- TCP·Polling·ONVIF·RTSP·PTZ
-- Alarm·Incident·Safe Command
-- Load·Fault·Recovery Measurement
-- 실제 사용자 검증
-- AI Recommendation
-- Usage·Billing
-
-## 공개 정책
-
-코드는 다음 단계를 통과한 뒤 공개합니다.
-
-```text
-설계
-  → 구현
-  → 자동 Test
-  → 재현 Evidence
-  → 외부 정보·Secret 검수
-  → 독립 Public Commit
-```
-
-Concept Image는 제품 방향을 설명하는 자료이며 실제 구현 화면과 혼동하지 않도록 명시합니다.
+[README](../README.md) · [로드맵](product/ROADMAP.ko.md)
