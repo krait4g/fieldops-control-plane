@@ -1,283 +1,58 @@
 # UX 설계와 사용자 검증 계획
 
-> 버전: `0.6.0`  
-> 상태: `DEFINED`  
-> 대상: Desktop-first Operations Console  
-> 현재 Prototype: Concept Image  
-> 다음 Prototype: Next.js Fixture Mode
+> 버전: `0.7.0`  
+> 상태: `DEFINED / IN DEVELOPMENT`  
+> 기본 지원 목표: Chromium desktop 1440px와 mobile 390px
 
-## 1. UX 목표
+## 목표와 정보 구조
 
-FieldOps UX는 다음 질문에 빠르게 답해야 합니다.
+운영자가 현재 문제가 무엇인지, 어떤 근거를 볼지, 정보가 최신인지 판단하도록 합니다. 이후 제어 기능에서는 요청·승인·전송·ACK·실제 결과를 구별합니다. Tenant → Site → Zone → Device → State/History라는 모델을 유지하고 Protocol은 보조 정보로 둡니다.
 
-```text
-현재 현장은 정상인가?
-무엇이 문제인가?
-어떤 근거를 확인해야 하는가?
-어떤 조치가 진행 중이며 실제 결과는 무엇인가?
-```
+활성 UI 범위는 /login, /overview, /devices, /devices/{deviceId}, /admin/members입니다. Camera/Alarm/Command 등 미래 Route를 동작하지 않는 메뉴로 노출하지 않습니다. Overview의 미래 위젯은 가짜 성공 대신 Empty/Unavailable/권한 상태를 표시합니다.
 
-기술 정보는 문제 조사에 필요할 때만 점진적으로 노출합니다.
+## 상태를 혼합하지 않음
 
-## 2. 성공 기준
-
-| 목표 | 기준 |
-|---|---:|
-| 우선 문제 식별 | Median 10초 이하 |
-| Device 근거 도달 | Median 30초 이하 |
-| 주요 이동 | 2회 이하 |
-| 상태 의미 이해 | 80% 이상 |
-| Partial Failure 판단 | 80% 이상 |
-| Critical UX Issue | 0개 |
-
-## 3. 사용자 Mental Model
-
-```text
-Tenant
-  → Site
-    → Zone
-      → Device
-        → State / History / Alarm / Command
-```
-
-Protocol과 Infrastructure는 보조 정보입니다.
-
-## 4. 독립적으로 표현할 상태
-
-| 상태 축 | 상태 |
+| 축 | 의미 |
 |---|---|
-| Realtime | CONNECTING, LIVE, RECONNECTING, DISCONNECTED |
-| Device | ONLINE, OFFLINE, DEGRADED, UNKNOWN |
-| Freshness | FRESH, STALE, UNKNOWN |
-| Readiness | READY, NOT_READY, UNKNOWN |
-| Widget | AVAILABLE, EMPTY, STALE, UNAVAILABLE, FORBIDDEN |
-| Preview | STARTING, AVAILABLE, DEGRADED, UNAVAILABLE |
-| PTZ Authority | AVAILABLE, CONTROLLED_BY_ME, CONTROLLED_BY_OTHER, LEASE_EXPIRING |
-| Command | WAITING_APPROVAL, DISPATCHED, ACKNOWLEDGED, SUCCEEDED, FAILED, UNKNOWN |
+| Stream | Connecting/Live/Reconnecting/Disconnected |
+| 장비 연결 | Online/Offline/Degraded/Unknown |
+| 최신성 | Fresh/Stale/Unknown |
+| 준비 상태 | Ready/Not ready/Unknown |
+| 위젯 | Available/Empty/Stale/Unavailable/Forbidden |
+| 후속 명령 | 승인 대기/전송/ACK/수행 확인/실패/Unknown |
 
-`SSE LIVE`와 `Device FRESH`, `Preview UNAVAILABLE`과 `Camera OFFLINE`, `ACKNOWLEDGED`와 `SUCCEEDED`를 같은 의미로 사용하지 않습니다.
+Stream Live는 장비 Fresh의 증거가 아니고 ACK는 수행 완료가 아닙니다. Snapshot 실패를 정상 0으로 표시하지 않습니다.
 
-## 5. Information Architecture
+## 화면별 최소 동작
 
-```text
-Overview
-Sites
-Devices
-Cameras
-Alarms & Incidents
-Commands
-Administration
-  ├─ Members & Access
-  ├─ Rules & Policies
-  ├─ Platform Health
-  └─ Usage
-```
+Overview는 상태·Freshness·Trend·Health를 우선하고 KPI에서 관련 필터 목록으로 이동합니다. Time Range는 이를 사용하는 Overview와 Device Detail에서만 보여줍니다.
 
-M1에서는 `/login`, `/overview`, `/devices`, `/devices/{id}`, `/admin/members`만 활성화합니다. 구현되지 않은 Future Route는 미리 노출하지 않습니다.
+Device List는 검색과 계약상 Device Type/Protocol/Connectivity/Readiness/Freshness 필터를 URL에 반영합니다. 계약에 없는 Zone 필터를 선행 추가하지 않습니다. Filter 변경은 Cursor를 초기화하고 Back/Forward·Clear·상세 이동을 지난 Debounce가 덮지 않게 합니다. 같은 값은 URL을 다시 갱신하지 않습니다.
 
-## 6. 공통 Layout
+Filter Toolbar는 결과 재조회 중에도 유지합니다. 초기 결과 Loading과 배경 Updating을 구분하며 Placeholder는 실제 Snapshot 성공이 아닙니다. 다른 Tenant/Site 또는 권한 철회에는 이전 성공 데이터를 노출하지 않습니다.
 
-```text
-┌────────────────────────────────────────────────────────────────┐
-│ Product · Tenant · Site · Range     Live · Last updated · User │
-├──────────────┬─────────────────────────────────────────────────┤
-│ Navigation   │ Breadcrumb · Page title · Primary action        │
-│              ├─────────────────────────────────────────────────┤
-│              │                  Page Content                   │
-└──────────────┴─────────────────────────────────────────────────┘
-```
+Device Detail은 Registry/State/History 오류를 나누고 값·단위·Quality·관측/수신 시각을 구분합니다. Registry 수정 시각을 Last Received로 대체하지 않습니다. Chart는 Gap을 연결하지 않고 다른 단위를 구분하며 읽을 수 있는 요약을 제공합니다. 계약에 없는 Delta를 만들지 않습니다.
 
-- 좌측 Navigation과 12-column Grid
-- KPI 최대 4개
-- 화면당 주요 Chart 2~3개 이하
-- Tablet에서는 KPI 2×2, Mobile에서는 조회 정보 우선
+Members는 read-only이고 권한이 없으면 메뉴를 숨기되 직접 접근 거부도 처리합니다. 수정/초대 기능을 추가하지 않습니다.
 
-## 7. Overview
+## 키보드·모바일
 
-### 목표
+주요 이동은 키보드로 가능하고 Focus가 보이며, 핵심 텍스트 대비를 확보합니다. Chart Summary와 상태의 Text/Icon을 제공합니다. Drawer는 Tab/Escape·닫힌 후 적절한 Focus 복원·배경 inert 해제를 처리합니다. Drawer가 열린 채 Desktop으로 전환되어도 숨은 Modal 잠금이 남지 않아야 합니다.
 
-10초 안에 현재 Site의 위험과 다음 이동을 결정합니다.
+페이지 이동과 단순 Query 변경을 구별하여 검색 중 Focus를 Heading으로 빼앗지 않습니다. 전체 Viewport/브라우저 행렬은 후속이며, 실제 구현한 중요한 Breakpoint 경계는 관련 회귀로 확인합니다.
 
-### 정보 우선순위
+## 후속 제어
 
-1. Critical·Stale·Partial Banner
-2. Device Status·Freshness
-3. Environment Trend
-4. Device Health
-5. 후속 Operational Widget
+Camera Connectivity/Preview/Control을 구분하고, 제어권 획득 전 PTZ를 허용하지 않습니다. 재연결 후 과거 입력을 재전송하지 않습니다. Stop 요청 실패와 장비 Timeout 한계를 정상 정지처럼 숨기지 않습니다.
 
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ Site · Last 24h                    LIVE · updated 2s ago      │
-├──────────────┬──────────────┬──────────────┬────────────────┤
-│ Devices      │ Active Alarm │ Commands     │ Data Freshness │
-├────────────────────────────────────┬─────────────────────────┤
-│ Environment Trend                  │ Current Conditions      │
-├────────────────────────────────────┼─────────────────────────┤
-│ Active Alarms                      │ Device Health           │
-├────────────────────────────────────┼─────────────────────────┤
-│ Recent Commands                    │ Primary Camera          │
-└────────────────────────────────────┴─────────────────────────┘
-```
+Command는 승인 대기, Dispatch, ACK, Reported State, Unknown을 다른 단계로 표시합니다. 실행 여부가 불확실한 명령을 성공으로 추정하지 않습니다.
 
-- Device Status와 Freshness에서 필터된 Device List로 이동
-- Device Health Row에서 Detail로 이동
-- Site 변경 전에 기존 실시간 연결 종료
-- M1에서 Alarm·Command·Camera는 Empty·Unavailable 상태만 표현하며 가짜 성공 데이터를 만들지 않음
+## 사용자 검증은 개선 입력
 
-## 8. Device List
+문제 식별 Median 10초, 근거 도달 30초, 상태 의미 이해 80%는 검증 전 가설입니다. 가능한 사용자에게 문제 찾기·상태와 Trend 읽기·Partial/Unknown 설명을 요청하고 관찰→작은 수정→관련 재검증을 남깁니다. 첫 UI Preview에 Proxy 3명이나 이 가설 수치 달성을 강제하지 않습니다.
 
-표시 항목:
+## Preview Gate
 
-- Name·External ID
-- Device Type
-- Site·Zone
-- Protocol
-- Connectivity
-- Readiness
-- Freshness
-- Latest Key Metric
-- Last Received
-- Active Alarm Count
+주요 Route와 실패 상태, 권한/Scope, 키보드/핵심 모바일, 실제 타입·빌드·핵심 테스트, development-only Fixture 표시가 필수입니다. 미세 여백·문구 취향·모든 Screenshot 조합 때문에 공개를 늦추지 않습니다. 실제 접근성과 기능 결함을 시각 취향으로 분류하지 않습니다.
 
-Filter:
-
-- Search, Device Type, Protocol, Connectivity, Readiness, Freshness, Zone
-
-규칙:
-
-- Filter를 URL Query에 반영
-- Filter 변경 시 Cursor 초기화
-- 전체 Empty와 Filter Empty 구분
-- Keyboard로 Row 접근 가능
-- Registry 수정 시각을 Last Received로 대체하지 않음
-
-## 9. Device Detail
-
-```text
-Header
-  Name · Protocol · Connectivity · Readiness · Freshness
-
-Latest Metrics
-  Value · Unit · Quality · Observed At
-
-Telemetry Trend
-  1h · 6h · 24h · 7d · Gap
-
-Connection Summary
-  Last Received · Reconnect · Reason
-
-State Metadata
-  Source · Version · Updated At
-```
-
-Registry, Latest State, History, Connection Health는 독립 Query와 오류 상태를 가집니다.
-
-Chart 원칙:
-
-- Gap을 선으로 연결하지 않음
-- 단위가 다른 Metric을 무리하게 같은 축에 표시하지 않음
-- Quality와 Timestamp 표시
-- 대용량은 Backend에서 Bucket 처리
-- 계약에 없는 Delta를 계산하지 않음
-
-## 10. Members & Access
-
-M1은 Name, Email, Role, Site Scope, Status, Last Login을 Read-only로 제공합니다. 조회 권한이 없으면 메뉴를 숨기며 접근 거절을 Empty List로 바꾸지 않습니다.
-
-## 11. Camera와 제어 UX
-
-- Camera Connectivity, Preview Health, Control Session을 분리
-- 제어권 획득 전 PTZ 비활성
-- 현재 제어자와 Lease 만료 표시
-- Preview 장애와 Camera Offline을 구분
-- Heartbeat 실패 시 제어 비활성
-- 입력 종료·화면 비활성화 시 Stop
-- 재연결 후 이전 이동 입력을 자동 재전송하지 않음
-
-## 12. Alarm·Incident·Command UX
-
-```text
-Alarm
-  → Device·Trend·Camera 근거
-  → Incident Workspace
-  → Command Request
-  → Approval
-  → Dispatch
-  → ACK·Reported State
-```
-
-| 상태 | 사용자 의미 |
-|---|---|
-| WAITING_APPROVAL | 아직 실행되지 않음 |
-| DISPATCHED | 장비로 전송됨 |
-| ACKNOWLEDGED | 장비가 수신 확인 |
-| SUCCEEDED | 실제 상태로 성공 확인 |
-| FAILED | 실패 확인 |
-| TIMED_OUT | 시간 내 결과 없음 |
-| UNKNOWN | 실행 여부 불확실 |
-
-`ACKNOWLEDGED`를 최종 성공으로 표시하지 않습니다.
-
-## 13. Realtime UX
-
-```text
-IDLE → CONNECTING → LIVE → RECONNECTING → STALE → DISCONNECTED
-                                      └→ SNAPSHOT_REQUIRED
-```
-
-- 연결 완료 전 LIVE 금지
-- Heartbeat는 연결 상태만 갱신
-- 낮거나 같은 Version Event 무시
-- 다른 Scope의 Event 무시
-- Snapshot 재동기화 실패 시 마지막 데이터를 Stale로 유지
-- Site 변경·Logout 시 기존 연결 종료
-
-## 14. Loading·Empty·Error·Partial
-
-- Loading은 Layout을 유지하는 Skeleton
-- Empty는 원래 데이터 없음, Filter 결과 없음, 후속 기능을 구분
-- 오류는 Stable Error Code를 기준으로 Retry·권한·Not Found를 구분
-- 한 Widget 오류로 전체 Page를 비우지 않음
-- Stale를 0이나 정상값으로 바꾸지 않음
-
-## 15. Prototype과 사용자 검증
-
-| 단계 | 산출물 | 검증 |
-|---|---|---|
-| Concept | 설명 이미지 | 제품 이해 |
-| Clickable Fixture | Next.js·Fixture | Navigation·상태·Task |
-| Remote Vertical Slice | 실제 REST·SSE | Contract·실시간 가치 |
-| Multi-Protocol | TCP·Polling·Camera | 차별화 |
-| Safe Operations | Alarm·Command | 안전한 조치 |
-
-1차 검증은 관제·시설·운영 Dashboard 경험자 2명과 비도메인 사용자 1명의 Proxy User Test로 진행합니다.
-
-주요 과업:
-
-1. 가장 먼저 확인할 문제 찾기
-2. 특정 Sensor 상태와 추세 판단
-3. 정상 정보와 실패 정보 구분
-4. LIVE·STALE·OFFLINE·UNKNOWN 설명
-5. Camera 제어권 충돌 대응
-6. Command의 실제 성공 여부 판단
-
-결과는 다음 순환으로 Git에 남깁니다.
-
-```text
-Observation
-  → Root Cause Hypothesis
-  → Smallest UX·API Change
-  → Prototype Revision
-  → Retest
-  → Accept / Revert / Defer
-```
-
-## 16. Prototype Release Gate
-
-- P0 Route 클릭 가능
-- Normal·Empty·Permission·Error·Partial·Stale·Reconnecting
-- Production Mock 비활성화
-- Proxy User 3명 검증
-- Critical Issue 0
-- 주요 변경을 PRD·UX·Git에 기록
+[PRD](PRD.ko.md) · [로드맵](ROADMAP.ko.md)

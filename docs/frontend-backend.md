@@ -1,137 +1,31 @@
 # Frontend·Backend 경계
 
-## 1. 기본 원칙
+설계 상태이며 실제 Remote 통합 완료를 의미하지 않습니다. 공개 예시는 활성 OpenAPI의 대체 명세가 아닙니다.
 
-Frontend와 Backend는 하나의 Product Repository에서 관리하되 Build Graph와 권위를 분리합니다.
+## 책임
 
-```text
-Java / Gradle
-  = Backend Runtime과 Module
+Java/Gradle과 Next.js/pnpm은 같은 Repository에서 독립 Build Graph로 관리합니다. Backend는 인증·Tenant/Site·Device 권한, 상태·Command·Audit를 소유하고 Frontend는 화면·입력·조회 Cache·오류 표현을 담당합니다. OpenAPI 생성 타입을 수동 복제하지 않습니다.
 
-Next.js / pnpm
-  = Web Console
+Browser는 PostgreSQL/Kafka/Redis/MQTT/장비 자격증명에 직접 접근하지 않습니다. REST/SSE는 same-origin API 경계, 실제 OIDC는 서버 소유 HttpOnly Session을 사용합니다. Access/Refresh Token을 Browser Storage에 두지 않습니다. 인증 Entry/Callback/Logout의 정확한 경로는 원격 계약에서 함께 고정합니다.
 
-OpenAPI / AsyncAPI / JSON Schema
-  = 공통 Contract
-```
+## Fixture에서 Remote로
 
-## 2. Frontend 책임
+같은 Page → Query Hook → API Adapter → Mapper/View를 쓰고 Transport만 바꿉니다. Remote 실패를 Fixture 성공으로 대체하지 않으며 production mock 차단을 유지합니다. 개발용 UI Preview 공개는 실제 Backend 제품 공개와 다릅니다.
 
-- App Router와 Navigation
-- Tenant·Site Context 표현
-- Dashboard와 Chart
-- Device·Camera·Alarm·Command 화면
-- Query Cache
-- Form과 사용자 확인
-- Loading·Empty·Permission·Partial·Stale·Reconnecting 상태
-- SSE·WebSocket Client
-- 접근성
-- OpenAPI Generated Type
+## Context와 Cache
 
-## 3. Backend 책임
+Tenant/Site는 Query Key뿐 아니라 실제 요청에도 전달·검증되어야 합니다. A/B 탭은 서로의 전역 Session Context를 바꾸지 않습니다. Query Key의 구체적 배열은 활성 query catalog가 정본이며 설명 문서에 별도 배열을 복제하지 않습니다.
 
-- 인증된 Session과 사용자 Scope
-- Tenant·Site·Resource Authorization
-- Device Registry와 상태
-- Rule·Alarm·Incident State
-- Command 상태 전이
-- Approval·Safety Validation
-- Idempotency
-- Event와 Projection
-- Audit
-- Stable Error Code
+같은 Scope의 이전 데이터는 표시 보조로 유지할 수 있지만 Placeholder를 Snapshot 성공으로 보지 않습니다. Scope 전환·401/403·권한 철회에는 이전 데이터가 노출되지 않아야 합니다. HTTP 오류는 `status`와 안정적인 `code`로 처리하고 `detail` 문자열을 파싱하지 않습니다.
 
-## 4. Browser 경계
+## Realtime
 
-Browser는 다음에 직접 접근하지 않습니다.
+연결 전후 Snapshot 인계, 제한된 버퍼, 동일 세대의 REST/SSE 버전 병합을 검증합니다. Native EventSource open만으로 최신 데이터 확보를 선언하지 않습니다. 초기 Lifecycle은 무효화 신호로 처리합니다. 실패 복구는 Stale/Retry이며 빈 성공으로 바꾸지 않습니다.
 
-- PostgreSQL
-- Kafka
-- Redis
-- MQTT Broker
-- ONVIF·RTSP Credential
-- Device 사설망 주소
+SSE의 실제 Payload를 읽을 권한과 열린 연결의 철회를 Backend가 검증합니다. 필터가 있는 목록은 이벤트에 따라 포함·페이지·total이 바뀌므로 안전한 범위를 넘는 Row Patch는 재조회로 대신합니다.
 
-Browser-facing 요청:
+## 검증 범위
 
-```text
-/api/v1/**
-/oauth2/**
-```
+UI Preview: 주요 Chromium 여정, Snapshot/실패/Scope/권한, Filter/Keyboard/Drawer, 타입·빌드·실제 API 생성 검사. 원격 제품: 같은 UI의 실제 인증·MQTT·REST/SSE 통합을 추가합니다. 전체 브라우저 행렬과 심화 부하는 후속이며 기존 핵심 실패를 삭제하거나 숨기지 않습니다.
 
-Remote 인증은 Server-owned HttpOnly Session을 사용합니다. Access Token과 Refresh Token을 Browser Storage에 보관하지 않습니다.
-
-## 5. Contract-first 병렬 개발
-
-```text
-PRD·UX
-  → OpenAPI·AsyncAPI·Fixture
-       ├─ Frontend: Fixture Transport로 실제 UI 개발
-       └─ Backend: 같은 Contract로 API 구현
-  → Remote Integration
-```
-
-Fixture는 버릴 Mock Application이 아니라 실제 Product UI의 개발·Test Transport입니다.
-
-```text
-Fixture Mode
-Page → Query Hook → API Adapter → Fixture Transport
-
-Remote Mode
-Page → 동일 Query Hook → 동일 API Adapter → Spring Boot
-```
-
-Remote 실패를 Fixture 성공으로 자동 전환하지 않습니다.
-
-## 6. Query Cache
-
-Tenant Query Key에는 `tenantId`, Site Query Key에는 `tenantId + siteId`를 포함합니다.
-
-```text
-["overview", tenantId, siteId, range]
-["devices", tenantId, siteId, filters, cursor]
-["device", tenantId, deviceId]
-["device-state", tenantId, deviceId]
-["device-series", tenantId, deviceId, range, metrics]
-["members", tenantId, filters, cursor]
-```
-
-## 7. Realtime
-
-Snapshot은 REST, Incremental Update는 SSE를 사용합니다.
-
-```text
-incoming.version <= cached.version
-  → 무시
-
-snapshot-required
-  → Incremental 적용 중지
-  → REST 재조회
-  → 성공 후 Resume
-```
-
-SSE 연결 상태와 Device Data Freshness를 별도로 관리합니다.
-
-PTZ 제어는 WebSocket을 사용하며 Session·Lease·Fencing·Sequence는 Backend가 검증합니다.
-
-## 8. Error와 Permission
-
-Frontend는 HTTP Status와 Stable `errorCode`를 기준으로 동작합니다.
-
-- 401: 로그인
-- 403: Permission State
-- 404: Not Found 또는 Scope 보호
-- 409: State·Version·Ownership Conflict
-- 422: Capability·Readiness·Safety Validation
-- 429: Rate Limit
-- 503: Dependency Unavailable
-
-Error를 빈 성공 데이터로 변환하지 않습니다.
-
-## 9. 완료 조건
-
-- OpenAPI Type을 수동으로 중복 정의하지 않음
-- Fixture와 Remote가 동일 View Model·Component 사용
-- Cross-tenant Cache 혼합 없음
-- Production Fixture Fallback 없음
-- 중요 상태의 Unit·Component·E2E Test
+[PRD](product/PRD.ko.md) · [아키텍처](architecture.md)

@@ -1,48 +1,23 @@
 # PRD 변경 이력
 
-## 관리 원칙
+현재 정본은 [PRD.ko.md](PRD.ko.md) 하나입니다. 과거 내용은 Git Commit/PR로 확인합니다. 문구 수정은 Patch, Scope·Priority·Gate 변경은 Minor, 제품 전제의 변경은 별도 주요 버전으로 기록합니다. PRD 문서 버전과 실행 제품 Tag는 구별합니다.
 
-현재 유효한 PRD는 [`PRD.ko.md`](PRD.ko.md) 하나입니다. 과거 내용은 Git Commit과 Pull Request에서 확인합니다.
-
-### 버전 규칙
-
-| 변경 | 버전 |
-|---|---|
-| 문구·명확화·오탈자·비기능 설명 | Patch |
-| 사용자·Scope·Journey·Metric·Priority 변경 | Minor |
-| Product Thesis·Core Release Goal 변경 | Major |
-
-### PRD 변경 Pull Request 필수 내용
-
-- 변경하려는 사용자 문제
-- 근거 또는 관찰
-- 변경 전·후
-- UX·API·Architecture·일정 영향
-- 검증 방법
-- 수용한 대가 또는 Rollback
-
-## 0.6.0 — 2026-09-04
-
-### Added
-
-- 한국어 PRD 정본
-- Site Operator, Command Approver, Tenant Admin, Integration Developer
-- JTBD와 제품 가설
-- P0·P1·P2·P3 우선순위
-- 사용자·기술·AI 활용 Product Building 지표
-- Interactive Prototype·Remote M1·Portfolio Core Release Gate
+## 0.7.0 — 2026-09-05
 
 ### Changed
 
-- AI를 활용한 제품 개발 과정을 P0으로 정의
-- 제품 내부 AI Recommendation과 Billing은 P3로 이동
-- 전체 상세 설계를 끝낸 뒤 일괄 구현하는 방식에서 Vertical Slice별 Prototype·검증·Contract·Build 방식으로 변경
-- Concept Image를 구현 완료 화면과 명확히 구분
-- 외부 제품·PRD·UX 문서의 기본 언어를 한국어로 전환
+- 개인 백엔드 포트폴리오의 작은 완성본을 우선하도록 UI Preview → 실제 관측 → 장비·제어 증분으로 출시 기준 분리.
+- P0+P1 일괄 완성, Proxy 사용자 3명, 모든 브라우저/Viewport·미세 시각 검수를 첫 공개의 필수 조건에서 제외.
+- 실제 원격 인증·Scope는 관측 버전 필수로 명확화. 고급 관측성·HA·AI·과금은 선택/후속 유지.
+- Context 전달, REST/SSE 병합·인계, 상태 세대, 단일 서버·유지보수 복구라는 제한된 설계 방향을 공개 아키텍처에 명시. 구현 완료로 주장하지 않음.
+- README는 Engineering Decision과 단계별 실행 결과를 앞에 두고 중복 기능 목록·상태 설명을 정리. 기존 Concept 이미지 세 장 유지.
+- 임의 진척률과 문서 완료=제품 완료 해석 제거. 실제 공개 상태는 별도 원장에서 관리.
+- README 이미지 경로와 검증 스크립트의 오래된 필수 경로를 정합화.
 
-## 다음 변경 후보
+### 검증과 대가
 
-- 1차 Prototype 사용자 검증 결과
-- Overview 정보 계층과 상태 문구
-- M2 Camera·PTZ Contract Review
-- M3 Alarm·Command 상태와 승인 정책
+문서·기밀·링크/이미지 참조를 검증하며 제품 테스트를 실행한 것으로 쓰지 않습니다. 초기 지원 환경·기능은 좁지만 완료된 결과를 먼저 공개하고 다음 버전에서 넓힙니다. 핵심 권한·정합성·사용성·제어 안전 기준은 유지합니다.
+
+## 0.6.0 — 2026-09-04
+
+한국어 PRD, 사용자/JTBD/제품 가설, P0~P3, UX/개발 지표, Prototype·Remote·Portfolio Gate를 추가했습니다. 제품 내부 AI/Billing은 후순위화하고 Contract 기반 병렬 구현을 정리했습니다. Concept과 실제 화면을 구분했습니다. 이 버전의 일괄 공개·고정 사용자 수 조건은 0.7.0에서 위와 같이 대체합니다.
