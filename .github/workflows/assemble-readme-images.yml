@@ -5,8 +5,7 @@ on:
     branches:
       - docs/use-attached-png-visuals
     paths:
-      - '.tmp/readme-images-v2/**'
-      - '.github/workflows/assemble-readme-images.yml'
+      - '.tmp/readme-images-v2/READY'
 
 permissions:
   contents: write
@@ -23,11 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ ! -d .tmp/readme-images-v2 ]; then
-            echo 'No staging chunks; nothing to assemble.'
-            exit 0
-          fi
-
+          test -f .tmp/readme-images-v2/READY
           mkdir -p docs/assets
           cat .tmp/readme-images-v2/hero.*.b64 | tr -d '\n\r' | base64 -d > docs/assets/product-vision-hero.jpg
           cat .tmp/readme-images-v2/cap.*.b64 | tr -d '\n\r' | base64 -d > docs/assets/capability-overview-concept.jpg
@@ -39,7 +34,6 @@ jobs:
 
           python - <<'PY'
           from PIL import Image
-          from pathlib import Path
           expected = {
               'docs/assets/product-vision-hero.jpg': (900, 507),
               'docs/assets/capability-overview-concept.jpg': (900, 507),
@@ -58,7 +52,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ ! -d .tmp/readme-images-v2 ]; then exit 0; fi
           python - <<'PY'
           from pathlib import Path
           p = Path('README.md')
@@ -80,12 +73,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
-            echo 'No generated changes.'
-            exit 0
-          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add README.md docs/assets .tmp/readme-images-v2 || true
+          git add -A README.md docs/assets .tmp/readme-images-v2
           git commit -m 'docs: apply attached concept visuals to README'
           git push
