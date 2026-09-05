@@ -1,0 +1,91 @@
+name: Assemble README images
+
+on:
+  push:
+    branches:
+      - docs/use-attached-png-visuals
+    paths:
+      - '.tmp/readme-images-v2/**'
+      - '.github/workflows/assemble-readme-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assemble and validate images
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -d .tmp/readme-images-v2 ]; then
+            echo 'No staging chunks; nothing to assemble.'
+            exit 0
+          fi
+
+          mkdir -p docs/assets
+          cat .tmp/readme-images-v2/hero.*.b64 | tr -d '\n\r' | base64 -d > docs/assets/product-vision-hero.jpg
+          cat .tmp/readme-images-v2/cap.*.b64 | tr -d '\n\r' | base64 -d > docs/assets/capability-overview-concept.jpg
+          cat .tmp/readme-images-v2/screen.*.b64 | tr -d '\n\r' | base64 -d > docs/assets/screen-concept.jpg
+
+          file docs/assets/product-vision-hero.jpg
+          file docs/assets/capability-overview-concept.jpg
+          file docs/assets/screen-concept.jpg
+
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          expected = {
+              'docs/assets/product-vision-hero.jpg': (900, 507),
+              'docs/assets/capability-overview-concept.jpg': (900, 507),
+              'docs/assets/screen-concept.jpg': (900, 507),
+          }
+          for path, size in expected.items():
+              with Image.open(path) as im:
+                  im.verify()
+              with Image.open(path) as im:
+                  assert im.format == 'JPEG', (path, im.format)
+                  assert im.size == size, (path, im.size)
+                  print(path, im.format, im.size)
+          PY
+
+      - name: Update README references and clean legacy visuals
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -d .tmp/readme-images-v2 ]; then exit 0; fi
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('README.md')
+          s = p.read_text()
+          s = s.replace('docs/assets/product-vision-hero.svg', 'docs/assets/product-vision-hero.jpg')
+          s = s.replace('docs/assets/capability-overview-concept.svg', 'docs/assets/capability-overview-concept.jpg')
+          s = s.replace('docs/assets/screen-concept.svg', 'docs/assets/screen-concept.jpg')
+          p.write_text(s)
+
+          p = Path('docs/assets/README.md')
+          p.write_text('''# README 시각 자료\n\n이 디렉터리의 이미지는 FieldOps Control Plane의 제품 방향과 기능 범위를 설명하기 위한 콘셉트 이미지입니다. 실제 구현 완료 화면이나 실측 운영 데이터를 의미하지 않습니다.\n\n- `product-vision-hero.jpg` — 제품 전체 비전과 현장 장비·운영 콘솔 연결\n- `capability-overview-concept.jpg` — 장비 연동, 실시간 상태, 대시보드, 이상 감지, 제어 흐름\n- `screen-concept.jpg` — Overview, Device Detail, Camera·Command 화면 구성\n\n## 사용 원칙\n\n- README에서 콘셉트 이미지임을 명확히 표시\n- 실제 회사·고객·운영 데이터와 자격 증명은 사용하지 않음\n- 구현이 완료된 화면은 검증된 마일스톤부터 실제 스크린샷으로 교체\n- README용 이미지는 원본 구도와 내용을 유지하면서 표시 성능을 위해 최적화\n''')
+          PY
+
+          rm -f docs/assets/product-vision-hero.svg docs/assets/capability-overview-concept.svg docs/assets/screen-concept.svg
+          rm -f docs/assets/product-vision-hero.webp docs/assets/capability-overview-concept.webp docs/assets/screen-concept.webp
+          rm -rf .tmp/readme-images-v2
+
+      - name: Commit generated assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo 'No generated changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md docs/assets .tmp/readme-images-v2 || true
+          git commit -m 'docs: apply attached concept visuals to README'
+          git push
