@@ -1,0 +1,80 @@
+name: Assemble attached README images
+
+on:
+  push:
+    branches:
+      - docs/use-attached-images-final
+    paths:
+      - '.tmp/readme-images/READY'
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: docs/use-attached-images-final
+          fetch-depth: 0
+
+      - name: Assemble and verify image files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/assets
+
+          cat .tmp/readme-images/hero.*.b64 | base64 --decode > docs/assets/product-vision-hero.webp
+          cat .tmp/readme-images/cap.*.b64 | base64 --decode > docs/assets/capability-overview.webp
+          cat .tmp/readme-images/screen.*.b64 | base64 --decode > docs/assets/screen-overview.webp
+
+          test "$(stat -c%s docs/assets/product-vision-hero.webp)" = "19812"
+          test "$(stat -c%s docs/assets/capability-overview.webp)" = "22774"
+          test "$(stat -c%s docs/assets/screen-overview.webp)" = "16568"
+
+          echo '34c257786a8b0401cf57647a893784ca363150fadc27a85ca12d8b7ddb777c53  docs/assets/product-vision-hero.webp' | sha256sum -c -
+          echo 'b20db0e09a4259f52967251ba11f8747946e7d52a4ff8b6bfdf35024441e11c1  docs/assets/capability-overview.webp' | sha256sum -c -
+          echo '449104e9621f0539eba37c9420bbddce863e99f56ab52e66ba87e76bb9a36abf  docs/assets/screen-overview.webp' | sha256sum -c -
+
+          file docs/assets/product-vision-hero.webp
+          file docs/assets/capability-overview.webp
+          file docs/assets/screen-overview.webp
+
+      - name: Update README references
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's#docs/assets/product-vision-hero\.svg#docs/assets/product-vision-hero.webp#g' README.md
+          sed -i 's#docs/assets/capability-overview-concept\.svg#docs/assets/capability-overview.webp#g' README.md
+          sed -i 's#docs/assets/screen-concept\.svg#docs/assets/screen-overview.webp#g' README.md
+
+          cat > docs/assets/README.md <<'EOF'
+          # README 이미지
+
+          이 디렉터리의 이미지는 FieldOps Control Plane의 제품 방향과 기능 범위를 설명하기 위한 콘셉트 이미지입니다.
+
+          - `product-vision-hero.webp` — 제품 전체 흐름을 보여주는 README Hero
+          - `capability-overview.webp` — 장비 연동·실시간 상태·알람·안전 제어 기능 개요
+          - `screen-overview.webp` — Overview·Device Detail·Camera·Command 화면 구성
+
+          세 이미지는 README용으로만 해상도와 용량을 최적화했으며, 원본 구도와 내용은 유지합니다. 실제 구현 화면이나 실측 결과로 표현하지 않습니다.
+          EOF
+
+      - name: Remove temporary transport files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .tmp/readme-images
+          rm -f .github/workflows/assemble-attached-images.yml
+
+      - name: Commit assembled assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs: use provided concept images in README'
+          git push origin HEAD:docs/use-attached-images-final
