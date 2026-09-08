@@ -34,6 +34,7 @@ REQUIRED = [
     "docs/product/AI_PRODUCT_BUILDING.ko.md", "docs/product/PRD_CHANGELOG.ko.md",
     "docs/assets/README.md", "docs/runnable-snapshot.md", "docs/LOCAL_OBSERVE_QUICKSTART.md",
     "contracts/README.md", "infra/README.md", "scripts/b02_observe.py",
+    "tests/repository-tests/test_b02_observe.py",
     "infra/compose/compose.yml", "infra/b02/compose.override.yml",
     "apps/fieldops-server/build.gradle.kts", "apps/device-gateway/build.gradle.kts",
     "apps/fieldops-worker/build.gradle.kts", "apps/simulator/build.gradle.kts",

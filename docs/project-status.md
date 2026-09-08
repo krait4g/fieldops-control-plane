@@ -13,8 +13,8 @@
 | MQTT/History/Redis/REST/SSE 통합 | Synthetic 데이터로 Local End-to-End 검증 완료 |
 | UI | Overview, 장비 목록·상세·차트, 구성원 조회, Desktop/Mobile 구현 완료 |
 | 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
-| Public 실행 소스 | Local Observe 최소 실행 폐쇄와 Quick Start Draft PR 후보. master 미공개 |
-| Public runnable validation | Ubuntu smoke `FAIL / SOURCE_FIX_REQUIRED`; Windows fresh clone `NOT_RUN` |
+| Public 실행 소스 | Local Observe 최소 실행 폐쇄와 Quick Start 공개 완료 |
+| Public runnable validation | 동일 Public head에서 Ubuntu smoke와 Windows fresh-clone Browser journey `PASS` |
 | 장비 제어·Camera·AI·과금 | 후속 또는 선택 범위 |
 | 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
 | Public Release | NOT_RELEASED. Local Preview와 별도 Release Gate 유지 |
@@ -58,7 +58,7 @@ Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이�
 
 1. **현재 구현 상태 공개** — 이 문서와 README에서 Local Observe Preview의 실제 구현 범위를 공개
 2. **최종 UI 캡처 공개 — 완료** — 한국어 기본 UI의 Overview / Devices / Device Detail / Members Mobile 실제 Remote Screenshot 공개
-3. **Quick Start + 선별 실행 소스 공개 — BLOCKED** — 후보와 CI는 구성했지만 Ubuntu의 Web process liveness 판정 source fix와 Windows fresh-clone 수용이 남음
+3. **Quick Start + 선별 실행 소스 공개 — 완료** — stable process identity fix와 Ubuntu/Windows 동일-head 수용을 거쳐 master에 반영
 4. **다음 제품 Slice 공개** — TCP/Polling, Camera/Control 등은 각각 검증된 Vertical Slice 단위로 추가
 5. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
@@ -80,7 +80,7 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 실제 Keycloak OIDC와 서버 Session, Synthetic MQTT → Kafka → PostgreSQL/Redis → REST/SSE → 운영 화면을 연결했습니다. 권한 격리, 상태 후퇴 방지, 중복·역순, Redis 장애 fallback 등 첫 제품 Slice의 핵심 실패 경계를 검증했습니다.
 
-공개 후보의 실행 소스와 Quick Start는 localhost-only Synthetic Portfolio Preview 범위입니다. 아직 master에 병합하지 않았으며 전체 제품이나 Production Release를 의미하지 않습니다.
+공개한 실행 소스와 Quick Start는 localhost-only Synthetic Portfolio Preview 범위입니다. 전체 제품이나 Production Release를 의미하지 않습니다.
 
 ## Release와 구별
 
@@ -94,6 +94,6 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 ## 공개 근거
 
-이 Snapshot 후보의 공개 baseline과 Java/Web/계약 build는 통과했습니다. Ubuntu Local Observe smoke는 Linux에서 Next.js process title이 바뀐 뒤 Web process 소유권을 확인하지 못해 `FAIL / SOURCE_FIX_REQUIRED`이며, Windows fresh-clone Browser 여정은 `NOT_RUN`입니다. Build 검사를 실행 제품 검증으로 과장하지 않습니다. Container image vulnerability review는 여전히 Release blocker입니다.
+같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu `up/status/demo/verify/down`, Windows fresh-clone `up/status/demo/verify/down`과 실제 Browser Login / Overview / Device Detail을 통과했습니다. Windows에서는 다른 프로세스가 소유한 기본 Keycloak port를 건드리지 않고 명시적 `B02_KEYCLOAK_PORT=28083`을 사용했습니다. Container image vulnerability review는 여전히 Release blocker입니다.
 
 [README](../README.md) · [Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)

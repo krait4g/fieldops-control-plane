@@ -72,7 +72,9 @@ jobs:
         run: pnpm contract:test
 
       - name: Verify public repository baseline
-        run: python scripts/verify_repository_baseline.py
+        run: |
+          python scripts/verify_repository_baseline.py
+          python tests/repository-tests/test_b02_observe.py
 
   local-observe-smoke:
     name: Ubuntu Local Observe smoke
@@ -108,6 +110,9 @@ jobs:
 
       - name: Show Docker Compose version
         run: docker compose version
+
+      - name: Verify B02 process ownership regression
+        run: python tests/repository-tests/test_b02_observe.py
 
       - name: Start Local Observe
         run: python3 scripts/b02_observe.py up

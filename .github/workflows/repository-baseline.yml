@@ -18,4 +18,6 @@ jobs:
         with:
           python-version: "3.13"
       - name: Verify repository baseline
-        run: python scripts/verify_repository_baseline.py
+        run: |
+          python scripts/verify_repository_baseline.py
+          python tests/repository-tests/test_b02_observe.py

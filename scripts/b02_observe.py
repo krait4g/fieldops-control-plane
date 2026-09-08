@@ -25,11 +25,12 @@ LOGS = RUNTIME / "logs"
 MANIFEST = RUNTIME / "run-manifest.json"
 PROJECT = os.environ.get("FIELDOPS_B02_PROJECT", "fieldops-b02")
 COMPOSE_FILES = [ROOT / "infra/compose/compose.yml", ROOT / "infra/b02/compose.override.yml"]
+DEFAULT_KEYCLOAK_PORT = 28080
 PORTS = {
     "web": 3000,
     "gateway": 28081,
     "server": 28082,
-    "keycloak": 28080,
+    "keycloak": DEFAULT_KEYCLOAK_PORT,
     "mqtt": 21883,
     "postgres": 25432,
     "redis": 26379,
@@ -49,6 +50,18 @@ class B02Error(RuntimeError):
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def resolve_keycloak_port(raw: str | None) -> int:
+    if raw is None:
+        return DEFAULT_KEYCLOAK_PORT
+    try:
+        port = int(raw)
+    except ValueError as error:
+        raise B02Error("B02_KEYCLOAK_PORT must be an integer from 1 to 65535") from error
+    if not 1 <= port <= 65535:
+        raise B02Error("B02_KEYCLOAK_PORT must be an integer from 1 to 65535")
+    return port
 
 
 def executable(name: str) -> str:
@@ -104,6 +117,7 @@ def ensure_runtime() -> dict[str, str]:
         raise B02Error(
             "FIELDOPS_B02_PROJECT must be fieldops-b02 or a fieldops-b02-<lowercase-suffix> name"
         )
+    PORTS["keycloak"] = resolve_keycloak_port(os.environ.get("B02_KEYCLOAK_PORT"))
     RUNTIME.mkdir(exist_ok=True)
     LOGS.mkdir(exist_ok=True)
 
@@ -256,7 +270,17 @@ def start_process(name: str, command: list[str], token: str,
         kwargs["start_new_session"] = True
     process = subprocess.Popen(command, **kwargs)
     log_handle.close()
-    return process, {"pid": process.pid, "token": token,
+    try:
+        identity = process_identity(process.pid)
+    except Exception:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+        raise
+    return process, {"pid": process.pid, "identity": identity, "token": token,
                      "log": str(log_path.relative_to(ROOT)), "startedAt": now()}
 
 
@@ -268,12 +292,40 @@ def process_command(pid: int) -> str:
     return path.read_bytes().replace(b"\0", b" ").decode("utf-8", "replace") if path.exists() else ""
 
 
+def parse_linux_start_ticks(stat: str) -> str:
+    closing_parenthesis = stat.rfind(")")
+    if closing_parenthesis < 0:
+        raise B02Error("invalid /proc process stat: missing command terminator")
+    fields = stat[closing_parenthesis + 1:].strip().split()
+    if len(fields) <= 19 or not fields[19].isdigit():
+        raise B02Error("invalid /proc process stat: missing start-time ticks")
+    return fields[19]
+
+
+def process_identity(pid: int) -> str:
+    if os.name == "nt":
+        script = (
+            f'$process = Get-CimInstance Win32_Process -Filter "ProcessId={pid}"; '
+            "if ($null -ne $process) { "
+            "$process.CreationDate.ToUniversalTime().ToString('o') }"
+        )
+        created_at = run(
+            ["powershell", "-NoProfile", "-Command", script], capture=True, timeout=15
+        )
+        if not created_at:
+            raise B02Error(f"process {pid} does not exist or has no CreationDate")
+        return f"windows-created:{created_at}"
+    stat_path = Path(f"/proc/{pid}/stat")
+    start_ticks = parse_linux_start_ticks(stat_path.read_text(encoding="utf-8"))
+    return f"linux-startticks:{start_ticks}"
+
+
 def process_alive(record: dict[str, Any]) -> bool:
     try:
-        command = process_command(int(record["pid"]))
-        normalized_command = command.replace("\\", "/").lower()
-        normalized_token = str(record["token"]).replace("\\", "/").lower()
-        return bool(command) and normalized_token in normalized_command
+        recorded_identity = record.get("identity")
+        if not isinstance(recorded_identity, str) or not recorded_identity:
+            return False
+        return process_identity(int(record["pid"])) == recorded_identity
     except (B02Error, OSError, ValueError, KeyError):
         return False
 
@@ -319,6 +371,11 @@ def create_topics(env: dict[str, str]) -> None:
 def action_up(_: argparse.Namespace) -> None:
     env = ensure_runtime()
     existing = load_manifest()
+    if existing.get("status") == "running" and existing.get("schemaVersion") != 2:
+        raise B02Error(
+            "legacy running manifest cannot prove process ownership; stop its processes manually "
+            "before starting a fresh B02 run"
+        )
     if existing.get("status") == "running" and all(
             process_alive(record) for record in existing.get("processes", {}).values()):
         print("B02 is already running; no duplicate processes were started.")
@@ -330,7 +387,7 @@ def action_up(_: argparse.Namespace) -> None:
     build_artifacts(env)
 
     manifest: dict[str, Any] = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "project": PROJECT,
         "sourceHead": source_head(),
         "startedAt": now(),
@@ -487,7 +544,7 @@ def action_down(_: argparse.Namespace) -> None:
         manifest["stoppedAt"] = now()
         manifest["volumesPreserved"] = True
         write_manifest(manifest)
-    print("B02 processes and project containers stopped; named volumes were preserved.")
+    print("Owned B02 processes and project containers stopped; named volumes were preserved.")
 
 
 def parser() -> argparse.ArgumentParser:

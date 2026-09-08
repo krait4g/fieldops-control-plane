@@ -7,9 +7,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)](#기술-구성)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**v0.2 Local Observe Preview의 선별 실행 소스와 Quick Start 공개 후보를 구성했습니다.** Synthetic MQTT 이벤트가 Java Gateway와 Kafka를 거쳐 PostgreSQL History·Redis Latest State에 반영되고, Keycloak OIDC 기반 Session과 Tenant/Site 권한을 통해 REST/SSE 운영 화면까지 연결됩니다.
+**v0.2 Local Observe Preview의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 이벤트가 Java Gateway와 Kafka를 거쳐 PostgreSQL History·Redis Latest State에 반영되고, Keycloak OIDC 기반 Session과 Tenant/Site 권한을 통해 REST/SSE 운영 화면까지 연결됩니다.
 
-이 Public Repository는 채용·리뷰를 위한 **curated snapshot**입니다. 현재 master에는 제품·아키텍처 문서와 실제 UI 캡처가 공개되어 있으며, localhost-only Synthetic 실행 경로는 Windows/Ubuntu 수용 Gate를 통과한 뒤 공개합니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
+이 Public Repository는 채용·리뷰를 위한 **curated snapshot**입니다. 현재 master에는 제품·아키텍처 문서, 실제 UI 캡처, localhost-only Synthetic 실행 경로가 공개되어 있습니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
 
 ## 실제 구현 화면
 
@@ -58,7 +58,7 @@ Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니�
 | 영역 | 현재 구현·검증 상태 | Public 동기화 |
 |---|---|---|
 | UI Preview | Login, Overview, 장비 목록·상세·차트, 구성원 조회, Error/Stale/Reconnecting, Desktop/Mobile | 실제 한국어 UI 캡처 공개 완료 |
-| Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 선별 실행 소스·Quick Start 공개 후보, 수용 Gate 진행 중 |
+| Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 선별 실행 소스·Quick Start 공개 완료 |
 | 인증·권한 | Keycloak Authorization Code + PKCE, 서버 Session, Tenant/Site/Device Scope | 설계·검증 결과 우선 공개 |
 | 정합성 | 중복·역순 처리, DB Commit 이후 Kafka ACK, Redis 장애 시 History 지속 + DB Snapshot/Stale fallback | Evidence 요약부터 공개 |
 | 계약·검증 | OpenAPI/AsyncAPI/JSON Schema, Testcontainers, Clean-clone Drill, GitHub Actions | 문서와 공개 Gate 순차 동기화 |
