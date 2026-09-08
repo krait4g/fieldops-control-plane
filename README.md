@@ -137,7 +137,7 @@ flowchart LR
   <img src="docs/assets/screen-overview.webp" alt="Overview와 장비 상세의 목표 화면을 나타낸 콘셉트 이미지" width="100%">
 </p>
 
-> 위 세 장은 아직 **콘셉트 이미지**입니다. 실제 Local Observe 화면은 최종 UI 시각 검토 후 Public Repository에 별도 캡처로 추가합니다.
+> 위 세 장은 아직 **콘셉트 이미지**이며 **구현 완료 스크린샷**이 아닙니다. 실제 Local Observe 화면은 최종 UI 시각 검토 후 Public Repository에 별도 캡처로 추가합니다.
 
 ## 기술 구성
 
