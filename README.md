@@ -39,7 +39,7 @@
 
 ## 로컬에서 실행하기
 
-Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니다. Clone한 뒤 `corepack enable`을 실행하고 Windows에서는 `py -3 scripts/b02_observe.py up`, Linux에서는 `python3 scripts/b02_observe.py up`으로 시작합니다. 이어서 `status`, `demo --device all --scenario portfolio`, `verify`를 실행하고 <http://localhost:3000/login>에서 생성된 Synthetic Credential로 확인합니다. 작업이 끝나면 반드시 `down`을 실행하세요.
+Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니다. Clone한 뒤 `pnpm --version`으로 준비 상태를 확인하고 Windows에서는 `py -3 scripts/b02_observe.py up`, Linux에서는 `python3 scripts/b02_observe.py up`으로 시작합니다. 이어서 `status`, `demo --device all --scenario portfolio`, `verify`를 실행하고 <http://localhost:3000/login>에서 생성된 Synthetic Credential로 확인합니다. 작업이 끝나면 반드시 `down`을 실행하세요.
 
 [전체 명령과 Browser 확인 절차](docs/LOCAL_OBSERVE_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
 

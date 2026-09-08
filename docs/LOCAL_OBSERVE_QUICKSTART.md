@@ -9,7 +9,7 @@
 - Git
 - Docker Engine 또는 Docker Desktop과 Compose v2
 - JDK 21
-- Node.js 24와 Corepack
+- Node.js 24와 pnpm 11.25.0(Corepack 또는 독립 설치)
 - Python 3.13
 
 Windows 수용 환경에서는 Git 2.45.1, Docker Engine 29.7.2, Docker Compose 5.5.0, Node.js 24.12.0, pnpm 11.25.0, Python 3.13.0으로 검증합니다. Ubuntu는 GitHub-hosted runner에서 JDK 21, Node.js 24, pnpm 11.25.0, Python 3.13과 runner 제공 Docker Compose로 검증합니다. macOS는 직접 검증하지 않았습니다(`NOT_RUN`).
@@ -22,7 +22,7 @@ Docker Desktop이 실행 중인지 먼저 확인하세요. 아래 기본 port `3
 git clone https://github.com/krait4g/fieldops-control-plane.git
 cd fieldops-control-plane
 
-corepack enable
+pnpm --version
 
 py -3 scripts/b02_observe.py up
 py -3 scripts/b02_observe.py status
@@ -38,7 +38,7 @@ py -3 scripts/b02_observe.py verify
 git clone https://github.com/krait4g/fieldops-control-plane.git
 cd fieldops-control-plane
 
-corepack enable
+pnpm --version
 
 python3 scripts/b02_observe.py up
 python3 scripts/b02_observe.py status
