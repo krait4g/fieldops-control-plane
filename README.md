@@ -9,7 +9,37 @@
 
 **현재 Private Workbench에서는 v0.2 Local Observe Preview까지 구현·검증했습니다.** Synthetic MQTT 이벤트가 Java Gateway와 Kafka를 거쳐 PostgreSQL History·Redis Latest State에 반영되고, Keycloak OIDC 기반 Session과 Tenant/Site 권한을 통해 REST/SSE 운영 화면까지 연결됩니다.
 
-이 Public Repository는 채용·리뷰를 위한 **curated snapshot**으로 단계적으로 동기화하고 있습니다. 현재는 제품·아키텍처 문서와 검증된 구현 현황을 공개하며, 실제 실행 소스·최종 스크린샷은 공개 전 검증을 통과한 작은 단위부터 추가합니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
+이 Public Repository는 채용·리뷰를 위한 **curated snapshot**으로 단계적으로 동기화하고 있습니다. 현재는 제품·아키텍처 문서, 검증된 구현 현황, 실제 UI 캡처를 공개하며 실행 소스와 Quick Start는 별도 검증을 통과한 다음 작은 단위에서 추가합니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
+
+## 실제 구현 화면
+
+아래 화면은 콘셉트 이미지가 아니라 Synthetic MQTT 이벤트를 실제 Local Observe 경로로 흘려 생성한 **구현 완료 스크린샷**입니다.
+
+`Simulator → MQTT → Gateway → Kafka → PostgreSQL/Redis → REST/SSE → Web Console`
+
+한국어를 기본 UI로 제공하고 English 전환을 지원합니다. 화면의 데이터는 포트폴리오 검토용 Synthetic 시나리오이며 실제 고객 데이터나 Production 운영 결과가 아닙니다.
+
+### Overview
+
+<p align="center">
+  <img src="docs/assets/implementation/local-observe-overview-ko.png" alt="FieldOps Local Observe 실제 구현 Overview 화면" width="100%">
+</p>
+
+### Device Detail
+
+<p align="center">
+  <img src="docs/assets/implementation/local-observe-device-detail-ko.png" alt="FieldOps Local Observe 실제 구현 장비 상세 화면" width="100%">
+</p>
+
+### 보조 화면
+
+| Devices | Members Mobile |
+|---|---|
+| <img src="docs/assets/implementation/local-observe-devices-ko.png" alt="FieldOps Local Observe 실제 구현 장비 목록 화면"> | <img src="docs/assets/implementation/local-observe-members-mobile-ko.png" alt="FieldOps Local Observe 실제 구현 모바일 구성원 화면"> |
+
+## 제품 비전 — 콘셉트 이미지
+
+아래 이미지는 후속 기능까지 포함한 제품 방향의 **콘셉트 이미지**이며, 위의 구현 완료 스크린샷과 구분합니다.
 
 <p align="center">
   <img src="docs/assets/product-vision-hero.webp" alt="FieldOps 목표 제품 경험을 나타낸 콘셉트 이미지" width="100%">
@@ -21,12 +51,12 @@
 
 | 영역 | 현재 구현·검증 상태 | Public 동기화 |
 |---|---|---|
-| UI Preview | Login, Overview, 장비 목록·상세·차트, 구성원 조회, Error/Stale/Reconnecting, Desktop/Mobile | 최종 한국어 UI 캡처 동기화 준비 중 |
-| Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 실행 소스 선별 공개 준비 중 |
+| UI Preview | Login, Overview, 장비 목록·상세·차트, 구성원 조회, Error/Stale/Reconnecting, Desktop/Mobile | 실제 한국어 UI 캡처 공개 완료 |
+| Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | UI 캡처 공개 완료, 실행 소스 선별 공개 준비 중 |
 | 인증·권한 | Keycloak Authorization Code + PKCE, 서버 Session, Tenant/Site/Device Scope | 설계·검증 결과 우선 공개 |
 | 정합성 | 중복·역순 처리, DB Commit 이후 Kafka ACK, Redis 장애 시 History 지속 + DB Snapshot/Stale fallback | Evidence 요약부터 공개 |
 | 계약·검증 | OpenAPI/AsyncAPI/JSON Schema, Testcontainers, Clean-clone Drill, GitHub Actions | 문서와 공개 Gate 순차 동기화 |
-| Portfolio UI | 한국어 기본 + English 전환, locale-aware formatting, 모바일 구성원 Card | 최종 시각 검토 후 캡처 공개 예정 |
+| Portfolio UI | 한국어 기본 + English 전환, locale-aware formatting, Desktop/Mobile polish | 실제 Remote 캡처 4장 공개 완료 |
 
 현재 실제 관측 흐름은 다음과 같습니다.
 
@@ -126,8 +156,8 @@ flowchart LR
 
 | 단계 | 현재 상태 | 사용자에게 보여줄 결과 | 이번 단계에서 하지 않는 것 |
 |---|---|---|---|
-| v0.1 UI Preview | **구현·검증 완료 / Public 동기화 중** | Fixture Login, Overview, 장비 목록·상세·차트, 회원 조회, 실패·재연결 표현 | 실제 Backend 연동을 Fixture 검증으로 대체하지 않음 |
-| v0.2 실제 관측 | **Local Preview 구현·검증 완료 / Public 동기화 중** | Synthetic MQTT → Kafka → History/Latest State → REST/SSE 화면, 실제 인증·Scope, 핵심 장애 경계 | Camera·Command·AI·과금 전체 구현 |
+| v0.1 UI Preview | **구현·검증 완료 / 실제 화면 공개** | Fixture Login, Overview, 장비 목록·상세·차트, 회원 조회, 실패·재연결 표현 | 실제 Backend 연동을 Fixture 검증으로 대체하지 않음 |
+| v0.2 실제 관측 | **Local Preview 구현·검증 완료 / 실제 화면 공개** | Synthetic MQTT → Kafka → History/Latest State → REST/SSE 화면, 실제 인증·Scope, 핵심 장애 경계 | Camera·Command·AI·과금 전체 구현 |
 | v0.3 이후 증분 | 계획 | TCP 또는 Polling 한 종류, Camera Preview, 안전 명령 한 종류 등을 각각 검증 후 추가 | 모든 프로토콜·Vendor를 한 번에 지원 |
 | 선택 확장 | 계획 | PTZ 고도화, 관측성·성능 개선, AI 보조, 사용량 기능 | 앞선 완성본의 공개를 지연시키는 선행 작업 |
 
@@ -137,7 +167,7 @@ flowchart LR
   <img src="docs/assets/screen-overview.webp" alt="Overview와 장비 상세의 목표 화면을 나타낸 콘셉트 이미지" width="100%">
 </p>
 
-> 위 세 장은 아직 **콘셉트 이미지**이며 **구현 완료 스크린샷**이 아닙니다. 실제 Local Observe 화면은 최종 UI 시각 검토 후 Public Repository에 별도 캡처로 추가합니다.
+> 위 세 장은 **콘셉트 이미지**이며 **구현 완료 스크린샷**이 아닙니다. 실제 Local Observe 화면은 README 상단의 실제 구현 화면에서 별도로 공개합니다.
 
 ## 기술 구성
 

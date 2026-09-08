@@ -7,18 +7,18 @@
 | 영역 | 실제 상태 |
 |---|---|
 | 제품 정의·UX·아키텍처 | Public 문서 공개 |
-| v0.1 UI Preview | Private Workbench에서 구현·검증 완료, Public 동기화 진행 중 |
-| v0.2 Local Observe Preview | Private Workbench에서 구현·검증 완료, Public 동기화 진행 중 |
+| v0.1 UI Preview | 구현·검증 완료, 실제 UI Capture Public 공개 완료 |
+| v0.2 Local Observe Preview | `VERIFIED_SCOPE: local-observe-preview`, 실제 UI Capture Public 공개 완료 |
 | 실제 Remote 인증 | Keycloak Code+PKCE + 서버 Session + Tenant/Site Scope 검증 완료 |
 | MQTT/History/Redis/REST/SSE 통합 | Synthetic 데이터로 Local End-to-End 검증 완료 |
 | UI | Overview, 장비 목록·상세·차트, 구성원 조회, Desktop/Mobile 구현 완료 |
-| 한국어/영어 UI | 한국어 기본 + English 전환 구현, 최종 포트폴리오 시각 검토 중 |
-| Public 실행 소스 | 아직 curated snapshot 단계. 선별 실행 소스·Quick Start를 순차 공개 예정 |
+| 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
+| Public 실행 소스 | 아직 동기화 전. 선별 실행 소스와 Quick Start는 다음 sync에서 공개 예정 |
 | 장비 제어·Camera·AI·과금 | 후속 또는 선택 범위 |
 | 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
 | Public Release | NOT_RELEASED. Local Preview와 별도 Release Gate 유지 |
 
-임의의 설계 진척률이나 문서 수로 구현 완료를 추정하지 않습니다. 현재 Public에 있는 Concept 이미지는 구현 완료 스크린샷이 아니며, 실제 캡처는 최종 시각 검토가 끝난 뒤 별도 동기화합니다.
+임의의 설계 진척률이나 문서 수로 구현 완료를 추정하지 않습니다. README 상단의 실제 캡처는 구현 완료 스크린샷이고, 별도의 Concept 이미지는 후속 제품 방향을 설명하는 자료입니다.
 
 ## 현재 검증된 Local Observe Preview
 
@@ -56,8 +56,8 @@ Synthetic Sensor
 Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이도록 작은 단위로 계속 갱신합니다.
 
 1. **현재 구현 상태 공개** — 이 문서와 README에서 Local Observe Preview의 실제 구현 범위를 공개
-2. **최종 UI 캡처 공개** — 한국어 기본 UI의 Overview / Devices / Device Detail 중심으로 실제 Remote Screenshot 추가
-3. **Quick Start + 선별 실행 소스 공개** — 기밀·로컬 전용 설정을 제거하고 Clean-clone 검증한 작은 실행 Snapshot 공개
+2. **최종 UI 캡처 공개 — 완료** — 한국어 기본 UI의 Overview / Devices / Device Detail / Members Mobile 실제 Remote Screenshot 공개
+3. **Quick Start + 선별 실행 소스 공개 — 다음 sync** — 기밀·로컬 전용 설정을 제거하고 Clean-clone 검증한 작은 실행 Snapshot 공개
 4. **다음 제품 Slice 공개** — TCP/Polling, Camera/Control 등은 각각 검증된 Vertical Slice 단위로 추가
 5. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
@@ -67,7 +67,7 @@ Public 동기화를 빠르게 하기 위해 미완성 기능 수를 늘리기보
 
 ### v0.1 — UI Preview
 
-상태: **IMPLEMENTED / VERIFIED in Private Workbench · Public sync in progress**
+상태: **IMPLEMENTED / VERIFIED · 실제 UI Capture Public 공개 완료**
 
 Fixture Login → Overview → 장비 목록·상세·24h Chart → Members 조회와 Normal/Empty/Permission/Error/Partial/Stale/Reconnecting, 필터·URL·키보드·모바일을 검증했습니다.
 
@@ -75,11 +75,11 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 ### v0.2 — Local Observe Preview
 
-상태: **IMPLEMENTED / VERIFIED_SCOPE: local-observe-preview · Public sync in progress**
+상태: **IMPLEMENTED / VERIFIED_SCOPE: local-observe-preview · 실제 UI Capture Public 공개 완료**
 
 실제 Keycloak OIDC와 서버 Session, Synthetic MQTT → Kafka → PostgreSQL/Redis → REST/SSE → 운영 화면을 연결했습니다. 권한 격리, 상태 후퇴 방지, 중복·역순, Redis 장애 fallback 등 첫 제품 Slice의 핵심 실패 경계를 검증했습니다.
 
-Public Repository에 실행 가능한 전체 제품이 이미 공개됐다는 의미는 아닙니다. 현재는 검증 완료한 범위를 선별해 순차 동기화하는 단계입니다.
+실제 화면 공개는 Public Repository에 실행 가능한 전체 제품이 이미 공개됐다는 의미가 아닙니다. 실행 소스와 Quick Start는 다음 sync에서 별도로 검증·공개할 예정입니다.
 
 ## Release와 구별
 
