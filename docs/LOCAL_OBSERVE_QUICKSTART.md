@@ -12,7 +12,7 @@
 - Node.js 24와 pnpm 11.25.0(Corepack 또는 독립 설치)
 - Python 3.13
 
-Windows 수용 환경에서는 Git 2.45.1, Docker Engine 29.7.2, Docker Compose 5.5.0, Node.js 24.12.0, pnpm 11.25.0, Python 3.13.0으로 검증합니다. Ubuntu는 GitHub-hosted runner에서 JDK 21, Node.js 24, pnpm 11.25.0, Python 3.13과 runner 제공 Docker Compose로 검증합니다. macOS는 직접 검증하지 않았습니다(`NOT_RUN`).
+Windows 수용 환경은 Git 2.45.1, Docker Engine 29.7.2, Docker Compose 5.5.0, Node.js 24.12.0, pnpm 11.25.0, Python 3.13.0을 사용합니다. Ubuntu CI는 GitHub-hosted runner의 JDK 21, Node.js 24, pnpm 11.25.0, Python 3.13과 runner 제공 Docker Compose를 사용합니다. 두 실행 수용 결과는 [현재 공개 상태](project-status.md)에 기록합니다. macOS는 직접 검증하지 않았습니다(`NOT_RUN`).
 
 Docker Desktop이 실행 중인지 먼저 확인하세요. 아래 기본 port `3000`, `21883`, `25432`, `26379`, `28080`~`28082`, `29092`, `29093`도 비어 있어야 합니다.
 
