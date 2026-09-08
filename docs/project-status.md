@@ -94,6 +94,6 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 ## 공개 근거
 
-같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu `up/status/demo/verify/down`, Windows fresh-clone `up/status/demo/verify/down`과 실제 Browser Login / Overview / Device Detail을 통과했습니다. Windows에서는 다른 프로세스가 소유한 기본 Keycloak port를 건드리지 않고 명시적 `B02_KEYCLOAK_PORT=28083`을 사용했습니다. Container image vulnerability review는 여전히 Release blocker입니다.
+같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu `up/status/demo/verify/down`, Windows fresh-clone `up/status/demo/verify/down`과 실제 Browser Login / Overview / Device Detail을 통과했습니다. Windows에서는 명시적 `B02_KEYCLOAK_PORT=28083` 경로도 검증했으며 다른 프로세스를 종료하지 않았습니다. Container image vulnerability review는 여전히 Release blocker입니다.
 
 [README](../README.md) · [Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)
