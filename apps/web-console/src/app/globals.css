@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --shell-bg: #f4f7fb;
+  --shell-surface: #ffffff;
+  --console-bg: #08111f;
+  --console-surface-1: #0f1a2b;
+  --console-surface-2: #162337;
+  --border-subtle: #26354a;
+  --text-primary: #f8fafc;
+  --text-secondary: #a7b4c6;
+  --text-muted: #94a3b8;
+  --accent-primary: #7aa2ff;
+  --accent-hover: #91b2ff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --critical: #ff6b6b;
+  --info: #38bdf8;
+  --unknown: #a78bfa;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--console-bg);
+  color: var(--text-primary);
+  font-family:
+    "Pretendard Variable", Pretendard, "Noto Sans KR", "Apple SD Gothic Neo",
+    "Malgun Gothic", "Segoe UI", ui-sans-serif, system-ui, -apple-system,
+    Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.numeral {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}

@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: simulator
+  main:
+    banner-mode: "off"
+    web-application-type: none

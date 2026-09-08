@@ -1,0 +1,66 @@
+{
+  "contractName": "fieldops-m1-ui",
+  "contractVersion": "2.0.0",
+  "uiCatalogVersion": "1.0.0",
+  "status": "FROZEN",
+  "milestone": "M1",
+  "baseDate": "2026-09-03",
+  "rest": "contracts/openapi/fieldops-m1-ui.yaml",
+  "realtime": "contracts/asyncapi/fieldops-m1-realtime.yaml",
+  "realtimeSchema": "contracts/json-schema/m1-sse-event.schema.json",
+  "telemetryRawSchema": "contracts/json-schema/b02-telemetry-raw.schema.json",
+  "telemetryNormalizedSchema": "contracts/json-schema/b02-telemetry-normalized.schema.json",
+  "uiContracts": [
+    "contracts/ui/m1-routes.json",
+    "contracts/ui/m1-permissions.json",
+    "contracts/ui/m1-error-catalog.json",
+    "contracts/ui/m1-copy.en.json",
+    "contracts/ui/m1-copy.ko.json",
+    "contracts/ui/m1-query-catalog.json",
+    "contracts/ui/m1-widget-catalog.json",
+    "contracts/ui/m1-fixture-index.json"
+  ],
+  "fixturesRoot": "fixtures/m1",
+  "changePolicy": {
+    "branchPrefix": "contract/m1-ui-",
+    "commitPrefix": "contract:",
+    "implementationMayModifyContract": false,
+    "breakingRequiresReview": true
+  },
+  "browserTransport": {
+    "basePath": "/api/v1",
+    "sameOrigin": true,
+    "remoteOriginEnvironment": "FIELDOPS_API_ORIGIN",
+    "dataModeEnvironment": "NEXT_PUBLIC_FIELDOPS_DATA_MODE"
+  },
+  "ownership": {
+    "ui": [
+      "apps/web-console/**",
+      "package.json",
+      "pnpm-lock.yaml"
+    ],
+    "backendMayModifyUiPathsDuringImplementation": false
+  },
+  "modes": {
+    "mock": "MSW + fixtures/m1",
+    "remote": "same-origin /api/v1 routed to fieldops-server"
+  },
+  "features": [
+    "SESSION_BOOTSTRAP",
+    "LOGIN",
+    "APP_SHELL",
+    "OVERVIEW",
+    "DEVICE_LIST",
+    "DEVICE_DETAIL",
+    "MEMBER_LIST_READ",
+    "SSE_LIVE_STATE"
+  ],
+  "nonGoals": [
+    "CAMERA_PTZ",
+    "ALARM_MUTATION",
+    "COMMAND_MUTATION",
+    "MEMBER_MUTATION",
+    "AI",
+    "USAGE_BILLING"
+  ]
+}

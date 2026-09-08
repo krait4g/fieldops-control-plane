@@ -1,0 +1,338 @@
+{
+  "version": "1.0.0",
+  "screen": "overview",
+  "layout": {
+    "desktopColumns": 12,
+    "tabletColumns": 8,
+    "mobileColumns": 4,
+    "widgetGapPx": 16
+  },
+  "widgets": [
+    {
+      "id": "deviceStatus",
+      "title": "Online devices",
+      "type": "KPI",
+      "grid": {
+        "desktop": {
+          "column": 1,
+          "span": 3,
+          "row": 1
+        },
+        "tablet": {
+          "column": 1,
+          "span": 4,
+          "row": 1
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 1
+        }
+      },
+      "source": "widgets.deviceStatus",
+      "click": {
+        "route": "/devices",
+        "query": {
+          "connectivity": "ONLINE"
+        }
+      },
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ]
+    },
+    {
+      "id": "activeAlarms",
+      "title": "Active alarms",
+      "type": "KPI",
+      "grid": {
+        "desktop": {
+          "column": 4,
+          "span": 3,
+          "row": 1
+        },
+        "tablet": {
+          "column": 5,
+          "span": 4,
+          "row": 1
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 2
+        }
+      },
+      "source": "widgets.activeAlarms",
+      "click": null,
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "m1Behavior": "Always render the card. Alarm mutation and alarm route are future milestones."
+    },
+    {
+      "id": "commands",
+      "title": "Commands",
+      "type": "KPI",
+      "grid": {
+        "desktop": {
+          "column": 7,
+          "span": 3,
+          "row": 1
+        },
+        "tablet": {
+          "column": 1,
+          "span": 4,
+          "row": 2
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 3
+        }
+      },
+      "source": "widgets.commands",
+      "click": null,
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "m1Behavior": "Always render the card as read-only. Command workflow is not implemented."
+    },
+    {
+      "id": "freshness",
+      "title": "Data freshness",
+      "type": "KPI",
+      "grid": {
+        "desktop": {
+          "column": 10,
+          "span": 3,
+          "row": 1
+        },
+        "tablet": {
+          "column": 5,
+          "span": 4,
+          "row": 2
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 4
+        }
+      },
+      "source": "widgets.freshness",
+      "click": {
+        "route": "/devices",
+        "query": {
+          "freshness": "STALE"
+        }
+      },
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ]
+    },
+    {
+      "id": "environmentTrend",
+      "title": "Environment trend",
+      "type": "LINE_CHART",
+      "grid": {
+        "desktop": {
+          "column": 1,
+          "span": 8,
+          "row": 2
+        },
+        "tablet": {
+          "column": 1,
+          "span": 8,
+          "row": 3
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 5
+        }
+      },
+      "sourceOperation": "getEnvironmentSeries",
+      "minHeightPx": 320,
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "accessibility": {
+        "summaryTableRequired": true
+      }
+    },
+    {
+      "id": "currentConditions",
+      "title": "Current conditions",
+      "type": "METRIC_GRID",
+      "grid": {
+        "desktop": {
+          "column": 9,
+          "span": 4,
+          "row": 2
+        },
+        "tablet": {
+          "column": 1,
+          "span": 8,
+          "row": 4
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 6
+        }
+      },
+      "source": "widgets.currentConditions",
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ]
+    },
+    {
+      "id": "activeAlarmList",
+      "title": "Active alarms",
+      "type": "TABLE",
+      "grid": {
+        "desktop": {
+          "column": 1,
+          "span": 7,
+          "row": 3
+        },
+        "tablet": {
+          "column": 1,
+          "span": 8,
+          "row": 5
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 7
+        }
+      },
+      "source": "widgets.activeAlarmList",
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "m1Behavior": "Rows are read-only and have no acknowledge or incident action."
+    },
+    {
+      "id": "deviceHealth",
+      "title": "Device health",
+      "type": "DONUT_AND_LEGEND",
+      "grid": {
+        "desktop": {
+          "column": 8,
+          "span": 5,
+          "row": 3
+        },
+        "tablet": {
+          "column": 1,
+          "span": 8,
+          "row": 6
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 8
+        }
+      },
+      "source": "widgets.deviceHealth",
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "accessibility": {
+        "summaryTextRequired": true
+      }
+    },
+    {
+      "id": "recentCommands",
+      "title": "Recent commands",
+      "type": "TIMELINE",
+      "grid": {
+        "desktop": {
+          "column": 1,
+          "span": 7,
+          "row": 4
+        },
+        "tablet": {
+          "column": 1,
+          "span": 8,
+          "row": 7
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 9
+        }
+      },
+      "source": "widgets.recentCommands",
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "m1Behavior": "Read-only. No command route or action in M1."
+    },
+    {
+      "id": "primaryCamera",
+      "title": "Primary camera",
+      "type": "PREVIEW_PLACEHOLDER",
+      "grid": {
+        "desktop": {
+          "column": 8,
+          "span": 5,
+          "row": 4
+        },
+        "tablet": {
+          "column": 1,
+          "span": 8,
+          "row": 8
+        },
+        "mobile": {
+          "column": 1,
+          "span": 4,
+          "row": 10
+        }
+      },
+      "source": "widgets.primaryCamera",
+      "states": [
+        "AVAILABLE",
+        "EMPTY",
+        "STALE",
+        "UNAVAILABLE",
+        "FORBIDDEN"
+      ],
+      "m1Behavior": "M1 renders the contracted state only. Video and camera route begin in M2."
+    }
+  ]
+}

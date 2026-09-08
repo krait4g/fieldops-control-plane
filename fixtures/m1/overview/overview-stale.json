@@ -1,0 +1,168 @@
+{
+  "context": {
+    "tenantId": "tenant-demo",
+    "siteId": "site-green-valley",
+    "siteName": "Green Valley Farm",
+    "timezone": "Asia/Seoul",
+    "range": "PT24H",
+    "generatedAt": "2026-09-03T04:20:00Z",
+    "dataVersion": "overview-1790"
+  },
+  "widgets": {
+    "deviceStatus": {
+      "meta": {
+        "status": "STALE",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": {
+        "online": 2,
+        "offline": 1,
+        "degraded": 0,
+        "unknown": 0,
+        "total": 3
+      }
+    },
+    "activeAlarms": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": {
+        "active": 0,
+        "critical": 0,
+        "warning": 0,
+        "info": 0,
+        "highestSeverity": null
+      }
+    },
+    "commands": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": {
+        "waitingApproval": 0,
+        "inProgress": 0,
+        "unknown": 0
+      }
+    },
+    "freshness": {
+      "meta": {
+        "status": "STALE",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": {
+        "fresh": 2,
+        "stale": 1,
+        "monitored": 3,
+        "ratio": 0.6667
+      }
+    },
+    "currentConditions": {
+      "meta": {
+        "status": "STALE",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": [
+        {
+          "zoneId": "zone-north",
+          "zoneName": "North Field",
+          "metrics": [
+            {
+              "code": "soil.moisture.pct",
+              "displayName": "Soil moisture",
+              "value": 18.7,
+              "unit": "%",
+              "quality": "GOOD",
+              "observedAt": "2026-09-03T04:29:55Z"
+            },
+            {
+              "code": "air.temperature.c",
+              "displayName": "Air temperature",
+              "value": 24.6,
+              "unit": "°C",
+              "quality": "GOOD",
+              "observedAt": "2026-09-03T04:29:55Z"
+            }
+          ]
+        },
+        {
+          "zoneId": "zone-south",
+          "zoneName": "South Field",
+          "metrics": [
+            {
+              "code": "air.humidity.pct",
+              "displayName": "Air humidity",
+              "value": 62.0,
+              "unit": "%",
+              "quality": "GOOD",
+              "observedAt": "2026-09-03T04:29:55Z"
+            }
+          ]
+        }
+      ]
+    },
+    "activeAlarmList": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": []
+    },
+    "deviceHealth": {
+      "meta": {
+        "status": "STALE",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": {
+        "online": 2,
+        "offline": 1,
+        "degraded": 0,
+        "unknown": 0,
+        "total": 3
+      }
+    },
+    "recentCommands": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "POSTGRES_SNAPSHOT",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": []
+    },
+    "primaryCamera": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "NONE",
+        "generatedAt": "2026-09-03T04:20:00Z",
+        "staleAt": "2026-09-03T04:20:30Z",
+        "failure": null
+      },
+      "data": null
+    }
+  },
+  "partialFailures": []
+}

@@ -1,0 +1,9 @@
+{
+  "type": "https://fieldops.dev/problems/session-required",
+  "title": "Authentication required",
+  "status": 401,
+  "code": "SESSION_REQUIRED",
+  "detail": "Sign in to continue.",
+  "traceId": "trace-fixture-401",
+  "timestamp": "2026-09-03T04:30:00Z"
+}

@@ -1,0 +1,69 @@
+{
+  "items": [
+    {
+      "id": "membership-admin",
+      "displayName": "Alex Admin",
+      "email": "admin@fieldops.local",
+      "role": "TENANT_ADMIN",
+      "siteScopes": [
+        {
+          "id": "site-green-valley",
+          "name": "Green Valley Farm",
+          "timezone": "Asia/Seoul"
+        },
+        {
+          "id": "site-research-greenhouse",
+          "name": "Research Greenhouse",
+          "timezone": "Asia/Seoul"
+        }
+      ],
+      "allSites": true,
+      "status": "ACTIVE",
+      "lastLoginAt": "2026-09-03T04:00:00Z",
+      "updatedBy": "system-seed",
+      "updatedAt": "2026-09-01T00:00:00Z"
+    },
+    {
+      "id": "membership-operator",
+      "displayName": "Olivia Operator",
+      "email": "operator@fieldops.local",
+      "role": "SITE_OPERATOR",
+      "siteScopes": [
+        {
+          "id": "site-green-valley",
+          "name": "Green Valley Farm",
+          "timezone": "Asia/Seoul"
+        }
+      ],
+      "allSites": false,
+      "status": "ACTIVE",
+      "lastLoginAt": "2026-09-03T03:45:00Z",
+      "updatedBy": "Alex Admin",
+      "updatedAt": "2026-09-02T01:20:00Z"
+    },
+    {
+      "id": "membership-viewer",
+      "displayName": "Vivian Viewer",
+      "email": "viewer@fieldops.local",
+      "role": "TENANT_VIEWER",
+      "siteScopes": [
+        {
+          "id": "site-green-valley",
+          "name": "Green Valley Farm",
+          "timezone": "Asia/Seoul"
+        }
+      ],
+      "allSites": false,
+      "status": "ACTIVE",
+      "lastLoginAt": "2026-09-02T10:15:00Z",
+      "updatedBy": "Alex Admin",
+      "updatedAt": "2026-09-02T01:21:00Z"
+    }
+  ],
+  "page": {
+    "pageSize": 25,
+    "hasNext": false,
+    "nextCursor": null
+  },
+  "total": 3
+}

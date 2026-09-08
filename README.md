@@ -7,9 +7,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)](#기술-구성)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**현재 Private Workbench에서는 v0.2 Local Observe Preview까지 구현·검증했습니다.** Synthetic MQTT 이벤트가 Java Gateway와 Kafka를 거쳐 PostgreSQL History·Redis Latest State에 반영되고, Keycloak OIDC 기반 Session과 Tenant/Site 권한을 통해 REST/SSE 운영 화면까지 연결됩니다.
+**v0.2 Local Observe Preview의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 이벤트가 Java Gateway와 Kafka를 거쳐 PostgreSQL History·Redis Latest State에 반영되고, Keycloak OIDC 기반 Session과 Tenant/Site 권한을 통해 REST/SSE 운영 화면까지 연결됩니다.
 
-이 Public Repository는 채용·리뷰를 위한 **curated snapshot**으로 단계적으로 동기화하고 있습니다. 현재는 제품·아키텍처 문서, 검증된 구현 현황, 실제 UI 캡처를 공개하며 실행 소스와 Quick Start는 별도 검증을 통과한 다음 작은 단위에서 추가합니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
+이 Public Repository는 채용·리뷰를 위한 **curated snapshot**입니다. 현재는 제품·아키텍처 문서, 실제 UI 캡처와 Windows/Ubuntu에서 검증한 localhost-only Synthetic 실행 경로를 공개합니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
 
 ## 실제 구현 화면
 
@@ -37,6 +37,12 @@
 |---|---|
 | <img src="docs/assets/implementation/local-observe-devices-ko.png" alt="FieldOps Local Observe 실제 구현 장비 목록 화면"> | <img src="docs/assets/implementation/local-observe-members-mobile-ko.png" alt="FieldOps Local Observe 실제 구현 모바일 구성원 화면"> |
 
+## 로컬에서 실행하기
+
+Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니다. Clone한 뒤 `corepack enable`을 실행하고 Windows에서는 `py -3 scripts/b02_observe.py up`, Linux에서는 `python3 scripts/b02_observe.py up`으로 시작합니다. 이어서 `status`, `demo --device all --scenario portfolio`, `verify`를 실행하고 <http://localhost:3000/login>에서 생성된 Synthetic Credential로 확인합니다. 작업이 끝나면 반드시 `down`을 실행하세요.
+
+[전체 명령과 Browser 확인 절차](docs/LOCAL_OBSERVE_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
+
 ## 제품 비전 — 콘셉트 이미지
 
 아래 이미지는 후속 기능까지 포함한 제품 방향의 **콘셉트 이미지**이며, 위의 구현 완료 스크린샷과 구분합니다.
@@ -47,12 +53,12 @@
 
 ## 현재 구현된 범위
 
-현재 공개 문서보다 구현이 앞서 있습니다. 아래 상태는 Private Workbench에서 실제 실행·검증한 범위이며, Public 코드 동기화 상태와 구분합니다.
+아래 표는 실제 구현·검증 범위와 이 공개 Snapshot에 포함된 상태를 함께 보여줍니다.
 
 | 영역 | 현재 구현·검증 상태 | Public 동기화 |
 |---|---|---|
 | UI Preview | Login, Overview, 장비 목록·상세·차트, 구성원 조회, Error/Stale/Reconnecting, Desktop/Mobile | 실제 한국어 UI 캡처 공개 완료 |
-| Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | UI 캡처 공개 완료, 실행 소스 선별 공개 준비 중 |
+| Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 선별 실행 소스·Quick Start 공개, Windows/Ubuntu 검증 |
 | 인증·권한 | Keycloak Authorization Code + PKCE, 서버 Session, Tenant/Site/Device Scope | 설계·검증 결과 우선 공개 |
 | 정합성 | 중복·역순 처리, DB Commit 이후 Kafka ACK, Redis 장애 시 History 지속 + DB Snapshot/Stale fallback | Evidence 요약부터 공개 |
 | 계약·검증 | OpenAPI/AsyncAPI/JSON Schema, Testcontainers, Clean-clone Drill, GitHub Actions | 문서와 공개 Gate 순차 동기화 |

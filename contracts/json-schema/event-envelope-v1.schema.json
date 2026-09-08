@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fieldops.dev/contracts/event-envelope-v1.schema.json",
+  "title": "FieldOps common event envelope metadata",
+  "description": "DRAFT / NOT_CONSUMED_BY_RUNTIME. This foundation schema contains only metadata already accepted by the Frozen M1 realtime contract. It does not define product event types, topics, ordering, epochs, or delivery guarantees.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "eventType",
+    "tenantId",
+    "siteId",
+    "resourceType",
+    "resourceId",
+    "version",
+    "occurredAt",
+    "payload"
+  ],
+  "properties": {
+    "eventId": { "type": "string", "minLength": 1 },
+    "eventType": { "type": "string", "minLength": 1 },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "siteId": { "type": "string", "minLength": 1 },
+    "resourceType": { "type": "string", "minLength": 1 },
+    "resourceId": { "type": "string", "minLength": 1 },
+    "version": { "type": "integer", "minimum": 0 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "payload": { "type": "object" }
+  }
+}

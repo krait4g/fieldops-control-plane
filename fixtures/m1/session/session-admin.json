@@ -1,0 +1,40 @@
+{
+  "user": {
+    "id": "user-admin",
+    "displayName": "Alex Admin",
+    "email": "admin@fieldops.local"
+  },
+  "memberships": [
+    {
+      "tenant": {
+        "id": "tenant-demo",
+        "name": "FieldOps Demo",
+        "timezone": "Asia/Seoul"
+      },
+      "role": "TENANT_ADMIN",
+      "permissions": [
+        "OVERVIEW_READ",
+        "DEVICE_READ",
+        "TELEMETRY_READ",
+        "MEMBER_READ"
+      ],
+      "sites": [
+        {
+          "id": "site-green-valley",
+          "name": "Green Valley Farm",
+          "timezone": "Asia/Seoul"
+        },
+        {
+          "id": "site-research-greenhouse",
+          "name": "Research Greenhouse",
+          "timezone": "Asia/Seoul"
+        }
+      ]
+    }
+  ],
+  "activeContext": {
+    "tenantId": "tenant-demo",
+    "siteId": "site-green-valley"
+  },
+  "issuedAt": "2026-09-03T04:30:00Z"
+}

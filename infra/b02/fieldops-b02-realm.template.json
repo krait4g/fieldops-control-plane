@@ -1,0 +1,70 @@
+{
+  "realm": "fieldops-local",
+  "displayName": "FieldOps B02 Local",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "clients": [
+    {
+      "clientId": "fieldops-web-local",
+      "name": "FieldOps Web Local Smoke",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/login"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    },
+    {
+      "clientId": "fieldops-bff-local",
+      "name": "FieldOps B02 Local BFF",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "__B02_CLIENT_SECRET__",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/api/v1/login/oauth2/code/keycloak"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    }
+  ],
+  "users": [
+    {
+      "id": "00000000-0000-0000-0000-0000000000a1",
+      "username": "b02-admin-a",
+      "enabled": true,
+      "email": "b02-admin-a@example.invalid",
+      "firstName": "Alicia",
+      "lastName": "Admin",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "__B02_USER_PASSWORD__", "temporary": false }
+      ]
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000b2",
+      "username": "b02-multi",
+      "enabled": true,
+      "email": "b02-multi@example.invalid",
+      "firstName": "Morgan",
+      "lastName": "Multi",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "__B02_USER_PASSWORD__", "temporary": false }
+      ]
+    }
+  ]
+}

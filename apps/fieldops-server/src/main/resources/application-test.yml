@@ -1,0 +1,54 @@
+logging:
+  level:
+    root: WARN
+
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:fieldops;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+  flyway:
+    placeholders:
+      oidcIssuer: http://localhost:28080/realms/fieldops-local
+  data:
+    redis:
+      repositories:
+        enabled: false
+  kafka:
+    listener:
+      auto-startup: false
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: fieldops-bff-local
+            client-secret: ${B02_TEST_OIDC_CLIENT_SECRET:local-test-only}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:3000/api/v1/login/oauth2/code/{registrationId}
+            scope: [openid, profile, email]
+            client-settings:
+              require-proof-key: true
+        provider:
+          keycloak:
+            authorization-uri: http://localhost:28080/realms/fieldops-local/protocol/openid-connect/auth
+            token-uri: http://localhost:28080/realms/fieldops-local/protocol/openid-connect/token
+            jwk-set-uri: http://localhost:28080/realms/fieldops-local/protocol/openid-connect/certs
+            user-info-uri: http://localhost:28080/realms/fieldops-local/protocol/openid-connect/userinfo
+            user-name-attribute: sub
+
+fieldops:
+  b02:
+    browser-origin: http://localhost:3000
+    state-fresh-after: 15s
+    state-offline-after: 30s
+
+management:
+  health:
+    redis:
+      enabled: false

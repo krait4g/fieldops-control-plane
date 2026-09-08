@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "fallback": {
+    "title": "Something went wrong",
+    "message": "Try again or use the trace ID when requesting support.",
+    "retryable": false
+  },
+  "errors": [
+    {
+      "code": "SESSION_REQUIRED",
+      "httpStatus": 401,
+      "scope": "GLOBAL",
+      "action": "REDIRECT_LOGIN",
+      "retryable": false
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "httpStatus": 401,
+      "scope": "GLOBAL",
+      "action": "CLEAR_SESSION_AND_LOGIN",
+      "retryable": false
+    },
+    {
+      "code": "TENANT_SCOPE_MISMATCH",
+      "httpStatus": 403,
+      "scope": "PAGE",
+      "action": "SHOW_PERMISSION",
+      "retryable": false
+    },
+    {
+      "code": "SITE_SCOPE_DENIED",
+      "httpStatus": 403,
+      "scope": "PAGE",
+      "action": "SHOW_PERMISSION",
+      "retryable": false
+    },
+    {
+      "code": "MEMBER_READ_DENIED",
+      "httpStatus": 403,
+      "scope": "PAGE",
+      "action": "SHOW_PERMISSION",
+      "retryable": false
+    },
+    {
+      "code": "RESOURCE_NOT_FOUND",
+      "httpStatus": 404,
+      "scope": "PAGE",
+      "action": "SHOW_NOT_FOUND",
+      "retryable": false
+    },
+    {
+      "code": "DEVICE_NOT_FOUND",
+      "httpStatus": 404,
+      "scope": "PAGE",
+      "action": "SHOW_NOT_FOUND",
+      "retryable": false
+    },
+    {
+      "code": "CONTEXT_VERSION_CONFLICT",
+      "httpStatus": 409,
+      "scope": "GLOBAL",
+      "action": "REFETCH_SESSION",
+      "retryable": true
+    },
+    {
+      "code": "INVALID_QUERY_PARAMETER",
+      "httpStatus": 422,
+      "scope": "PAGE",
+      "action": "NORMALIZE_URL",
+      "retryable": false
+    },
+    {
+      "code": "RATE_LIMITED",
+      "httpStatus": 429,
+      "scope": "PAGE_OR_WIDGET",
+      "action": "RETRY_AFTER",
+      "retryable": true
+    },
+    {
+      "code": "READ_MODEL_UNAVAILABLE",
+      "httpStatus": 503,
+      "scope": "PAGE_OR_WIDGET",
+      "action": "SHOW_ERROR",
+      "retryable": true
+    },
+    {
+      "code": "REALTIME_STATE_UNAVAILABLE",
+      "httpStatus": 503,
+      "scope": "WIDGET",
+      "action": "SHOW_STALE_OR_ERROR",
+      "retryable": true
+    },
+    {
+      "code": "TELEMETRY_SERIES_UNAVAILABLE",
+      "httpStatus": 503,
+      "scope": "WIDGET",
+      "action": "SHOW_CHART_ERROR",
+      "retryable": true
+    },
+    {
+      "code": "INTERNAL_ERROR",
+      "httpStatus": 500,
+      "scope": "PAGE_OR_WIDGET",
+      "action": "SHOW_ERROR",
+      "retryable": true
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+# B02 localhost-only overlay. It reuses the five pinned B01 images unchanged.
+services:
+  mosquitto:
+    command:
+      - |
+        mosquitto_passwd -b -c /run/fieldops-mqtt/passwd b02-gateway "$$(cat /run/secrets/gateway)"
+        mosquitto_passwd -b /run/fieldops-mqtt/passwd b02-tenant-a "$$(cat /run/secrets/tenant-a)"
+        mosquitto_passwd -b /run/fieldops-mqtt/passwd b02-tenant-b "$$(cat /run/secrets/tenant-b)"
+        chown mosquitto:mosquitto /run/fieldops-mqtt/passwd
+        chmod 600 /run/fieldops-mqtt/passwd
+        exec mosquitto -c /mosquitto/config/mosquitto.conf
+    volumes: !override
+      - type: bind
+        source: ./../b02/mosquitto.conf
+        target: /mosquitto/config/mosquitto.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./../b02/mosquitto.acl
+        target: /mosquitto/config/b02.acl
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${B02_RUNTIME_DIR:?B02_RUNTIME_DIR is required}/mqtt-gateway-password
+        target: /run/secrets/gateway
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${B02_RUNTIME_DIR:?B02_RUNTIME_DIR is required}/mqtt-tenant-a-password
+        target: /run/secrets/tenant-a
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${B02_RUNTIME_DIR:?B02_RUNTIME_DIR is required}/mqtt-tenant-b-password
+        target: /run/secrets/tenant-b
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'mosquitto_pub -V mqttv5 -h 127.0.0.1 -p 1883 -u b02-gateway -P "$$(cat /run/secrets/gateway)" -q 1 -t fieldops/local/tenant-a/site-a/device-a-soil-01/telemetry -n'
+
+  keycloak:
+    volumes: !override
+      - type: bind
+        source: ${B02_RUNTIME_DIR:?B02_RUNTIME_DIR is required}/fieldops-b02-realm.json
+        target: /opt/keycloak/data/import/fieldops-local-realm.json
+        read_only: true
+        bind:
+          create_host_path: false

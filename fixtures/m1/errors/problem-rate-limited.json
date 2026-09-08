@@ -1,0 +1,10 @@
+{
+  "type": "https://fieldops.dev/problems/rate-limited",
+  "title": "Too many requests",
+  "status": 429,
+  "code": "RATE_LIMITED",
+  "detail": "Retry after the indicated delay.",
+  "traceId": "trace-fixture-429",
+  "timestamp": "2026-09-03T04:30:00Z",
+  "retryAfterSeconds": 10
+}

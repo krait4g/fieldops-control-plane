@@ -1,0 +1,110 @@
+{
+  "inventoryVersion": 1,
+  "status": "FOUNDATION_REVIEW",
+  "canonicalContracts": [
+    {
+      "id": "m1-rest-ui",
+      "kind": "openapi",
+      "path": "contracts/openapi/fieldops-m1-ui.yaml",
+      "lifecycle": "FROZEN",
+      "mapsTo": ["M0 REST baseline", "ProblemDetails baseline"]
+    },
+    {
+      "id": "m1-realtime-ui",
+      "kind": "asyncapi",
+      "path": "contracts/asyncapi/fieldops-m1-realtime.yaml",
+      "lifecycle": "FROZEN",
+      "mapsTo": ["M0 realtime baseline"]
+    },
+    {
+      "id": "m1-sse-event",
+      "kind": "json-schema",
+      "path": "contracts/json-schema/m1-sse-event.schema.json",
+      "lifecycle": "FROZEN",
+      "mapsTo": ["M1 browser SSE payload"]
+    },
+    {
+      "id": "m1-ui-manifest",
+      "kind": "manifest",
+      "path": "contracts/ui/m1-contract-manifest.json",
+      "lifecycle": "FROZEN",
+      "mapsTo": ["M1 fixture and generated-type validation"]
+    },
+    {
+      "id": "b02-telemetry-raw",
+      "kind": "json-schema",
+      "path": "contracts/json-schema/b02-telemetry-raw.schema.json",
+      "lifecycle": "B02_DEVELOPMENT",
+      "mapsTo": ["fieldops.telemetry.raw.v1"]
+    },
+    {
+      "id": "b02-telemetry-normalized",
+      "kind": "json-schema",
+      "path": "contracts/json-schema/b02-telemetry-normalized.schema.json",
+      "lifecycle": "B02_DEVELOPMENT",
+      "mapsTo": ["fieldops.telemetry.normalized.v1"]
+    }
+  ],
+  "foundationContracts": [
+    {
+      "id": "event-envelope-v1",
+      "kind": "json-schema",
+      "path": "contracts/json-schema/event-envelope-v1.schema.json",
+      "lifecycle": "DRAFT",
+      "runtimeConsumption": "NOT_CONSUMED_BY_RUNTIME",
+      "mapsTo": ["M0 common event metadata only"]
+    }
+  ],
+  "examples": [
+    {
+      "contract": "event-envelope-v1",
+      "path": "contracts/examples/m0/event-envelope-valid.json",
+      "expected": "valid"
+    },
+    {
+      "contract": "event-envelope-v1",
+      "path": "contracts/examples/m0/event-envelope-missing-tenant.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "event-envelope-v1",
+      "path": "contracts/examples/m0/event-envelope-invalid-version.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "b02-telemetry-raw",
+      "path": "contracts/examples/b02/telemetry-raw-valid.json",
+      "expected": "valid"
+    },
+    {
+      "contract": "b02-telemetry-raw",
+      "path": "contracts/examples/b02/telemetry-raw-missing-tenant.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "b02-telemetry-normalized",
+      "path": "contracts/examples/b02/telemetry-normalized-valid.json",
+      "expected": "valid"
+    },
+    {
+      "contract": "b02-telemetry-normalized",
+      "path": "contracts/examples/b02/telemetry-normalized-extra-property.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "problem-details-from-m1-openapi",
+      "path": "contracts/examples/m0/problem-details-valid.json",
+      "expected": "valid"
+    },
+    {
+      "contract": "problem-details-from-m1-openapi",
+      "path": "contracts/examples/m0/problem-details-missing-code.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "problem-details-from-m1-openapi",
+      "path": "contracts/examples/m0/problem-details-invalid-status.json",
+      "expected": "invalid"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "permissions": [
+    "OVERVIEW_READ",
+    "DEVICE_READ",
+    "TELEMETRY_READ",
+    "MEMBER_READ",
+    "SITE_READ",
+    "CAMERA_READ",
+    "ALARM_READ",
+    "COMMAND_READ",
+    "RULE_MANAGE",
+    "PLATFORM_HEALTH_READ",
+    "USAGE_READ"
+  ],
+  "roles": {
+    "TENANT_VIEWER": [
+      "OVERVIEW_READ",
+      "DEVICE_READ",
+      "TELEMETRY_READ"
+    ],
+    "SITE_OPERATOR": [
+      "OVERVIEW_READ",
+      "DEVICE_READ",
+      "TELEMETRY_READ"
+    ],
+    "COMMAND_APPROVER": [
+      "OVERVIEW_READ",
+      "DEVICE_READ",
+      "TELEMETRY_READ"
+    ],
+    "TENANT_ADMIN": [
+      "OVERVIEW_READ",
+      "DEVICE_READ",
+      "TELEMETRY_READ",
+      "MEMBER_READ"
+    ],
+    "PLATFORM_ADMIN": [
+      "OVERVIEW_READ",
+      "DEVICE_READ",
+      "TELEMETRY_READ",
+      "MEMBER_READ"
+    ]
+  },
+  "rules": {
+    "sessionPermissionsAreAuthority": true,
+    "roleInferenceForbidden": true,
+    "platformAdminRequiresTenantContext": true,
+    "frontendVisibilityIsNotAuthorization": true
+  }
+}

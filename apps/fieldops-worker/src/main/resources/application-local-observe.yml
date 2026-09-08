@@ -1,0 +1,44 @@
+spring:
+  main:
+    web-application-type: none
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:${B02_POSTGRES_PORT:25432}/${B02_POSTGRES_DB:fieldops_b02}
+    username: ${B02_POSTGRES_USER:fieldops_b02}
+    password: ${B02_POSTGRES_PASSWORD}
+  data:
+    redis:
+      host: 127.0.0.1
+      port: ${B02_REDIS_PORT:26379}
+      password: ${B02_REDIS_PASSWORD}
+      timeout: 750ms
+  kafka:
+    bootstrap-servers: 127.0.0.1:${B02_KAFKA_PORT:29092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        max.poll.records: 32
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+    listener:
+      ack-mode: manual_immediate
+
+fieldops:
+  b02:
+    kafka:
+      raw-topic: fieldops.telemetry.raw.v1
+      normalized-topic: fieldops.telemetry.normalized.v1
+      state-topic: fieldops.device.state-updated.v1
+    redis:
+      state-ttl: 1d
+    state-fresh-after: 15s
+    state-offline-after: 30s
+
+logging:
+  level:
+    io.krait.fieldops: INFO

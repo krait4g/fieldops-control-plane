@@ -1,0 +1,16 @@
+{
+  "type": "https://fieldops.dev/problems/invalid-query-parameter",
+  "title": "Invalid query parameter",
+  "status": 422,
+  "code": "INVALID_QUERY_PARAMETER",
+  "detail": "One or more query parameters are invalid.",
+  "traceId": "trace-fixture-422",
+  "timestamp": "2026-09-03T04:30:00Z",
+  "fieldErrors": [
+    {
+      "field": "range",
+      "code": "UNSUPPORTED_VALUE",
+      "message": "Use PT1H, PT6H, PT24H, or P7D."
+    }
+  ]
+}

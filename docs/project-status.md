@@ -13,7 +13,8 @@
 | MQTT/History/Redis/REST/SSE 통합 | Synthetic 데이터로 Local End-to-End 검증 완료 |
 | UI | Overview, 장비 목록·상세·차트, 구성원 조회, Desktop/Mobile 구현 완료 |
 | 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
-| Public 실행 소스 | 아직 동기화 전. 선별 실행 소스와 Quick Start는 다음 sync에서 공개 예정 |
+| Public 실행 소스 | Local Observe 최소 실행 폐쇄와 Quick Start 공개 |
+| Public runnable validation | Windows fresh clone + Ubuntu CI smoke |
 | 장비 제어·Camera·AI·과금 | 후속 또는 선택 범위 |
 | 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
 | Public Release | NOT_RELEASED. Local Preview와 별도 Release Gate 유지 |
@@ -22,7 +23,7 @@
 
 ## 현재 검증된 Local Observe Preview
 
-Private Workbench에서는 다음 흐름을 실제로 실행·검증했습니다.
+공개 Snapshot에서 다음 흐름을 실제로 실행·검증했습니다.
 
 ```text
 Synthetic Sensor
@@ -51,13 +52,13 @@ Synthetic Sensor
 
 이 결과는 localhost-only Synthetic Portfolio Preview의 검증 범위입니다. Production, 외부 고객 데이터, HA, 무손실 장기 Replay, 모든 Vendor 호환을 주장하지 않습니다.
 
-## Public 동기화 계획
+## Public 동기화 상태와 다음 단계
 
 Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이도록 작은 단위로 계속 갱신합니다.
 
 1. **현재 구현 상태 공개** — 이 문서와 README에서 Local Observe Preview의 실제 구현 범위를 공개
 2. **최종 UI 캡처 공개 — 완료** — 한국어 기본 UI의 Overview / Devices / Device Detail / Members Mobile 실제 Remote Screenshot 공개
-3. **Quick Start + 선별 실행 소스 공개 — 다음 sync** — 기밀·로컬 전용 설정을 제거하고 Clean-clone 검증한 작은 실행 Snapshot 공개
+3. **Quick Start + 선별 실행 소스 공개 — 완료** — 기밀·내부 문맥을 제외하고 Windows fresh clone과 Ubuntu CI로 검증한 작은 실행 Snapshot 공개
 4. **다음 제품 Slice 공개** — TCP/Polling, Camera/Control 등은 각각 검증된 Vertical Slice 단위로 추가
 5. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
@@ -79,7 +80,7 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 실제 Keycloak OIDC와 서버 Session, Synthetic MQTT → Kafka → PostgreSQL/Redis → REST/SSE → 운영 화면을 연결했습니다. 권한 격리, 상태 후퇴 방지, 중복·역순, Redis 장애 fallback 등 첫 제품 Slice의 핵심 실패 경계를 검증했습니다.
 
-실제 화면 공개는 Public Repository에 실행 가능한 전체 제품이 이미 공개됐다는 의미가 아닙니다. 실행 소스와 Quick Start는 다음 sync에서 별도로 검증·공개할 예정입니다.
+공개된 실행 소스와 Quick Start는 localhost-only Synthetic Portfolio Preview 범위입니다. 전체 제품이나 Production Release를 의미하지 않습니다.
 
 ## Release와 구별
 
@@ -89,10 +90,10 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 - 실제 고객 정보·Credential 비공개
 - 컨테이너 이미지 취약점 finding은 Release 검토에서 별도 처리
 - 측정하지 않은 성능 수치는 공개하지 않음
-- Public Tag/Release는 아직 수행하지 않음
+- Public Tag/Release/Hosting은 수행하지 않음(`NOT_RUN`)
 
 ## 공개 근거
 
-문서-only 갱신은 링크·기밀 경계·상태와 문서 CI를 확인합니다. 제품 소스 공개는 해당 범위의 깨끗한 설치·실행·핵심 테스트와 실제 Capture가 준비됐을 때 수행합니다. 제품을 실행하지 않은 문서 CI를 제품 테스트로 표시하지 않습니다.
+이 Snapshot은 공개 baseline, Java/Web/계약 build, Ubuntu Local Observe smoke와 독립 Windows fresh-clone Browser 여정을 구분해 검증합니다. Build 검사를 실행 제품 검증으로 과장하지 않습니다. Container image vulnerability review는 여전히 Release blocker입니다.
 
-[README](../README.md) · [로드맵](product/ROADMAP.ko.md)
+[README](../README.md) · [Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)

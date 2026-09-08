@@ -1,0 +1,61 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:${B02_POSTGRES_PORT:25432}/${B02_POSTGRES_DB:fieldops_b02}
+    username: ${B02_POSTGRES_USER:fieldops_b02}
+    password: ${B02_POSTGRES_PASSWORD}
+  flyway:
+    placeholders:
+      oidcIssuer: http://localhost:${B02_KEYCLOAK_PORT:28080}/realms/fieldops-local
+  data:
+    redis:
+      host: 127.0.0.1
+      port: ${B02_REDIS_PORT:26379}
+      password: ${B02_REDIS_PASSWORD}
+      timeout: 750ms
+  kafka:
+    bootstrap-servers: 127.0.0.1:${B02_KAFKA_PORT:29092}
+    consumer:
+      group-id: fieldops-b02-server
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: fieldops-bff-local
+            client-secret: ${B02_KEYCLOAK_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:3000/api/v1/login/oauth2/code/{registrationId}
+            scope: [openid, profile, email]
+            client-settings:
+              require-proof-key: true
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:${B02_KEYCLOAK_PORT:28080}/realms/fieldops-local
+
+server:
+  address: 127.0.0.1
+  port: ${B02_SERVER_PORT:28082}
+  servlet:
+    session:
+      cookie:
+        name: FIELDOPS_SESSION
+        http-only: true
+        secure: false
+        same-site: lax
+        path: /
+
+fieldops:
+  b02:
+    browser-origin: http://localhost:3000
+    kafka:
+      state-topic: fieldops.device.state-updated.v1
+    state-fresh-after: 15s
+    state-offline-after: 30s
+
+logging:
+  level:
+    io.krait.fieldops: INFO

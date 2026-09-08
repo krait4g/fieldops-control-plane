@@ -1,0 +1,21 @@
+logging:
+  level:
+    root: WARN
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:worker;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  kafka:
+    listener:
+      auto-startup: false
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+management:
+  health:
+    redis:
+      enabled: false

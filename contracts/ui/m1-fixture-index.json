@@ -1,0 +1,202 @@
+{
+  "version": "1.0.0",
+  "root": "fixtures/m1",
+  "fixtures": [
+    {
+      "id": "device-detail-offline",
+      "path": "fixtures/m1/devices/device-detail-offline.json",
+      "schema": "DeviceDetailResponse",
+      "state": "DEVICE_DETAIL_OFFLINE",
+      "synthetic": true
+    },
+    {
+      "id": "device-detail-online",
+      "path": "fixtures/m1/devices/device-detail-online.json",
+      "schema": "DeviceDetailResponse",
+      "state": "DEVICE_DETAIL_ONLINE",
+      "synthetic": true
+    },
+    {
+      "id": "device-list-empty",
+      "path": "fixtures/m1/devices/device-list-empty.json",
+      "schema": "DeviceListResponse",
+      "state": "DEVICE_LIST_EMPTY",
+      "synthetic": true
+    },
+    {
+      "id": "device-list-normal",
+      "path": "fixtures/m1/devices/device-list-normal.json",
+      "schema": "DeviceListResponse",
+      "state": "DEVICE_LIST_NORMAL",
+      "synthetic": true
+    },
+    {
+      "id": "device-state-live",
+      "path": "fixtures/m1/devices/device-state-live.json",
+      "schema": "DeviceStateResponse",
+      "state": "DEVICE_STATE_LIVE",
+      "synthetic": true
+    },
+    {
+      "id": "device-state-stale",
+      "path": "fixtures/m1/devices/device-state-stale.json",
+      "schema": "DeviceStateResponse",
+      "state": "DEVICE_STATE_STALE",
+      "synthetic": true
+    },
+    {
+      "id": "problem-forbidden",
+      "path": "fixtures/m1/errors/problem-forbidden.json",
+      "schema": "ProblemDetails",
+      "state": "PROBLEM_FORBIDDEN",
+      "synthetic": true
+    },
+    {
+      "id": "problem-invalid-query",
+      "path": "fixtures/m1/errors/problem-invalid-query.json",
+      "schema": "ProblemDetails",
+      "state": "PROBLEM_INVALID_QUERY",
+      "synthetic": true
+    },
+    {
+      "id": "problem-not-found",
+      "path": "fixtures/m1/errors/problem-not-found.json",
+      "schema": "ProblemDetails",
+      "state": "PROBLEM_NOT_FOUND",
+      "synthetic": true
+    },
+    {
+      "id": "problem-rate-limited",
+      "path": "fixtures/m1/errors/problem-rate-limited.json",
+      "schema": "ProblemDetails",
+      "state": "PROBLEM_RATE_LIMITED",
+      "synthetic": true
+    },
+    {
+      "id": "problem-read-model-unavailable",
+      "path": "fixtures/m1/errors/problem-read-model-unavailable.json",
+      "schema": "ProblemDetails",
+      "state": "PROBLEM_READ_MODEL_UNAVAILABLE",
+      "synthetic": true
+    },
+    {
+      "id": "problem-unauthorized",
+      "path": "fixtures/m1/errors/problem-unauthorized.json",
+      "schema": "ProblemDetails",
+      "state": "PROBLEM_UNAUTHORIZED",
+      "synthetic": true
+    },
+    {
+      "id": "member-list-empty",
+      "path": "fixtures/m1/members/member-list-empty.json",
+      "schema": "MemberListResponse",
+      "state": "MEMBER_LIST_EMPTY",
+      "synthetic": true
+    },
+    {
+      "id": "member-list",
+      "path": "fixtures/m1/members/member-list.json",
+      "schema": "MemberListResponse",
+      "state": "MEMBER_LIST",
+      "synthetic": true
+    },
+    {
+      "id": "environment-series-24h",
+      "path": "fixtures/m1/overview/environment-series-24h.json",
+      "schema": "TelemetrySeriesResponse",
+      "state": "ENVIRONMENT_SERIES_24H",
+      "synthetic": true
+    },
+    {
+      "id": "overview-empty",
+      "path": "fixtures/m1/overview/overview-empty.json",
+      "schema": "OverviewResponse",
+      "state": "OVERVIEW_EMPTY",
+      "synthetic": true
+    },
+    {
+      "id": "overview-normal",
+      "path": "fixtures/m1/overview/overview-normal.json",
+      "schema": "OverviewResponse",
+      "state": "OVERVIEW_NORMAL",
+      "synthetic": true
+    },
+    {
+      "id": "overview-partial",
+      "path": "fixtures/m1/overview/overview-partial.json",
+      "schema": "OverviewResponse",
+      "state": "OVERVIEW_PARTIAL",
+      "synthetic": true
+    },
+    {
+      "id": "overview-stale",
+      "path": "fixtures/m1/overview/overview-stale.json",
+      "schema": "OverviewResponse",
+      "state": "OVERVIEW_STALE",
+      "synthetic": true
+    },
+    {
+      "id": "device-lifecycle-changed",
+      "path": "fixtures/m1/realtime/device-lifecycle-changed.json",
+      "schema": "M1SseEvent",
+      "state": "DEVICE_LIFECYCLE_CHANGED",
+      "synthetic": true
+    },
+    {
+      "id": "device-state-updated-stale-version",
+      "path": "fixtures/m1/realtime/device-state-updated-stale-version.json",
+      "schema": "M1SseEvent",
+      "state": "DEVICE_STATE_UPDATED_STALE_VERSION",
+      "synthetic": true
+    },
+    {
+      "id": "device-state-updated",
+      "path": "fixtures/m1/realtime/device-state-updated.json",
+      "schema": "M1SseEvent",
+      "state": "DEVICE_STATE_UPDATED",
+      "synthetic": true
+    },
+    {
+      "id": "heartbeat",
+      "path": "fixtures/m1/realtime/heartbeat.json",
+      "schema": "M1SseEvent",
+      "state": "HEARTBEAT",
+      "synthetic": true
+    },
+    {
+      "id": "snapshot-required",
+      "path": "fixtures/m1/realtime/snapshot-required.json",
+      "schema": "M1SseEvent",
+      "state": "SNAPSHOT_REQUIRED",
+      "synthetic": true
+    },
+    {
+      "id": "session-admin",
+      "path": "fixtures/m1/session/session-admin.json",
+      "schema": "SessionResponse",
+      "state": "SESSION_ADMIN",
+      "synthetic": true
+    },
+    {
+      "id": "session-no-site",
+      "path": "fixtures/m1/session/session-no-site.json",
+      "schema": "SessionResponse",
+      "state": "SESSION_NO_SITE",
+      "synthetic": true
+    },
+    {
+      "id": "session-viewer",
+      "path": "fixtures/m1/session/session-viewer.json",
+      "schema": "SessionResponse",
+      "state": "SESSION_VIEWER",
+      "synthetic": true
+    },
+    {
+      "id": "series-24h",
+      "path": "fixtures/m1/telemetry/series-24h.json",
+      "schema": "TelemetrySeriesResponse",
+      "state": "SERIES_24H",
+      "synthetic": true
+    }
+  ]
+}

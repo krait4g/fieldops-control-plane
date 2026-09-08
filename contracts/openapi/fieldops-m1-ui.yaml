@@ -1,0 +1,1319 @@
+openapi: 3.1.0
+info:
+  title: FieldOps M1 Web Console API
+  version: 2.0.0
+  description: |
+    Contract-first REST API consumed by the M1 FieldOps Web Console.
+    Browser feature code uses same-origin /api/v1 paths. The authenticated
+    session is the authority for tenant, site, and permission scope.
+servers:
+  - url: /
+    description: Unified browser origin; /api/v1 is routed to fieldops-server.
+tags:
+  - name: Session
+  - name: Dashboard
+  - name: Devices
+  - name: Members
+  - name: Realtime
+security:
+  - sessionCookie: []
+
+paths:
+  /api/v1/oauth2/authorization/keycloak:
+    get:
+      operationId: startKeycloakLogin
+      tags: [Session]
+      summary: Start the local Keycloak Authorization Code and PKCE flow
+      security: []
+      responses:
+        "302":
+          description: Redirect to the configured Keycloak authorization endpoint
+          headers:
+            Location:
+              required: true
+              schema: { type: string, format: uri }
+
+  /api/v1/login/oauth2/code/keycloak:
+    get:
+      operationId: completeKeycloakLogin
+      tags: [Session]
+      summary: Complete the Keycloak authorization callback and establish the BFF session
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: state
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+      responses:
+        "302":
+          description: Redirect to the fixed same-origin overview route
+          headers:
+            Location:
+              required: true
+              schema: { type: string, format: uri-reference }
+
+  /api/v1/auth/csrf:
+    get:
+      operationId: getCsrfToken
+      tags: [Session]
+      summary: Read the CSRF token associated with the current BFF session
+      responses:
+        "200":
+          description: CSRF token metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CsrfTokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/auth/logout:
+    post:
+      operationId: logoutSession
+      tags: [Session]
+      summary: Invalidate only the local BFF session
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "204":
+          description: Local session invalidated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/session:
+    get:
+      operationId: getSession
+      tags: [Session]
+      summary: Read the current session and allowed tenant/site contexts
+      x-fieldops-ui:
+        routes: ["/login", "/overview", "/devices", "/devices/{deviceId}", "/admin/members"]
+        permissionAuthority: permissions
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+              examples:
+                admin:
+                  externalValue: ../../fixtures/m1/session/session-admin.json
+                viewer:
+                  externalValue: ../../fixtures/m1/session/session-viewer.json
+                noSite:
+                  externalValue: ../../fixtures/m1/session/session-no-site.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/v1/dashboard/overview:
+    get:
+      operationId: getOverview
+      tags: [Dashboard]
+      summary: Read the composed overview dashboard snapshot
+      x-fieldops-ui:
+        route: /overview
+        permissions: [OVERVIEW_READ]
+        partialFailure: true
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SiteId"
+        - $ref: "#/components/parameters/TimeRange"
+      responses:
+        "200":
+          description: Overview snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverviewResponse"
+              examples:
+                normal:
+                  externalValue: ../../fixtures/m1/overview/overview-normal.json
+                partial:
+                  externalValue: ../../fixtures/m1/overview/overview-partial.json
+                stale:
+                  externalValue: ../../fixtures/m1/overview/overview-stale.json
+                empty:
+                  externalValue: ../../fixtures/m1/overview/overview-empty.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidQuery"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/v1/dashboard/environment-series:
+    get:
+      operationId: getEnvironmentSeries
+      tags: [Dashboard]
+      summary: Read bucketed environment series for the overview chart
+      x-fieldops-ui:
+        route: /overview
+        widget: environmentTrend
+        permissions: [OVERVIEW_READ, TELEMETRY_READ]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SiteId"
+        - $ref: "#/components/parameters/TimeRange"
+        - $ref: "#/components/parameters/Bucket"
+      responses:
+        "200":
+          description: Environment time series
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelemetrySeriesResponse"
+              examples:
+                default:
+                  externalValue: ../../fixtures/m1/overview/environment-series-24h.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidQuery"
+        "503":
+          $ref: "#/components/responses/TelemetrySeriesUnavailable"
+
+  /api/v1/devices:
+    get:
+      operationId: listDevices
+      tags: [Devices]
+      summary: List devices in the active tenant and selected site
+      x-fieldops-ui:
+        route: /devices
+        permissions: [DEVICE_READ]
+        pagination: cursor
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SiteId"
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: deviceType
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+        - name: protocol
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/DeviceProtocol"
+        - name: connectivity
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Connectivity"
+        - name: readiness
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Readiness"
+        - name: freshness
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/FreshnessStatus"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Device list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceListResponse"
+              examples:
+                normal:
+                  externalValue: ../../fixtures/m1/devices/device-list-normal.json
+                empty:
+                  externalValue: ../../fixtures/m1/devices/device-list-empty.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidQuery"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/v1/devices/{deviceId}:
+    get:
+      operationId: getDevice
+      tags: [Devices]
+      summary: Read device registry and connection metadata
+      x-fieldops-ui:
+        route: /devices/{deviceId}
+        permissions: [DEVICE_READ]
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Device detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceDetailResponse"
+              examples:
+                online:
+                  externalValue: ../../fixtures/m1/devices/device-detail-online.json
+                offline:
+                  externalValue: ../../fixtures/m1/devices/device-detail-offline.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/DeviceNotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/v1/devices/{deviceId}/state:
+    get:
+      operationId: getDeviceState
+      tags: [Devices]
+      summary: Read the latest device state projection or snapshot fallback
+      x-fieldops-ui:
+        route: /devices/{deviceId}
+        permissions: [DEVICE_READ, TELEMETRY_READ]
+        realtimeEvents: [device.state.updated, device.lifecycle.changed]
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Latest device state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceStateResponse"
+              examples:
+                realtime:
+                  externalValue: ../../fixtures/m1/devices/device-state-live.json
+                stale:
+                  externalValue: ../../fixtures/m1/devices/device-state-stale.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/DeviceNotFound"
+        "503":
+          $ref: "#/components/responses/RealtimeStateUnavailable"
+
+  /api/v1/devices/{deviceId}/telemetry/series:
+    get:
+      operationId: getDeviceTelemetrySeries
+      tags: [Devices]
+      summary: Read bucketed telemetry series for a device
+      x-fieldops-ui:
+        route: /devices/{deviceId}
+        permissions: [DEVICE_READ, TELEMETRY_READ]
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/TimeRange"
+        - $ref: "#/components/parameters/Bucket"
+        - name: metrics
+          in: query
+          required: false
+          description: Comma-separated metric codes. Maximum four codes.
+          schema:
+            type: string
+            maxLength: 300
+      responses:
+        "200":
+          description: Device telemetry series
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelemetrySeriesResponse"
+              examples:
+                default:
+                  externalValue: ../../fixtures/m1/telemetry/series-24h.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/DeviceNotFound"
+        "422":
+          $ref: "#/components/responses/InvalidQuery"
+        "503":
+          $ref: "#/components/responses/TelemetrySeriesUnavailable"
+
+  /api/v1/members:
+    get:
+      operationId: listMembers
+      tags: [Members]
+      summary: List tenant members for the read-only M1 screen
+      x-fieldops-ui:
+        route: /admin/members
+        permissions: [MEMBER_READ]
+        mutationAllowed: false
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: role
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/MemberRole"
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/MemberStatus"
+        - name: siteId
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Member list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberListResponse"
+              examples:
+                normal:
+                  externalValue: ../../fixtures/m1/members/member-list.json
+                empty:
+                  externalValue: ../../fixtures/m1/members/member-list-empty.json
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/MemberReadDenied"
+        "422":
+          $ref: "#/components/responses/InvalidQuery"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/v1/events/stream:
+    get:
+      operationId: streamSiteEvents
+      tags: [Realtime]
+      summary: Open the site-scoped Server-Sent Events stream
+      description: |
+        The browser uses native EventSource with same-origin session cookies.
+        The server emits standard id, event, retry, and data fields. The JSON
+        data field follows contracts/json-schema/m1-sse-event.schema.json.
+      x-fieldops-ui:
+        permissions: [OVERVIEW_READ, DEVICE_READ, TELEMETRY_READ]
+        transport: native-event-source
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SiteId"
+      responses:
+        "200":
+          description: SSE stream
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-cache
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                wire:
+                  value: |
+                    id: 01K...
+                    event: device.state.updated
+                    retry: 3000
+                    data: {"eventId":"01K...","eventType":"device.state.updated"}
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: FIELDOPS_SESSION
+
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      required: true
+      description: Tenant selected from the authenticated session membership scope.
+      schema:
+        type: string
+        minLength: 1
+    SiteId:
+      name: siteId
+      in: query
+      required: true
+      description: Site selected from the authenticated session scope.
+      schema:
+        type: string
+        minLength: 1
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    TimeRange:
+      name: range
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/TimeRange"
+        default: PT24H
+    Bucket:
+      name: bucket
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/TimeBucket"
+        default: PT5M
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 512
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    CsrfToken:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      description: Token returned by /api/v1/auth/csrf for the current session.
+      schema:
+        type: string
+        minLength: 1
+
+  responses:
+    Unauthorized:
+      description: Session missing or expired
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            sessionRequired:
+              externalValue: ../../fixtures/m1/errors/problem-unauthorized.json
+    Forbidden:
+      description: Authenticated but outside the allowed tenant or site scope
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            forbidden:
+              externalValue: ../../fixtures/m1/errors/problem-forbidden.json
+    MemberReadDenied:
+      description: MEMBER_READ permission is absent
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            forbidden:
+              value:
+                type: https://fieldops.dev/problems/member-read-denied
+                title: Member access denied
+                status: 403
+                code: MEMBER_READ_DENIED
+                detail: The current session cannot read tenant members.
+                traceId: trace-demo-member-403
+                timestamp: 2026-09-03T04:30:00Z
+    DeviceNotFound:
+      description: Device does not exist or cannot be disclosed
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            notFound:
+              externalValue: ../../fixtures/m1/errors/problem-not-found.json
+    InvalidQuery:
+      description: Query parameter validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            invalid:
+              externalValue: ../../fixtures/m1/errors/problem-invalid-query.json
+    ServiceUnavailable:
+      description: Required read model is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            unavailable:
+              externalValue: ../../fixtures/m1/errors/problem-read-model-unavailable.json
+    RealtimeStateUnavailable:
+      description: Realtime state is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            unavailable:
+              value:
+                type: https://fieldops.dev/problems/realtime-state-unavailable
+                title: Realtime state unavailable
+                status: 503
+                code: REALTIME_STATE_UNAVAILABLE
+                detail: The latest state projection is temporarily unavailable.
+                traceId: trace-demo-state-503
+                timestamp: 2026-09-03T04:30:00Z
+    TelemetrySeriesUnavailable:
+      description: Telemetry series query is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            unavailable:
+              value:
+                type: https://fieldops.dev/problems/telemetry-series-unavailable
+                title: Telemetry series unavailable
+                status: 503
+                code: TELEMETRY_SERIES_UNAVAILABLE
+                detail: Historical telemetry cannot be queried at this time.
+                traceId: trace-demo-series-503
+                timestamp: 2026-09-03T04:30:00Z
+
+  schemas:
+    TimeRange:
+      type: string
+      enum: [PT1H, PT6H, PT24H, P7D]
+
+    TimeBucket:
+      type: string
+      enum: [PT1M, PT5M, PT1H, PT6H]
+
+    Permission:
+      type: string
+      enum:
+        - OVERVIEW_READ
+        - DEVICE_READ
+        - TELEMETRY_READ
+        - MEMBER_READ
+        - SITE_READ
+        - CAMERA_READ
+        - ALARM_READ
+        - COMMAND_READ
+        - RULE_MANAGE
+        - PLATFORM_HEALTH_READ
+        - USAGE_READ
+
+    MemberRole:
+      type: string
+      enum: [TENANT_VIEWER, SITE_OPERATOR, COMMAND_APPROVER, TENANT_ADMIN, PLATFORM_ADMIN]
+
+    MemberStatus:
+      type: string
+      enum: [ACTIVE, SUSPENDED, INVITED]
+
+    DeviceProtocol:
+      type: string
+      enum: [MQTT, TCP_BINARY, HTTP_POLLING, ONVIF]
+
+    Connectivity:
+      type: string
+      enum: [ONLINE, OFFLINE, DEGRADED, UNKNOWN]
+
+    Readiness:
+      type: string
+      enum: [READY, NOT_READY, FAULTED, MAINTENANCE, UNKNOWN]
+
+    FreshnessStatus:
+      type: string
+      enum: [FRESH, STALE, UNKNOWN]
+
+    DataSource:
+      type: string
+      enum: [REALTIME_PROJECTION, POSTGRES_SNAPSHOT, COMPOSED_READ_MODEL, NONE]
+
+    WidgetStatus:
+      type: string
+      enum: [AVAILABLE, EMPTY, STALE, UNAVAILABLE, FORBIDDEN]
+
+    MetricQuality:
+      type: string
+      enum: [GOOD, UNCERTAIN, BAD, MISSING]
+
+    MetricValue:
+      description: JSON scalar metric value. The JSON Schema number type includes integer values.
+      type: [number, boolean, string, "null"]
+
+    SessionResponse:
+      type: object
+      additionalProperties: false
+      required: [user, memberships, activeContext, issuedAt]
+      properties:
+        user:
+          $ref: "#/components/schemas/SessionUser"
+        memberships:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionMembership"
+        activeContext:
+          $ref: "#/components/schemas/ActiveContext"
+        issuedAt:
+          type: string
+          format: date-time
+
+    CsrfTokenResponse:
+      type: object
+      additionalProperties: false
+      required: [headerName, parameterName, token]
+      properties:
+        headerName: { type: string, const: X-XSRF-TOKEN }
+        parameterName: { type: string, const: _csrf }
+        token: { type: string, minLength: 1 }
+
+    SessionUser:
+      type: object
+      additionalProperties: false
+      required: [id, displayName, email]
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        email: { type: string, format: email }
+
+    SessionMembership:
+      type: object
+      additionalProperties: false
+      required: [tenant, role, permissions, sites]
+      properties:
+        tenant:
+          $ref: "#/components/schemas/TenantOption"
+        role:
+          $ref: "#/components/schemas/MemberRole"
+        permissions:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Permission"
+        sites:
+          type: array
+          items:
+            $ref: "#/components/schemas/SiteOption"
+
+    TenantOption:
+      type: object
+      additionalProperties: false
+      required: [id, name, timezone]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        timezone: { type: string }
+
+    SiteOption:
+      type: object
+      additionalProperties: false
+      required: [id, name, timezone]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        timezone: { type: string }
+
+    ActiveContext:
+      type: object
+      additionalProperties: false
+      required: [tenantId, siteId]
+      properties:
+        tenantId: { type: string }
+        siteId: { type: [string, "null"] }
+
+    DashboardContext:
+      type: object
+      additionalProperties: false
+      required: [tenantId, siteId, siteName, timezone, range, generatedAt, dataVersion]
+      properties:
+        tenantId: { type: string }
+        siteId: { type: string }
+        siteName: { type: string }
+        timezone: { type: string }
+        range:
+          $ref: "#/components/schemas/TimeRange"
+        generatedAt: { type: string, format: date-time }
+        dataVersion: { type: string }
+
+    WidgetFailure:
+      type: object
+      additionalProperties: false
+      required: [code, message, retryable]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        retryable: { type: boolean }
+        traceId: { type: [string, "null"] }
+
+    WidgetMeta:
+      type: object
+      additionalProperties: false
+      required: [status, source, generatedAt, staleAt, failure]
+      properties:
+        status:
+          $ref: "#/components/schemas/WidgetStatus"
+        source:
+          $ref: "#/components/schemas/DataSource"
+        generatedAt: { type: string, format: date-time }
+        staleAt: { type: [string, "null"], format: date-time }
+        failure:
+          oneOf:
+            - $ref: "#/components/schemas/WidgetFailure"
+            - type: "null"
+
+    OverviewResponse:
+      type: object
+      additionalProperties: false
+      required: [context, widgets, partialFailures]
+      properties:
+        context:
+          $ref: "#/components/schemas/DashboardContext"
+        widgets:
+          $ref: "#/components/schemas/OverviewWidgets"
+        partialFailures:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartialFailure"
+
+    OverviewWidgets:
+      type: object
+      additionalProperties: false
+      required:
+        - deviceStatus
+        - activeAlarms
+        - commands
+        - freshness
+        - currentConditions
+        - activeAlarmList
+        - deviceHealth
+        - recentCommands
+        - primaryCamera
+      properties:
+        deviceStatus:
+          $ref: "#/components/schemas/DeviceStatusWidget"
+        activeAlarms:
+          $ref: "#/components/schemas/ActiveAlarmWidget"
+        commands:
+          $ref: "#/components/schemas/CommandWidget"
+        freshness:
+          $ref: "#/components/schemas/FreshnessWidget"
+        currentConditions:
+          $ref: "#/components/schemas/CurrentConditionsWidget"
+        activeAlarmList:
+          $ref: "#/components/schemas/ActiveAlarmListWidget"
+        deviceHealth:
+          $ref: "#/components/schemas/DeviceHealthWidget"
+        recentCommands:
+          $ref: "#/components/schemas/RecentCommandsWidget"
+        primaryCamera:
+          $ref: "#/components/schemas/PrimaryCameraWidget"
+
+    DeviceStatusWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data: { $ref: "#/components/schemas/DeviceStatusCounts" }
+
+    DeviceStatusCounts:
+      type: object
+      additionalProperties: false
+      required: [online, offline, degraded, unknown, total]
+      properties:
+        online: { type: integer, minimum: 0 }
+        offline: { type: integer, minimum: 0 }
+        degraded: { type: integer, minimum: 0 }
+        unknown: { type: integer, minimum: 0 }
+        total: { type: integer, minimum: 0 }
+
+    ActiveAlarmWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data: { $ref: "#/components/schemas/AlarmCounts" }
+
+    AlarmCounts:
+      type: object
+      additionalProperties: false
+      required: [active, critical, warning, info, highestSeverity]
+      properties:
+        active: { type: integer, minimum: 0 }
+        critical: { type: integer, minimum: 0 }
+        warning: { type: integer, minimum: 0 }
+        info: { type: integer, minimum: 0 }
+        highestSeverity:
+          type: [string, "null"]
+          enum: [CRITICAL, WARNING, INFO, null]
+
+    CommandWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data: { $ref: "#/components/schemas/CommandCounts" }
+
+    CommandCounts:
+      type: object
+      additionalProperties: false
+      required: [waitingApproval, inProgress, unknown]
+      properties:
+        waitingApproval: { type: integer, minimum: 0 }
+        inProgress: { type: integer, minimum: 0 }
+        unknown: { type: integer, minimum: 0 }
+
+    FreshnessWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data: { $ref: "#/components/schemas/FreshnessCounts" }
+
+    FreshnessCounts:
+      type: object
+      additionalProperties: false
+      required: [fresh, stale, monitored, ratio]
+      properties:
+        fresh: { type: integer, minimum: 0 }
+        stale: { type: integer, minimum: 0 }
+        monitored: { type: integer, minimum: 0 }
+        ratio: { type: number, minimum: 0, maximum: 1 }
+
+    CurrentConditionsWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneCondition"
+
+    ZoneCondition:
+      type: object
+      additionalProperties: false
+      required: [zoneId, zoneName, metrics]
+      properties:
+        zoneId: { type: string }
+        zoneName: { type: string }
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricReading"
+
+    ActiveAlarmListWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActiveAlarmSummary"
+
+    ActiveAlarmSummary:
+      type: object
+      additionalProperties: false
+      required: [id, severity, title, deviceId, deviceName, startedAt]
+      properties:
+        id: { type: string }
+        severity: { type: string, enum: [CRITICAL, WARNING, INFO] }
+        title: { type: string }
+        deviceId: { type: string }
+        deviceName: { type: string }
+        startedAt: { type: string, format: date-time }
+
+    DeviceHealthWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data: { $ref: "#/components/schemas/DeviceStatusCounts" }
+
+    RecentCommandsWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecentCommandSummary"
+
+    RecentCommandSummary:
+      type: object
+      additionalProperties: false
+      required: [id, targetName, type, state, requestedAt]
+      properties:
+        id: { type: string }
+        targetName: { type: string }
+        type: { type: string }
+        state: { type: string, enum: [WAITING_APPROVAL, IN_PROGRESS, SUCCEEDED, FAILED, UNKNOWN] }
+        requestedAt: { type: string, format: date-time }
+
+    PrimaryCameraWidget:
+      type: object
+      additionalProperties: false
+      required: [meta, data]
+      properties:
+        meta: { $ref: "#/components/schemas/WidgetMeta" }
+        data:
+          oneOf:
+            - $ref: "#/components/schemas/PrimaryCameraSummary"
+            - type: "null"
+
+    PrimaryCameraSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name, previewStatus, posterUrl]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        previewStatus: { type: string, enum: [AVAILABLE, UNAVAILABLE, CONNECTING] }
+        posterUrl: { type: [string, "null"], format: uri-reference }
+
+    PartialFailure:
+      type: object
+      additionalProperties: false
+      required: [source, code, retryable]
+      properties:
+        source: { type: string }
+        code: { type: string }
+        retryable: { type: boolean }
+        traceId: { type: [string, "null"] }
+
+    MetricReading:
+      type: object
+      additionalProperties: false
+      required: [code, displayName, value, unit, quality, observedAt]
+      properties:
+        code: { type: string }
+        displayName: { type: string }
+        value: { $ref: "#/components/schemas/MetricValue" }
+        unit: { type: [string, "null"] }
+        quality: { $ref: "#/components/schemas/MetricQuality" }
+        observedAt: { type: string, format: date-time }
+
+    TelemetrySeriesResponse:
+      type: object
+      additionalProperties: false
+      required: [context, series]
+      properties:
+        context: { $ref: "#/components/schemas/SeriesContext" }
+        series:
+          type: array
+          items:
+            $ref: "#/components/schemas/TelemetrySeries"
+
+    SeriesContext:
+      type: object
+      additionalProperties: false
+      required: [tenantId, siteId, deviceId, timezone, range, bucket, generatedAt]
+      properties:
+        tenantId: { type: string }
+        siteId: { type: string }
+        deviceId: { type: [string, "null"] }
+        timezone: { type: string }
+        range: { $ref: "#/components/schemas/TimeRange" }
+        bucket: { $ref: "#/components/schemas/TimeBucket" }
+        generatedAt: { type: string, format: date-time }
+
+    TelemetrySeries:
+      type: object
+      additionalProperties: false
+      required: [metricCode, displayName, unit, aggregation, points]
+      properties:
+        metricCode: { type: string }
+        displayName: { type: string }
+        unit: { type: string }
+        aggregation: { type: string, enum: [RAW, AVG, MIN, MAX, LAST] }
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/TelemetryPoint"
+
+    TelemetryPoint:
+      type: object
+      additionalProperties: false
+      required: [timestamp, value, quality]
+      properties:
+        timestamp: { type: string, format: date-time }
+        value: { type: [number, "null"] }
+        quality: { $ref: "#/components/schemas/MetricQuality" }
+
+    PageInfo:
+      type: object
+      additionalProperties: false
+      required: [pageSize, hasNext, nextCursor]
+      properties:
+        pageSize: { type: integer, minimum: 1 }
+        hasNext: { type: boolean }
+        nextCursor: { type: [string, "null"] }
+
+    DeviceListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeviceSummary"
+        page: { $ref: "#/components/schemas/PageInfo" }
+        total: { type: integer, minimum: 0 }
+
+    DeviceSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - externalId
+        - name
+        - typeCode
+        - typeName
+        - siteId
+        - siteName
+        - zoneId
+        - zoneName
+        - protocol
+        - connectivity
+        - readiness
+        - freshness
+        - latestMetric
+        - lastSeenAt
+        - activeAlarmCount
+        - version
+      properties:
+        id: { type: string }
+        externalId: { type: string }
+        name: { type: string }
+        typeCode: { type: string }
+        typeName: { type: string }
+        siteId: { type: string }
+        siteName: { type: string }
+        zoneId: { type: [string, "null"] }
+        zoneName: { type: [string, "null"] }
+        protocol: { $ref: "#/components/schemas/DeviceProtocol" }
+        connectivity: { $ref: "#/components/schemas/Connectivity" }
+        readiness: { $ref: "#/components/schemas/Readiness" }
+        freshness: { $ref: "#/components/schemas/FreshnessStatus" }
+        latestMetric:
+          oneOf:
+            - $ref: "#/components/schemas/MetricReading"
+            - type: "null"
+        lastSeenAt: { type: [string, "null"], format: date-time }
+        activeAlarmCount: { type: integer, minimum: 0 }
+        version: { type: integer, minimum: 0 }
+
+    DeviceDetailResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - externalId
+        - name
+        - typeCode
+        - typeName
+        - siteId
+        - siteName
+        - zoneId
+        - zoneName
+        - protocol
+        - primaryMetricCodes
+        - connection
+        - createdAt
+        - updatedAt
+        - version
+      properties:
+        id: { type: string }
+        externalId: { type: string }
+        name: { type: string }
+        typeCode: { type: string }
+        typeName: { type: string }
+        siteId: { type: string }
+        siteName: { type: string }
+        zoneId: { type: [string, "null"] }
+        zoneName: { type: [string, "null"] }
+        protocol: { $ref: "#/components/schemas/DeviceProtocol" }
+        primaryMetricCodes:
+          type: array
+          maxItems: 6
+          items: { type: string }
+        connection: { $ref: "#/components/schemas/ConnectionSummary" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        version: { type: integer, minimum: 0 }
+
+    ConnectionSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - adapterType
+        - status
+        - lastConnectedAt
+        - lastDisconnectedAt
+        - reasonCode
+        - sessionIdMasked
+      properties:
+        adapterType: { type: string }
+        status: { type: string, enum: [CONNECTED, DISCONNECTED, DEGRADED, UNKNOWN] }
+        lastConnectedAt: { type: [string, "null"], format: date-time }
+        lastDisconnectedAt: { type: [string, "null"], format: date-time }
+        reasonCode: { type: [string, "null"] }
+        sessionIdMasked: { type: [string, "null"] }
+
+    DeviceStateResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - deviceId
+        - connectivity
+        - readiness
+        - freshness
+        - source
+        - stateVersion
+        - stateEpoch
+        - revision
+        - observedAt
+        - receivedAt
+        - staleAt
+        - metrics
+      properties:
+        deviceId: { type: string }
+        connectivity: { $ref: "#/components/schemas/Connectivity" }
+        readiness: { $ref: "#/components/schemas/Readiness" }
+        freshness: { $ref: "#/components/schemas/FreshnessStatus" }
+        source: { type: string, enum: [REDIS_REALTIME, POSTGRES_SNAPSHOT, NONE] }
+        stateVersion: { type: integer, minimum: 0 }
+        stateEpoch:
+          type: string
+          minLength: 1
+          description: Normalized topic identifier and partition; changes require an authenticated snapshot reset.
+        revision:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Accepted normalized Kafka offset plus one within stateEpoch.
+        observedAt: { type: [string, "null"], format: date-time }
+        receivedAt: { type: [string, "null"], format: date-time }
+        staleAt: { type: [string, "null"], format: date-time }
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricReading"
+
+    MemberListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberSummary"
+        page: { $ref: "#/components/schemas/PageInfo" }
+        total: { type: integer, minimum: 0 }
+
+    MemberSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - displayName
+        - email
+        - role
+        - siteScopes
+        - allSites
+        - status
+        - lastLoginAt
+        - updatedBy
+        - updatedAt
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: "#/components/schemas/MemberRole" }
+        siteScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SiteOption"
+        allSites: { type: boolean }
+        status: { $ref: "#/components/schemas/MemberStatus" }
+        lastLoginAt: { type: [string, "null"], format: date-time }
+        updatedBy: { type: string }
+        updatedAt: { type: string, format: date-time }
+
+    FieldError:
+      type: object
+      additionalProperties: false
+      required: [field, code, message]
+      properties:
+        field: { type: string }
+        code: { type: string }
+        message: { type: string }
+
+    ProblemDetails:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, code, detail, traceId, timestamp]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { type: string }
+        detail: { type: string }
+        traceId: { type: string }
+        timestamp: { type: string, format: date-time }
+        retryAfterSeconds: { type: integer, minimum: 0 }
+        fieldErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldError"

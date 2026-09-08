@@ -1,0 +1,8 @@
+user b02-gateway
+topic read fieldops/local/+/+/+/telemetry
+
+user b02-tenant-a
+topic write fieldops/local/tenant-a/site-a/+/telemetry
+
+user b02-tenant-b
+topic write fieldops/local/tenant-b/site-b/+/telemetry

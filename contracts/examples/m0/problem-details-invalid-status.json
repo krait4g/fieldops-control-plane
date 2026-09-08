@@ -1,0 +1,9 @@
+{
+  "type": "https://fieldops.dev/problems/foundation-synthetic",
+  "title": "Synthetic foundation problem",
+  "status": 200,
+  "code": "FOUNDATION_SYNTHETIC_INVALID",
+  "detail": "The HTTP status is intentionally outside the problem range.",
+  "traceId": "trace-foundation-003",
+  "timestamp": "2026-09-07T00:00:00Z"
+}

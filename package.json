@@ -8,10 +8,25 @@
     "pnpm": ">=11 <12"
   },
   "scripts": {
+    "lint": "pnpm run lint:web",
+    "test": "pnpm run test:web",
+    "build": "node apps/web-console/scripts/run-remote-build.mjs",
     "dev:web": "pnpm --filter @fieldops/web-console dev",
     "build:web": "pnpm --filter @fieldops/web-console build",
     "lint:web": "pnpm --filter @fieldops/web-console lint",
+    "typecheck:web": "pnpm --filter @fieldops/web-console typecheck",
     "test:web": "pnpm --filter @fieldops/web-console test",
+    "test:e2e:web": "pnpm --filter @fieldops/web-console test:e2e",
+    "generate:api": "pnpm --filter @fieldops/web-console generate:api",
+    "contract:lint": "node tests/contract-tests/lint-contracts.mjs",
+    "contract:test": "node tests/contract-tests/test-contracts.mjs",
     "verify:repo": "python scripts/verify_repository_baseline.py"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.0.0",
+    "@asyncapi/parser": "3.6.3",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "yaml": "2.9.0"
   }
 }

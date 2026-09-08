@@ -1,0 +1,200 @@
+{
+  "version": "1.0.0",
+  "library": "@tanstack/react-query",
+  "defaults": {
+    "refetchOnWindowFocus": false,
+    "retry": {
+      "queries": 2,
+      "mutations": 0,
+      "doNotRetryHttpStatus": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422
+      ]
+    }
+  },
+  "queries": [
+    {
+      "id": "session",
+      "operationId": "getSession",
+      "key": [
+        "session"
+      ],
+      "staleTimeMs": 30000,
+      "gcTimeMs": 300000,
+      "contextFields": [],
+      "realtimeEvents": [],
+      "notes": "The session response is the permission authority. Do not infer permissions from role."
+    },
+    {
+      "id": "overview",
+      "operationId": "getOverview",
+      "key": [
+        "overview",
+        "{tenantId}",
+        "{siteId}",
+        "{range}"
+      ],
+      "staleTimeMs": 10000,
+      "gcTimeMs": 300000,
+      "contextFields": [
+        "tenantId",
+        "siteId",
+        "range"
+      ],
+      "realtimeEvents": [
+        "device.state.updated",
+        "device.lifecycle.changed",
+        "snapshot-required"
+      ],
+      "eventStrategy": "Batch invalidation for 500ms; do not refetch once per event."
+    },
+    {
+      "id": "environment-series",
+      "operationId": "getEnvironmentSeries",
+      "key": [
+        "environment-series",
+        "{tenantId}",
+        "{siteId}",
+        "{range}",
+        "{bucket}"
+      ],
+      "staleTimeMs": 60000,
+      "gcTimeMs": 600000,
+      "contextFields": [
+        "tenantId",
+        "siteId",
+        "range",
+        "bucket"
+      ],
+      "realtimeEvents": [
+        "snapshot-required"
+      ],
+      "eventStrategy": "Historical series is not replaced by raw SSE. Invalidate on explicit snapshot reset or range change."
+    },
+    {
+      "id": "device-list",
+      "operationId": "listDevices",
+      "key": [
+        "devices",
+        "{tenantId}",
+        "{siteId}",
+        "{normalizedFilters}",
+        "{cursor}"
+      ],
+      "staleTimeMs": 15000,
+      "gcTimeMs": 300000,
+      "contextFields": [
+        "tenantId",
+        "siteId",
+        "filters",
+        "cursor"
+      ],
+      "realtimeEvents": [
+        "device.state.updated",
+        "device.lifecycle.changed",
+        "snapshot-required"
+      ],
+      "eventStrategy": "Patch visible rows only after mapper validation; otherwise invalidate in a 500ms batch."
+    },
+    {
+      "id": "device-detail",
+      "operationId": "getDevice",
+      "key": [
+        "device",
+        "{tenantId}",
+        "{siteId}",
+        "{deviceId}"
+      ],
+      "staleTimeMs": 60000,
+      "gcTimeMs": 600000,
+      "contextFields": [
+        "tenantId",
+        "siteId",
+        "deviceId"
+      ],
+      "realtimeEvents": [
+        "snapshot-required"
+      ],
+      "eventStrategy": "Registry metadata changes are not part of M1 SSE."
+    },
+    {
+      "id": "device-state",
+      "operationId": "getDeviceState",
+      "key": [
+        "device-state",
+        "{tenantId}",
+        "{siteId}",
+        "{deviceId}"
+      ],
+      "staleTimeMs": 5000,
+      "gcTimeMs": 300000,
+      "contextFields": [
+        "tenantId",
+        "siteId",
+        "deviceId"
+      ],
+      "realtimeEvents": [
+        "device.state.updated",
+        "device.lifecycle.changed",
+        "snapshot-required"
+      ],
+      "eventStrategy": "Apply only when event version is greater than cached stateVersion."
+    },
+    {
+      "id": "device-series",
+      "operationId": "getDeviceTelemetrySeries",
+      "key": [
+        "device-series",
+        "{tenantId}",
+        "{siteId}",
+        "{deviceId}",
+        "{range}",
+        "{metrics}",
+        "{bucket}"
+      ],
+      "staleTimeMs": 60000,
+      "gcTimeMs": 600000,
+      "contextFields": [
+        "tenantId",
+        "siteId",
+        "deviceId",
+        "range",
+        "metrics",
+        "bucket"
+      ],
+      "realtimeEvents": [
+        "snapshot-required"
+      ],
+      "eventStrategy": "Do not append unbucketed SSE values into an aggregated series."
+    },
+    {
+      "id": "member-list",
+      "operationId": "listMembers",
+      "key": [
+        "members",
+        "{tenantId}",
+        "{normalizedFilters}",
+        "{cursor}"
+      ],
+      "staleTimeMs": 30000,
+      "gcTimeMs": 300000,
+      "contextFields": [
+        "tenantId",
+        "filters",
+        "cursor"
+      ],
+      "realtimeEvents": [],
+      "eventStrategy": "Membership updates are out of M1 scope."
+    }
+  ],
+  "contextResetRules": [
+    "Close the old EventSource before selecting a new tenant or site.",
+    "Do not reuse cached data across a different tenantId or siteId.",
+    "Clear transient selection and cursor when a filter scope changes.",
+    "Keep the last successful snapshot visible while reconnecting, but mark it non-live."
+  ]
+}

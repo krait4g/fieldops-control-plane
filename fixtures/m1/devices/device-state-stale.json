@@ -1,0 +1,31 @@
+{
+  "deviceId": "device-soil-02",
+  "connectivity": "OFFLINE",
+  "readiness": "UNKNOWN",
+  "freshness": "STALE",
+  "source": "POSTGRES_SNAPSHOT",
+  "stateVersion": 315,
+  "stateEpoch": "fieldops.telemetry.normalized.v1:topic-demo-uuid:0",
+  "revision": 315,
+  "observedAt": "2026-09-03T04:20:00Z",
+  "receivedAt": "2026-09-03T04:20:01Z",
+  "staleAt": "2026-09-03T04:20:30Z",
+  "metrics": [
+    {
+      "code": "soil.moisture.pct",
+      "displayName": "Soil moisture",
+      "value": 23.1,
+      "unit": "%",
+      "quality": "UNCERTAIN",
+      "observedAt": "2026-09-03T04:20:00Z"
+    },
+    {
+      "code": "soil.temperature.c",
+      "displayName": "Soil temperature",
+      "value": 21.9,
+      "unit": "°C",
+      "quality": "UNCERTAIN",
+      "observedAt": "2026-09-03T04:20:00Z"
+    }
+  ]
+}

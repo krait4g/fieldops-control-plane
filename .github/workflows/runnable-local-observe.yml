@@ -1,0 +1,126 @@
+name: Runnable Local Observe
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runnable-local-observe-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-contract:
+    name: Build and contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+
+      - name: Install locked Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Java and run unit tests
+        run: ./gradlew clean test build --no-daemon
+
+      - name: Check generated API
+        run: pnpm --filter @fieldops/web-console check:api
+
+      - name: Lint Web
+        run: pnpm --filter @fieldops/web-console lint
+
+      - name: Typecheck Web
+        run: pnpm --filter @fieldops/web-console typecheck
+
+      - name: Run Web unit and component tests
+        run: pnpm --filter @fieldops/web-console test
+
+      - name: Build remote production Web
+        run: pnpm build
+
+      - name: Lint contracts
+        run: pnpm contract:lint
+
+      - name: Test contracts
+        run: pnpm contract:test
+
+      - name: Verify public repository baseline
+        run: python scripts/verify_repository_baseline.py
+
+  local-observe-smoke:
+    name: Ubuntu Local Observe smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+
+      - name: Show Docker Compose version
+        run: docker compose version
+
+      - name: Start Local Observe
+        run: python3 scripts/b02_observe.py up
+
+      - name: Check Local Observe status
+        run: python3 scripts/b02_observe.py status
+
+      - name: Run deterministic portfolio demo
+        run: python3 scripts/b02_observe.py demo --device all --scenario portfolio
+
+      - name: Verify History and Latest State
+        run: python3 scripts/b02_observe.py verify
+
+      - name: Stop task-owned Local Observe resources
+        if: always() && hashFiles('scripts/b02_observe.py') != ''
+        run: python3 scripts/b02_observe.py down

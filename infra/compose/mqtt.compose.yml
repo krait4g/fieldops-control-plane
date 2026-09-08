@@ -1,0 +1,31 @@
+# Synthetic localhost development only. Not a production configuration.
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22@sha256:212f89e1eaeb2c322d6441b64396e3346026674db8fa9c27beac293405c32b3c
+    restart: "no"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        mosquitto_passwd -b -c /run/fieldops-mqtt/passwd fieldops fieldops-local
+        chown mosquitto:mosquitto /run/fieldops-mqtt/passwd
+        chmod 600 /run/fieldops-mqtt/passwd
+        exec mosquitto -c /mosquitto/config/mosquitto.conf
+    ports:
+      - "127.0.0.1:${MQTT_PORT:?MQTT_PORT is required}:1883"
+    volumes:
+      - type: bind
+        source: ../mqtt/mosquitto.conf
+        target: /mosquitto/config/mosquitto.conf
+        read_only: true
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /run/fieldops-mqtt:rw,noexec,nosuid,size=1m
+      - /mosquitto/data:rw,noexec,nosuid,size=1m
+      - /mosquitto/log:rw,noexec,nosuid,size=1m
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-V", "mqttv5", "-h", "127.0.0.1", "-p", "1883", "-u", "fieldops", "-P", "fieldops-local", "-q", "1", "-t", "fieldops/test/m005b/health", "-n"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s

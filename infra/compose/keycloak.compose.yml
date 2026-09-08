@@ -1,0 +1,33 @@
+# Synthetic localhost identity provider only. Not a production deployment.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3@sha256:ff4257d0d64efbe99ed1ddfaf07765cc3c36dc7518bf8324d41961327f441c54
+    restart: "no"
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: "8080"
+      KC_HTTP_MANAGEMENT_PORT: "9000"
+    ports:
+      - "127.0.0.1:${KEYCLOAK_HTTP_PORT:?KEYCLOAK_HTTP_PORT is required}:8080"
+    volumes:
+      - type: bind
+        source: ../keycloak/fieldops-local-realm.json
+        target: /opt/keycloak/data/import/fieldops-local-realm.json
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test:
+        - CMD
+        - /bin/bash
+        - -ec
+        - "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/127.0.0.1/9000"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 15s
+    mem_limit: 1g
