@@ -1,0 +1,131 @@
+{
+  "context": {
+    "tenantId": "tenant-demo",
+    "siteId": "site-green-valley",
+    "siteName": "Green Valley Farm",
+    "timezone": "Asia/Seoul",
+    "range": "PT24H",
+    "generatedAt": "2026-09-03T04:30:00Z",
+    "dataVersion": "overview-empty-1"
+  },
+  "widgets": {
+    "deviceStatus": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": {
+        "online": 0,
+        "offline": 0,
+        "degraded": 0,
+        "unknown": 0,
+        "total": 0
+      }
+    },
+    "activeAlarms": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": {
+        "active": 0,
+        "critical": 0,
+        "warning": 0,
+        "info": 0,
+        "highestSeverity": null
+      }
+    },
+    "commands": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": {
+        "waitingApproval": 0,
+        "inProgress": 0,
+        "unknown": 0
+      }
+    },
+    "freshness": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": {
+        "fresh": 0,
+        "stale": 0,
+        "monitored": 0,
+        "ratio": 0.0
+      }
+    },
+    "currentConditions": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": []
+    },
+    "activeAlarmList": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": []
+    },
+    "deviceHealth": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": {
+        "online": 0,
+        "offline": 0,
+        "degraded": 0,
+        "unknown": 0,
+        "total": 0
+      }
+    },
+    "recentCommands": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "COMPOSED_READ_MODEL",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": []
+    },
+    "primaryCamera": {
+      "meta": {
+        "status": "EMPTY",
+        "source": "NONE",
+        "generatedAt": "2026-09-03T04:30:00Z",
+        "staleAt": null,
+        "failure": null
+      },
+      "data": null
+    }
+  },
+  "partialFailures": []
+}

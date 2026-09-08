@@ -1,0 +1,31 @@
+{
+  "eventId": "evt-state-1825",
+  "eventType": "device.state.updated",
+  "tenantId": "tenant-demo",
+  "siteId": "site-green-valley",
+  "resourceType": "DEVICE",
+  "resourceId": "device-soil-01",
+  "version": 1825,
+  "stateEpoch": "fieldops.telemetry.normalized.v1:topic-demo-uuid:0",
+  "revision": 1825,
+  "occurredAt": "2026-09-03T04:31:00Z",
+  "payload": {
+    "connectivity": "ONLINE",
+    "readiness": "READY",
+    "freshness": "FRESH",
+    "source": "REDIS_REALTIME",
+    "observedAt": "2026-09-03T04:30:59Z",
+    "receivedAt": "2026-09-03T04:31:00Z",
+    "staleAt": "2026-09-03T04:31:30Z",
+    "metrics": [
+      {
+        "code": "soil.moisture.pct",
+        "displayName": "Soil moisture",
+        "value": 19.2,
+        "unit": "%",
+        "quality": "GOOD",
+        "observedAt": "2026-09-03T04:30:59Z"
+      }
+    ]
+  }
+}

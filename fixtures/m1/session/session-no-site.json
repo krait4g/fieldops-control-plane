@@ -1,0 +1,28 @@
+{
+  "user": {
+    "id": "user-nosite",
+    "displayName": "No Site User",
+    "email": "nosite@fieldops.local"
+  },
+  "memberships": [
+    {
+      "tenant": {
+        "id": "tenant-demo",
+        "name": "FieldOps Demo",
+        "timezone": "Asia/Seoul"
+      },
+      "role": "TENANT_VIEWER",
+      "permissions": [
+        "OVERVIEW_READ",
+        "DEVICE_READ",
+        "TELEMETRY_READ"
+      ],
+      "sites": []
+    }
+  ],
+  "activeContext": {
+    "tenantId": "tenant-demo",
+    "siteId": null
+  },
+  "issuedAt": "2026-09-03T04:30:00Z"
+}

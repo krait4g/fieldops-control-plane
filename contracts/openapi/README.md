@@ -1,3 +1,3 @@
 # OpenAPI
 
-REST API source contracts are introduced milestone by milestone. Frontend types are generated from these definitions.
+REST API source contracts are introduced milestone by milestone. Frontend API types are generated from these contracts rather than maintained manually.

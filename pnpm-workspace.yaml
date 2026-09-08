@@ -1,2 +1,9 @@
 packages:
   - "apps/web-console"
+
+allowBuilds:
+  # Analytics-only transitive postinstall; contract parsing does not require it.
+  '@scarf/scarf': false
+  esbuild: true
+  msw: true
+  unrs-resolver: true

@@ -1,0 +1,10 @@
+{
+  "type": "https://fieldops.dev/problems/read-model-unavailable",
+  "title": "Read model unavailable",
+  "status": 503,
+  "code": "READ_MODEL_UNAVAILABLE",
+  "detail": "The requested read model is temporarily unavailable.",
+  "traceId": "trace-fixture-503",
+  "timestamp": "2026-09-03T04:30:00Z",
+  "retryAfterSeconds": 5
+}

@@ -1,0 +1,9 @@
+{
+  "type": "https://fieldops.dev/problems/foundation-synthetic",
+  "title": "Synthetic foundation problem",
+  "status": 422,
+  "code": "FOUNDATION_SYNTHETIC_INVALID",
+  "detail": "Synthetic data used only by contract validation.",
+  "traceId": "trace-foundation-001",
+  "timestamp": "2026-09-07T00:00:00Z"
+}

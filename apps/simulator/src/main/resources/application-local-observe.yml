@@ -1,0 +1,12 @@
+fieldops:
+  b02:
+    mqtt:
+      uri: tcp://127.0.0.1:${B02_MQTT_PORT:21883}
+      tenant-a-username: ${B02_MQTT_TENANT_A_USER}
+      tenant-a-password: ${B02_MQTT_TENANT_A_PASSWORD}
+      tenant-b-username: ${B02_MQTT_TENANT_B_USER}
+      tenant-b-password: ${B02_MQTT_TENANT_B_PASSWORD}
+
+logging:
+  level:
+    io.krait.fieldops: INFO

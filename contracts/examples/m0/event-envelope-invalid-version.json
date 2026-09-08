@@ -1,0 +1,11 @@
+{
+  "eventId": "foundation-test-event-003",
+  "eventType": "foundation.synthetic.checked",
+  "tenantId": "tenant-test",
+  "siteId": "site-test",
+  "resourceType": "SYNTHETIC_RESOURCE",
+  "resourceId": "resource-test-003",
+  "version": -1,
+  "occurredAt": "2026-09-07T00:00:00Z",
+  "payload": { "synthetic": true }
+}

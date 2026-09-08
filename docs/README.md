@@ -17,6 +17,8 @@
 - [`frontend-backend.md`](frontend-backend.md) — Frontend·Backend 경계
 - [`roadmap.md`](roadmap.md) — 기술 마일스톤
 - [`project-status.md`](project-status.md) — 현재 공개 상태
+- [`LOCAL_OBSERVE_QUICKSTART.md`](LOCAL_OBSERVE_QUICKSTART.md) — localhost Synthetic Preview 실행 방법
+- [`runnable-snapshot.md`](runnable-snapshot.md) — 공개 실행 소스 범위와 제외 항목
 - [`decisions/README.md`](decisions/README.md) — 주요 Architecture Decision
 
 ## 이미지

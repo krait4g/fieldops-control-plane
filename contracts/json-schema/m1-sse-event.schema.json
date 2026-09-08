@@ -1,0 +1,369 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fieldops.dev/schemas/m1-sse-event.schema.json",
+  "title": "FieldOps M1 SSE Event 2.0",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/deviceStateUpdated"
+    },
+    {
+      "$ref": "#/$defs/deviceLifecycleChanged"
+    },
+    {
+      "$ref": "#/$defs/snapshotRequired"
+    },
+    {
+      "$ref": "#/$defs/heartbeat"
+    }
+  ],
+  "$defs": {
+    "base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventId",
+        "eventType",
+        "tenantId",
+        "siteId",
+        "resourceType",
+        "resourceId",
+        "version",
+        "stateEpoch",
+        "revision",
+        "occurredAt",
+        "payload"
+      ],
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "tenantId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "siteId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resourceType": {
+          "enum": [
+            "DEVICE",
+            "SITE"
+          ]
+        },
+        "resourceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stateEpoch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object"
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "displayName",
+        "value",
+        "unit",
+        "quality",
+        "observedAt"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "value": {
+          "description": "JSON scalar metric value. The JSON Schema number type includes integer values.",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quality": {
+          "enum": [
+            "GOOD",
+            "UNCERTAIN",
+            "BAD",
+            "MISSING"
+          ]
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "deviceStatePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectivity",
+        "readiness",
+        "freshness",
+        "source",
+        "observedAt",
+        "receivedAt",
+        "staleAt",
+        "metrics"
+      ],
+      "properties": {
+        "connectivity": {
+          "enum": [
+            "ONLINE",
+            "OFFLINE",
+            "DEGRADED",
+            "UNKNOWN"
+          ]
+        },
+        "readiness": {
+          "enum": [
+            "READY",
+            "NOT_READY",
+            "FAULTED",
+            "MAINTENANCE",
+            "UNKNOWN"
+          ]
+        },
+        "freshness": {
+          "enum": [
+            "FRESH",
+            "STALE",
+            "UNKNOWN"
+          ]
+        },
+        "source": {
+          "enum": [
+            "REDIS_REALTIME",
+            "POSTGRES_SNAPSHOT",
+            "NONE"
+          ]
+        },
+        "observedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "receivedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "staleAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metric"
+          }
+        }
+      }
+    },
+    "deviceStateUpdated": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventType": {
+              "const": "device.state.updated"
+            },
+            "resourceType": {
+              "const": "DEVICE"
+            },
+            "payload": {
+              "$ref": "#/$defs/deviceStatePayload"
+            }
+          }
+        }
+      ]
+    },
+    "deviceLifecyclePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previousConnectivity",
+        "connectivity",
+        "changedAt",
+        "reasonCode"
+      ],
+      "properties": {
+        "previousConnectivity": {
+          "enum": [
+            "ONLINE",
+            "OFFLINE",
+            "DEGRADED",
+            "UNKNOWN"
+          ]
+        },
+        "connectivity": {
+          "enum": [
+            "ONLINE",
+            "OFFLINE",
+            "DEGRADED",
+            "UNKNOWN"
+          ]
+        },
+        "changedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reasonCode": {
+          "type": "string"
+        }
+      }
+    },
+    "deviceLifecycleChanged": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventType": {
+              "const": "device.lifecycle.changed"
+            },
+            "resourceType": {
+              "const": "DEVICE"
+            },
+            "payload": {
+              "$ref": "#/$defs/deviceLifecyclePayload"
+            }
+          }
+        }
+      ]
+    },
+    "snapshotRequiredPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "lastAvailableEventId"
+      ],
+      "properties": {
+        "reason": {
+          "enum": [
+            "REPLAY_WINDOW_EXPIRED",
+            "SERVER_RESTART",
+            "SCOPE_RESET"
+          ]
+        },
+        "lastAvailableEventId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "snapshotRequired": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventType": {
+              "const": "snapshot-required"
+            },
+            "resourceType": {
+              "const": "SITE"
+            },
+            "payload": {
+              "$ref": "#/$defs/snapshotRequiredPayload"
+            }
+          }
+        }
+      ]
+    },
+    "heartbeatPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serverTime"
+      ],
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "heartbeat": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventType": {
+              "const": "heartbeat"
+            },
+            "resourceType": {
+              "const": "SITE"
+            },
+            "payload": {
+              "$ref": "#/$defs/heartbeatPayload"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

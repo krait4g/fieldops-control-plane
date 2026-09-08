@@ -1,5 +1,11 @@
 # web-console
 
-Next.js App Router operations console for device state, alarms, approvals, recommendations and usage. It accesses the platform through Spring REST/SSE APIs and does not connect directly to PostgreSQL, Kafka or Redis.
+Next.js Operations Console.
 
-Current status: directory and responsibility baseline. Executable bootstrap is M0 scope.
+- Overview, Device, Camera, Alarm/Incident, Command, Members, Platform Health
+- REST Snapshot + TanStack Query
+- SSE Incremental Update
+- WebSocket PTZ Control
+- TypeScript strict and generated OpenAPI client
+
+Domain rule과 최종 authorization을 Browser에 복제하지 않는다.

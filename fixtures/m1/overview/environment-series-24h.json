@@ -1,0 +1,232 @@
+{
+  "context": {
+    "tenantId": "tenant-demo",
+    "siteId": "site-green-valley",
+    "deviceId": null,
+    "timezone": "Asia/Seoul",
+    "range": "PT24H",
+    "bucket": "PT1H",
+    "generatedAt": "2026-09-03T04:30:00Z"
+  },
+  "series": [
+    {
+      "metricCode": "soil.moisture.pct",
+      "displayName": "Soil moisture",
+      "unit": "%",
+      "aggregation": "AVG",
+      "points": [
+        {
+          "timestamp": "2026-09-02T04:30:00Z",
+          "value": 27.5,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T06:30:00Z",
+          "value": 27.2,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T08:30:00Z",
+          "value": 26.9,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T10:30:00Z",
+          "value": 26.3,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T12:30:00Z",
+          "value": 25.6,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T14:30:00Z",
+          "value": null,
+          "quality": "MISSING"
+        },
+        {
+          "timestamp": "2026-09-02T16:30:00Z",
+          "value": 23.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T18:30:00Z",
+          "value": 22.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T20:30:00Z",
+          "value": 21.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T22:30:00Z",
+          "value": 20.9,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T00:30:00Z",
+          "value": 20.2,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T02:30:00Z",
+          "value": 19.8,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T04:30:00Z",
+          "value": 19.5,
+          "quality": "GOOD"
+        }
+      ]
+    },
+    {
+      "metricCode": "air.temperature.c",
+      "displayName": "Air temperature",
+      "unit": "°C",
+      "aggregation": "AVG",
+      "points": [
+        {
+          "timestamp": "2026-09-02T04:30:00Z",
+          "value": 17.8,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T06:30:00Z",
+          "value": 19.3,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T08:30:00Z",
+          "value": 21.0,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T10:30:00Z",
+          "value": 22.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T12:30:00Z",
+          "value": 24.2,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T14:30:00Z",
+          "value": 25.4,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T16:30:00Z",
+          "value": 26.1,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T18:30:00Z",
+          "value": 26.2,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T20:30:00Z",
+          "value": 25.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T22:30:00Z",
+          "value": 24.8,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T00:30:00Z",
+          "value": 23.4,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T02:30:00Z",
+          "value": 21.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T04:30:00Z",
+          "value": 20.0,
+          "quality": "GOOD"
+        }
+      ]
+    },
+    {
+      "metricCode": "air.humidity.pct",
+      "displayName": "Air humidity",
+      "unit": "%",
+      "aggregation": "AVG",
+      "points": [
+        {
+          "timestamp": "2026-09-02T04:30:00Z",
+          "value": 72.3,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T06:30:00Z",
+          "value": 69.8,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T08:30:00Z",
+          "value": 67.0,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T10:30:00Z",
+          "value": 64.2,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T12:30:00Z",
+          "value": 61.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T14:30:00Z",
+          "value": 59.8,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T16:30:00Z",
+          "value": 58.7,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T18:30:00Z",
+          "value": 58.5,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T20:30:00Z",
+          "value": 59.3,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-02T22:30:00Z",
+          "value": 60.9,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T00:30:00Z",
+          "value": 63.1,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T02:30:00Z",
+          "value": 65.8,
+          "quality": "GOOD"
+        },
+        {
+          "timestamp": "2026-09-03T04:30:00Z",
+          "value": 68.6,
+          "quality": "GOOD"
+        }
+      ]
+    }
+  ]
+}

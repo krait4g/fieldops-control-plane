@@ -1,0 +1,284 @@
+asyncapi: 3.0.0
+info:
+  title: FieldOps M1 Realtime Events
+  version: 2.0.0
+  description: Site-scoped Server-Sent Events consumed by the M1 Web Console.
+servers:
+  local:
+    host: localhost:8080
+    protocol: http
+    description: Local fieldops-server
+channels:
+  siteEvents:
+    address: /api/v1/events/stream
+    messages:
+      deviceStateUpdated:
+        $ref: "#/components/messages/DeviceStateUpdated"
+      deviceLifecycleChanged:
+        $ref: "#/components/messages/DeviceLifecycleChanged"
+      snapshotRequired:
+        $ref: "#/components/messages/SnapshotRequired"
+      heartbeat:
+        $ref: "#/components/messages/Heartbeat"
+operations:
+  receiveSiteEvents:
+    action: receive
+    channel:
+      $ref: "#/channels/siteEvents"
+    summary: Receive site-scoped incremental events
+    messages:
+      - $ref: "#/channels/siteEvents/messages/deviceStateUpdated"
+      - $ref: "#/channels/siteEvents/messages/deviceLifecycleChanged"
+      - $ref: "#/channels/siteEvents/messages/snapshotRequired"
+      - $ref: "#/channels/siteEvents/messages/heartbeat"
+components:
+  messages:
+    DeviceStateUpdated:
+      name: device.state.updated
+      title: Device state updated
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/DeviceStateUpdatedEvent"
+      examples:
+        - name: higherVersion
+          payload:
+            eventId: 01K2M1STATE000000000000001
+            eventType: device.state.updated
+            tenantId: tenant-demo
+            siteId: site-green-valley
+            resourceType: DEVICE
+            resourceId: device-soil-01
+            version: 1825
+            stateEpoch: fieldops.telemetry.normalized.v1:topic-demo-uuid:0
+            revision: 1825
+            occurredAt: 2026-09-03T04:31:00Z
+            payload:
+              connectivity: ONLINE
+              readiness: READY
+              freshness: FRESH
+              source: REDIS_REALTIME
+              observedAt: 2026-09-03T04:30:58Z
+              receivedAt: 2026-09-03T04:30:59Z
+              staleAt: 2026-09-03T04:35:59Z
+              metrics:
+                - code: soil.moisture.pct
+                  displayName: Soil moisture
+                  value: 18.7
+                  unit: "%"
+                  quality: GOOD
+                  observedAt: 2026-09-03T04:30:58Z
+    DeviceLifecycleChanged:
+      name: device.lifecycle.changed
+      title: Device lifecycle changed
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/DeviceLifecycleChangedEvent"
+    SnapshotRequired:
+      name: snapshot-required
+      title: Snapshot reload required
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/SnapshotRequiredEvent"
+    Heartbeat:
+      name: heartbeat
+      title: Realtime connection heartbeat
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/HeartbeatEvent"
+
+  schemas:
+    BaseEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - eventId
+        - eventType
+        - tenantId
+        - siteId
+        - resourceType
+        - resourceId
+        - version
+        - stateEpoch
+        - revision
+        - occurredAt
+        - payload
+      properties:
+        eventId:
+          type: string
+        eventType:
+          type: string
+        tenantId:
+          type: string
+        siteId:
+          type: string
+        resourceType:
+          type: string
+          enum: [DEVICE, SITE]
+        resourceId:
+          type: string
+        version:
+          type: integer
+          minimum: 0
+        stateEpoch:
+          type: string
+          minLength: 1
+          description: Normalized topic identifier and partition for the current projection generation.
+        revision:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Accepted normalized Kafka offset plus one within stateEpoch.
+        occurredAt:
+          type: string
+          format: date-time
+        payload:
+          type: object
+
+    DeviceStateUpdatedEvent:
+      allOf:
+        - $ref: "#/components/schemas/BaseEvent"
+        - type: object
+          properties:
+            eventType:
+              const: device.state.updated
+            resourceType:
+              const: DEVICE
+            payload:
+              $ref: "#/components/schemas/DeviceStatePayload"
+
+    DeviceLifecycleChangedEvent:
+      allOf:
+        - $ref: "#/components/schemas/BaseEvent"
+        - type: object
+          properties:
+            eventType:
+              const: device.lifecycle.changed
+            resourceType:
+              const: DEVICE
+            payload:
+              $ref: "#/components/schemas/DeviceLifecyclePayload"
+
+    SnapshotRequiredEvent:
+      allOf:
+        - $ref: "#/components/schemas/BaseEvent"
+        - type: object
+          properties:
+            eventType:
+              const: snapshot-required
+            resourceType:
+              const: SITE
+            payload:
+              $ref: "#/components/schemas/SnapshotRequiredPayload"
+
+    HeartbeatEvent:
+      allOf:
+        - $ref: "#/components/schemas/BaseEvent"
+        - type: object
+          properties:
+            eventType:
+              const: heartbeat
+            resourceType:
+              const: SITE
+            payload:
+              $ref: "#/components/schemas/HeartbeatPayload"
+
+    DeviceStatePayload:
+      type: object
+      additionalProperties: false
+      required:
+        - connectivity
+        - readiness
+        - freshness
+        - source
+        - observedAt
+        - receivedAt
+        - staleAt
+        - metrics
+      properties:
+        connectivity:
+          type: string
+          enum: [ONLINE, OFFLINE, DEGRADED, UNKNOWN]
+        readiness:
+          type: string
+          enum: [READY, NOT_READY, FAULTED, MAINTENANCE, UNKNOWN]
+        freshness:
+          type: string
+          enum: [FRESH, STALE, UNKNOWN]
+        source:
+          type: string
+          enum: [REDIS_REALTIME, POSTGRES_SNAPSHOT, NONE]
+        observedAt:
+          type: [string, "null"]
+          format: date-time
+        receivedAt:
+          type: [string, "null"]
+          format: date-time
+        staleAt:
+          type: [string, "null"]
+          format: date-time
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricReading"
+
+    DeviceLifecyclePayload:
+      type: object
+      additionalProperties: false
+      required: [previousConnectivity, connectivity, changedAt, reasonCode]
+      properties:
+        previousConnectivity:
+          type: string
+          enum: [ONLINE, OFFLINE, DEGRADED, UNKNOWN]
+        connectivity:
+          type: string
+          enum: [ONLINE, OFFLINE, DEGRADED, UNKNOWN]
+        changedAt:
+          type: string
+          format: date-time
+        reasonCode:
+          type: string
+
+    SnapshotRequiredPayload:
+      type: object
+      additionalProperties: false
+      required: [reason, lastAvailableEventId]
+      properties:
+        reason:
+          type: string
+          enum: [REPLAY_WINDOW_EXPIRED, SERVER_RESTART, SCOPE_RESET]
+        lastAvailableEventId:
+          type: [string, "null"]
+
+    HeartbeatPayload:
+      type: object
+      additionalProperties: false
+      required: [serverTime]
+      properties:
+        serverTime:
+          type: string
+          format: date-time
+
+    MetricReading:
+      type: object
+      additionalProperties: false
+      required: [code, displayName, value, unit, quality, observedAt]
+      properties:
+        code:
+          type: string
+        displayName:
+          type: string
+        value:
+          description: JSON scalar metric value. The JSON Schema number type includes integer values.
+          oneOf:
+            - type: number
+            - type: boolean
+            - type: string
+            - type: "null"
+        unit:
+          type: [string, "null"]
+        quality:
+          type: string
+          enum: [GOOD, UNCERTAIN, BAD, MISSING]
+        observedAt:
+          type: string
+          format: date-time

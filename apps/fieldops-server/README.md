@@ -2,12 +2,10 @@
 
 Northbound product runtime.
 
-- REST snapshot, search and mutation APIs
-- SSE device, alarm, incident and command updates
-- PTZ WebSocket session endpoint
-- OIDC browser session and tenant/site authorization
-- Dashboard, device, camera, alarm, command and membership queries
+- REST Snapshot/Mutation
+- SSE state/alarm/command updates
+- PTZ WebSocket endpoint
+- OIDC session, tenant/site authorization
+- Dashboard, Device, Camera, Alarm, Command, Membership API
 
-It does not own MQTT/TCP/ONVIF clients or direct device command transport. Product business rules remain in approved domain/application modules rather than controllers or the web console.
-
-Current status: boundary only. Executable bootstrap is M0 scope.
+Southbound protocol client와 Kafka Consumer workflow를 직접 구현하지 않는다.

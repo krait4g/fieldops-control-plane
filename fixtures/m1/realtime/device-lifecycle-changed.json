@@ -1,0 +1,18 @@
+{
+  "eventId": "evt-life-316",
+  "eventType": "device.lifecycle.changed",
+  "tenantId": "tenant-demo",
+  "siteId": "site-green-valley",
+  "resourceType": "DEVICE",
+  "resourceId": "device-soil-02",
+  "version": 316,
+  "stateEpoch": "fieldops.telemetry.normalized.v1:topic-demo-uuid:0",
+  "revision": 316,
+  "occurredAt": "2026-09-03T04:31:10Z",
+  "payload": {
+    "previousConnectivity": "OFFLINE",
+    "connectivity": "ONLINE",
+    "changedAt": "2026-09-03T04:31:10Z",
+    "reasonCode": "TELEMETRY_RESUMED"
+  }
+}

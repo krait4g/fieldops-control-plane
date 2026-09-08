@@ -1,0 +1,9 @@
+{
+  "type": "https://fieldops.dev/problems/device-not-found",
+  "title": "Device not found",
+  "status": 404,
+  "code": "DEVICE_NOT_FOUND",
+  "detail": "The requested device does not exist or is outside the current scope.",
+  "traceId": "trace-fixture-404",
+  "timestamp": "2026-09-03T04:30:00Z"
+}

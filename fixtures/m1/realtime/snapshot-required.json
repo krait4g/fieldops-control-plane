@@ -1,0 +1,16 @@
+{
+  "eventId": "evt-site-reset-001",
+  "eventType": "snapshot-required",
+  "tenantId": "tenant-demo",
+  "siteId": "site-green-valley",
+  "resourceType": "SITE",
+  "resourceId": "site-green-valley",
+  "version": 1826,
+  "stateEpoch": "fieldops.telemetry.normalized.v1:topic-demo-uuid:0",
+  "revision": 1826,
+  "occurredAt": "2026-09-03T04:32:00Z",
+  "payload": {
+    "reason": "REPLAY_WINDOW_EXPIRED",
+    "lastAvailableEventId": "evt-state-1825"
+  }
+}

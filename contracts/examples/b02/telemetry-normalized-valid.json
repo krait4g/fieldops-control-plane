@@ -1,0 +1,23 @@
+{
+  "eventId": "b02-a-soil-01-session-1-42",
+  "schemaVersion": "2.0.0",
+  "tenantId": "tenant-a",
+  "siteId": "site-a",
+  "deviceId": "device-a-soil-01",
+  "sessionId": "session-1",
+  "sessionStartedAt": "2026-09-07T00:00:00Z",
+  "sequence": 42,
+  "observedAt": "2026-09-07T00:01:24Z",
+  "receivedAt": "2026-09-07T00:01:24.050Z",
+  "metrics": [
+    {
+      "code": "soil.moisture.pct",
+      "displayName": "Soil moisture",
+      "value": 37.5,
+      "unit": "%",
+      "quality": "GOOD",
+      "observedAt": "2026-09-07T00:01:24Z"
+    }
+  ],
+  "payloadDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

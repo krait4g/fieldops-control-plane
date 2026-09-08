@@ -1,0 +1,88 @@
+{
+  "items": [
+    {
+      "id": "device-soil-01",
+      "externalId": "SOIL-001",
+      "name": "Soil Sensor #1",
+      "typeCode": "SOIL_SENSOR",
+      "typeName": "Soil Sensor",
+      "siteId": "site-green-valley",
+      "siteName": "Green Valley Farm",
+      "zoneId": "zone-north",
+      "zoneName": "North Field",
+      "protocol": "MQTT",
+      "connectivity": "ONLINE",
+      "readiness": "READY",
+      "freshness": "FRESH",
+      "latestMetric": {
+        "code": "soil.moisture.pct",
+        "displayName": "Soil moisture",
+        "value": 18.7,
+        "unit": "%",
+        "quality": "GOOD",
+        "observedAt": "2026-09-03T04:29:55Z"
+      },
+      "lastSeenAt": "2026-09-03T04:29:55Z",
+      "activeAlarmCount": 0,
+      "version": 1824
+    },
+    {
+      "id": "device-weather-01",
+      "externalId": "WEATHER-001",
+      "name": "Weather Station #1",
+      "typeCode": "WEATHER_STATION",
+      "typeName": "Weather Station",
+      "siteId": "site-green-valley",
+      "siteName": "Green Valley Farm",
+      "zoneId": "zone-north",
+      "zoneName": "North Field",
+      "protocol": "MQTT",
+      "connectivity": "ONLINE",
+      "readiness": "READY",
+      "freshness": "FRESH",
+      "latestMetric": {
+        "code": "air.temperature.c",
+        "displayName": "Air temperature",
+        "value": 24.6,
+        "unit": "°C",
+        "quality": "GOOD",
+        "observedAt": "2026-09-03T04:29:55Z"
+      },
+      "lastSeenAt": "2026-09-03T04:29:55Z",
+      "activeAlarmCount": 0,
+      "version": 940
+    },
+    {
+      "id": "device-soil-02",
+      "externalId": "SOIL-002",
+      "name": "Soil Sensor #2",
+      "typeCode": "SOIL_SENSOR",
+      "typeName": "Soil Sensor",
+      "siteId": "site-green-valley",
+      "siteName": "Green Valley Farm",
+      "zoneId": "zone-south",
+      "zoneName": "South Field",
+      "protocol": "MQTT",
+      "connectivity": "OFFLINE",
+      "readiness": "UNKNOWN",
+      "freshness": "STALE",
+      "latestMetric": {
+        "code": "soil.moisture.pct",
+        "displayName": "Soil moisture",
+        "value": 23.1,
+        "unit": "%",
+        "quality": "UNCERTAIN",
+        "observedAt": "2026-09-03T04:20:00Z"
+      },
+      "lastSeenAt": "2026-09-03T04:20:00Z",
+      "activeAlarmCount": 0,
+      "version": 315
+    }
+  ],
+  "page": {
+    "pageSize": 25,
+    "hasNext": false,
+    "nextCursor": null
+  },
+  "total": 3
+}

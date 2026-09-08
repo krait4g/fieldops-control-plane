@@ -1,0 +1,27 @@
+{
+  "id": "device-soil-02",
+  "externalId": "SOIL-002",
+  "name": "Soil Sensor #2",
+  "typeCode": "SOIL_SENSOR",
+  "typeName": "Soil Sensor",
+  "siteId": "site-green-valley",
+  "siteName": "Green Valley Farm",
+  "zoneId": "zone-south",
+  "zoneName": "South Field",
+  "protocol": "MQTT",
+  "primaryMetricCodes": [
+    "soil.moisture.pct",
+    "soil.temperature.c"
+  ],
+  "connection": {
+    "adapterType": "MQTT_5",
+    "status": "DISCONNECTED",
+    "lastConnectedAt": "2026-09-03T03:50:00Z",
+    "lastDisconnectedAt": "2026-09-03T04:20:00Z",
+    "reasonCode": "HEARTBEAT_TIMEOUT",
+    "sessionIdMasked": "mqtt-••••-9bc2"
+  },
+  "createdAt": "2026-08-01T00:00:00Z",
+  "updatedAt": "2026-09-03T04:20:00Z",
+  "version": 9
+}

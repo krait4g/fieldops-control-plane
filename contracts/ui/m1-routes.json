@@ -1,0 +1,163 @@
+{
+  "version": "1.0.0",
+  "defaultRoute": "/overview",
+  "routes": [
+    {
+      "id": "login",
+      "path": "/login",
+      "label": "Sign in",
+      "group": "auth",
+      "public": true,
+      "requiredPermissions": [],
+      "m1Status": "ACTIVE",
+      "apiOperations": [
+        "getSession"
+      ]
+    },
+    {
+      "id": "overview",
+      "path": "/overview",
+      "label": "Overview",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "OVERVIEW_READ"
+      ],
+      "m1Status": "ACTIVE",
+      "queryParameters": [
+        "tenant",
+        "site",
+        "range"
+      ],
+      "apiOperations": [
+        "getOverview",
+        "getEnvironmentSeries"
+      ],
+      "realtimeEvents": [
+        "device.state.updated",
+        "device.lifecycle.changed",
+        "snapshot-required",
+        "heartbeat"
+      ]
+    },
+    {
+      "id": "devices",
+      "path": "/devices",
+      "label": "Devices",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "DEVICE_READ"
+      ],
+      "m1Status": "ACTIVE",
+      "queryParameters": [
+        "tenant",
+        "site",
+        "query",
+        "deviceType",
+        "protocol",
+        "connectivity",
+        "readiness",
+        "freshness",
+        "cursor"
+      ],
+      "apiOperations": [
+        "listDevices"
+      ]
+    },
+    {
+      "id": "device-detail",
+      "path": "/devices/{deviceId}",
+      "label": "Device detail",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "DEVICE_READ",
+        "TELEMETRY_READ"
+      ],
+      "m1Status": "ACTIVE",
+      "queryParameters": [
+        "tenant",
+        "site",
+        "range",
+        "tab"
+      ],
+      "apiOperations": [
+        "getDevice",
+        "getDeviceState",
+        "getDeviceTelemetrySeries"
+      ],
+      "realtimeEvents": [
+        "device.state.updated",
+        "device.lifecycle.changed",
+        "snapshot-required"
+      ]
+    },
+    {
+      "id": "members",
+      "path": "/admin/members",
+      "label": "Members & Access",
+      "group": "administration",
+      "public": false,
+      "requiredPermissions": [
+        "MEMBER_READ"
+      ],
+      "m1Status": "ACTIVE",
+      "queryParameters": [
+        "tenant",
+        "site",
+        "query",
+        "role",
+        "status",
+        "cursor"
+      ],
+      "apiOperations": [
+        "listMembers"
+      ]
+    },
+    {
+      "id": "sites",
+      "path": "/sites",
+      "label": "Sites",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "SITE_READ"
+      ],
+      "m1Status": "HIDDEN"
+    },
+    {
+      "id": "cameras",
+      "path": "/cameras",
+      "label": "Cameras",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "CAMERA_READ"
+      ],
+      "m1Status": "HIDDEN"
+    },
+    {
+      "id": "alarms",
+      "path": "/alarms",
+      "label": "Alarms & Incidents",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "ALARM_READ"
+      ],
+      "m1Status": "HIDDEN"
+    },
+    {
+      "id": "commands",
+      "path": "/commands",
+      "label": "Commands",
+      "group": "operations",
+      "public": false,
+      "requiredPermissions": [
+        "COMMAND_READ"
+      ],
+      "m1Status": "HIDDEN"
+    }
+  ]
+}

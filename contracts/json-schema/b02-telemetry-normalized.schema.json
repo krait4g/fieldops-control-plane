@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fieldops.dev/schemas/b02-telemetry-normalized.schema.json",
+  "title": "FieldOps B02 Normalized Telemetry Envelope",
+  "description": "Canonical sample published to fieldops.telemetry.normalized.v1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "schemaVersion",
+    "tenantId",
+    "siteId",
+    "deviceId",
+    "sessionId",
+    "sessionStartedAt",
+    "sequence",
+    "observedAt",
+    "receivedAt",
+    "metrics",
+    "payloadDigest"
+  ],
+  "properties": {
+    "eventId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "schemaVersion": { "const": "2.0.0" },
+    "tenantId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "siteId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "deviceId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "sessionStartedAt": { "type": "string", "format": "date-time" },
+    "sequence": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "receivedAt": { "type": "string", "format": "date-time" },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/metric" }
+    },
+    "payloadDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "traceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "correlationId": { "type": "string", "minLength": 1, "maxLength": 128 }
+  },
+  "$defs": {
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "displayName", "value", "unit", "quality", "observedAt"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "value": { "type": "number" },
+        "unit": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "quality": { "const": "GOOD" },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "eventId": "evt-heartbeat-001",
+  "eventType": "heartbeat",
+  "tenantId": "tenant-demo",
+  "siteId": "site-green-valley",
+  "resourceType": "SITE",
+  "resourceId": "site-green-valley",
+  "version": 1826,
+  "stateEpoch": "fieldops.telemetry.normalized.v1:topic-demo-uuid:0",
+  "revision": 1826,
+  "occurredAt": "2026-09-03T04:32:15Z",
+  "payload": {
+    "serverTime": "2026-09-03T04:32:15Z"
+  }
+}

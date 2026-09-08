@@ -1,0 +1,8 @@
+{
+  "type": "https://fieldops.dev/problems/foundation-synthetic",
+  "title": "Synthetic foundation problem",
+  "status": 422,
+  "detail": "The required code member is intentionally absent.",
+  "traceId": "trace-foundation-002",
+  "timestamp": "2026-09-07T00:00:00Z"
+}

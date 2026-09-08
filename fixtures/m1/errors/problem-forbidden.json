@@ -1,0 +1,9 @@
+{
+  "type": "https://fieldops.dev/problems/site-scope-denied",
+  "title": "Site access denied",
+  "status": 403,
+  "code": "SITE_SCOPE_DENIED",
+  "detail": "Your current membership does not allow access to this site.",
+  "traceId": "trace-fixture-403",
+  "timestamp": "2026-09-03T04:30:00Z"
+}

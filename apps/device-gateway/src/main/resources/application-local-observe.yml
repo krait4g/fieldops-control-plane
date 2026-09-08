@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:${B02_POSTGRES_PORT:25432}/${B02_POSTGRES_DB:fieldops_b02}
+    username: ${B02_POSTGRES_USER:fieldops_b02}
+    password: ${B02_POSTGRES_PASSWORD}
+  kafka:
+    bootstrap-servers: 127.0.0.1:${B02_KAFKA_PORT:29092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+
+server:
+  address: 127.0.0.1
+  port: ${B02_GATEWAY_PORT:28081}
+
+fieldops:
+  b02:
+    mqtt:
+      uri: tcp://127.0.0.1:${B02_MQTT_PORT:21883}
+      username: ${B02_MQTT_GATEWAY_USER}
+      password: ${B02_MQTT_GATEWAY_PASSWORD}
+      client-id: fieldops-b02-gateway
+      max-payload-bytes: 65536
+      max-inflight: 256
+    kafka:
+      raw-topic: fieldops.telemetry.raw.v1
+
+logging:
+  level:
+    io.krait.fieldops: INFO

@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: fieldops-worker
+  main:
+    banner-mode: "off"
+    web-application-type: none

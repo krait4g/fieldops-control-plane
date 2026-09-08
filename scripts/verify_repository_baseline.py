@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -19,7 +20,8 @@ REQUIRED = [
     "README.md", "LICENSE", "CONTRIBUTING.md", "SECURITY.md",
     ".editorconfig", ".gitattributes", ".gitignore", ".env.example",
     ".java-version", ".nvmrc", "package.json", "pnpm-workspace.yaml",
-    "settings.gradle.kts", "build.gradle.kts", "gradle.properties",
+    "settings.gradle.kts", "build.gradle.kts", "gradle.properties", "gradlew", "gradlew.bat",
+    "gradle/wrapper/gradle-wrapper.jar", "gradle/wrapper/gradle-wrapper.properties",
     "gradle/libs.versions.toml", "apps/README.md",
     "apps/fieldops-server/README.md", "apps/device-gateway/README.md",
     "apps/fieldops-worker/README.md", "apps/billing-job/README.md",
@@ -30,7 +32,14 @@ REQUIRED = [
     "docs/decisions/README.md", "docs/product/README.ko.md", "docs/product/PRD.ko.md",
     "docs/product/UX_DESIGN.ko.md", "docs/product/ROADMAP.ko.md",
     "docs/product/AI_PRODUCT_BUILDING.ko.md", "docs/product/PRD_CHANGELOG.ko.md",
-    "docs/assets/README.md", "contracts/README.md", "infra/README.md", *IMAGES,
+    "docs/assets/README.md", "docs/runnable-snapshot.md", "docs/LOCAL_OBSERVE_QUICKSTART.md",
+    "contracts/README.md", "infra/README.md", "scripts/b02_observe.py",
+    "tests/repository-tests/test_b02_observe.py",
+    "infra/compose/compose.yml", "infra/b02/compose.override.yml",
+    "apps/fieldops-server/build.gradle.kts", "apps/device-gateway/build.gradle.kts",
+    "apps/fieldops-worker/build.gradle.kts", "apps/simulator/build.gradle.kts",
+    "apps/web-console/package.json", "modules/telemetry-domain/build.gradle.kts",
+    "modules/telemetry-application/build.gradle.kts", *IMAGES,
 ]
 LEGACY_RUNTIME_PATHS = (
     "apps/fieldops-api", "apps/ingestion-gateway", "apps/telemetry-worker", "apps/automation-worker",
@@ -38,7 +47,7 @@ LEGACY_RUNTIME_PATHS = (
 FORBIDDEN_PUBLIC_PATHS = (
     "AGENTS.md", "UI_AGENT.md", "CURRENT_STATE.md", "HANDOVER.md", "RESUME.md",
     "CODEX_START_HERE.md", "OPENCODE_START_HERE.md", "docs/codex", "docs/agents",
-    "docs/ui-agent", "docs/reviews", "docs/evidence/recovery",
+    "docs/ui-agent", "docs/reviews", "docs/evidence", "docs/archive",
 )
 EXPECTED_ENV = {
     "FIELDOPS_SERVER_PORT": "8080", "DEVICE_GATEWAY_PORT": "8081",
@@ -48,8 +57,16 @@ EXPECTED_ENV = {
     "PROMETHEUS_PORT": "9090", "GRAFANA_PORT": "3001", "OTEL_GRPC_PORT": "4317",
     "OTEL_HTTP_PORT": "4318", "TEMPO_HTTP_PORT": "3200", "LOKI_HTTP_PORT": "3100",
 }
-TEXT_SUFFIXES = {".md", ".yml", ".yaml", ".json", ".toml", ".kts", ".py", ".txt"}
+TEXT_SUFFIXES = {
+    ".md", ".yml", ".yaml", ".json", ".toml", ".kts", ".py", ".txt", ".java",
+    ".ts", ".tsx", ".js", ".mjs", ".cjs", ".properties", ".sql", ".conf", ".acl",
+    ".xml", ".sh", ".bat",
+}
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
+IGNORED_TREE_PARTS = {
+    ".git", ".gradle", ".next", ".fieldops-b02", "node_modules", "build", "out",
+    "coverage", "playwright-report", "test-results", "__pycache__",
+}
 errors: list[str] = []
 
 for rel in REQUIRED:
@@ -60,7 +77,7 @@ for rel in (*LEGACY_RUNTIME_PATHS, *FORBIDDEN_PUBLIC_PATHS):
         errors.append(f"forbidden public/legacy path: {rel}")
 
 for path in ROOT.rglob("*"):
-    if not path.is_file() or ".git" in path.parts:
+    if not path.is_file() or any(part in IGNORED_TREE_PARTS for part in path.parts):
         continue
     rel = path.relative_to(ROOT).as_posix()
     if "%" in rel:
@@ -79,8 +96,23 @@ for path in ROOT.rglob("*"):
     if path.resolve() != SELF:
         if re.search(r"(?i)fieldops-control-plane-workbench", text):
             errors.append(f"private repository name leaked: {rel}")
-        if re.search(r"(?i)(codex|opencode|agent handoff|internal prompt)", text):
+        if re.search(
+            r"(?i)(codex|opencode|agent handoff|internal prompt|docs/(?:ui-agent|agents|evidence)|(?:UI_)?AGENTS?\.md)",
+            text,
+        ):
             errors.append(f"internal agent context: {rel}")
+        if re.search(r"(?i)(?:[A-Z]:[\\/]+Users[\\/]+|/home/[^/]+/)", text):
+            errors.append(f"personal absolute path: {rel}")
+
+tracked = subprocess.run(
+    ["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True,
+).stdout.decode("utf-8").split("\0")
+for rel in tracked:
+    if not rel:
+        continue
+    parts = Path(rel).parts
+    if any(part in IGNORED_TREE_PARTS for part in parts):
+        errors.append(f"generated/runtime path must not be tracked: {rel}")
 
 
 def read(rel: str) -> str:
@@ -126,6 +158,21 @@ elif f"## {version.group(1)} " not in read("docs/product/PRD_CHANGELOG.ko.md"):
     errors.append("PRD changelog must contain the declared version")
 if "한국어를 기본" not in read("docs/README.md"):
     errors.append("documentation index must declare Korean-first documentation")
+if "docs/LOCAL_OBSERVE_QUICKSTART.md" not in readme:
+    errors.append("README must link the Local Observe Quick Start")
+
+for rel in (
+    "infra/compose/compose.yml", "infra/compose/mqtt.compose.yml",
+    "infra/compose/kafka.compose.yml", "infra/compose/keycloak.compose.yml",
+):
+    for line in read(rel).splitlines():
+        stripped = line.strip().strip("'\"")
+        if stripped.startswith("- "):
+            stripped = stripped[2:].strip().strip("'\"")
+        if re.match(r"^(?:\$\{[^}]+\}|\d+):\d+(?:/\w+)?$", stripped):
+            errors.append(f"non-loopback host port publish: {rel}: {line.strip()}")
+if '"--hostname", "127.0.0.1"' not in read("scripts/b02_observe.py"):
+    errors.append("web-console start must bind to 127.0.0.1")
 
 # Check local file destinations in the maintained public entry documents.
 # This is deliberately not a network crawler, Markdown renderer, or app test.
