@@ -146,6 +146,7 @@ def port_free(port: int, socket_type: int = socket.SOCK_STREAM) -> bool:
 
 
 def preflight_ports() -> None:
+    b02.PORTS["keycloak"] = b02.resolve_keycloak_port(os.environ.get("B02_KEYCLOAK_PORT"))
     requested = {**b02.PORTS, **PORTS}
     occupied = [f"{name}:{port}" for name, port in requested.items()
                 if name not in {"webrtcUdp"} and not port_free(port)]

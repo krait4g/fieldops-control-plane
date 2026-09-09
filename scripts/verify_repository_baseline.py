@@ -47,6 +47,7 @@ REQUIRED = [
     "contracts/README.md", "infra/README.md", "scripts/b02_observe.py",
     "tests/repository-tests/test_b02_observe.py",
     "tests/repository-tests/test_b04_image_scan_report.py",
+    "tests/repository-tests/test_b04_camera.py",
     "scripts/b04_camera.py", "scripts/verify_b04_image_scan_report.py",
     "infra/compose/compose.yml", "infra/b02/compose.override.yml",
     "apps/fieldops-server/build.gradle.kts", "apps/device-gateway/build.gradle.kts",

@@ -18,6 +18,22 @@ Local Observe port에 더해 `28084`, `28189/udp`, `28554`, `28889`, `29997`을
 localhost에 사용합니다. 필요한 port가 사용 중이면 orchestration은 다른
 process를 종료하지 않고 중단합니다.
 
+기본 Keycloak port `28080`만 충돌한다면 그 process를 종료하지 말고, 같은
+PowerShell 또는 shell에서 빈 loopback port를 선택해 `up`부터 `down`까지
+`B02_KEYCLOAK_PORT`를 유지하세요.
+
+Windows PowerShell 예시:
+
+```powershell
+$env:B02_KEYCLOAK_PORT='28083'
+```
+
+Ubuntu / Linux 예시:
+
+```bash
+export B02_KEYCLOAK_PORT=28083
+```
+
 FFmpeg encoder는 다음 명령으로 확인할 수 있습니다.
 
 ```text
