@@ -74,7 +74,9 @@ python3 scripts/b04_camera.py down
 `up`은 source head와 task-owned process identity를 기록하고, Local Observe의
 PostgreSQL·Redis·Kafka·Mosquitto·Keycloak, Java service, production Web,
 MediaMTX, Synthetic ONVIF simulator, FFmpeg publisher를 시작합니다. MediaMTX는
-exact digest로 고정되며 모든 host publish는 `127.0.0.1`입니다.
+exact digest로 고정되며 모든 host publish는 `127.0.0.1`입니다. Compose project
+이름에는 checkout 경로 fingerprint가 들어가므로 다른 clone의 container,
+network, named volume을 재사용하지 않습니다.
 
 `verify`는 실제 Chromium WebRTC 재생과 REST/WebSocket/ONVIF 경로를 포함한
 G1-G10을 검사합니다. 주요 경계는 scope와 control permission, Redis

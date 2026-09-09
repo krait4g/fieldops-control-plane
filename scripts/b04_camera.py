@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -21,7 +22,16 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / ".fieldops-b04"
 LOGS = RUNTIME / "logs"
 MANIFEST = RUNTIME / "run-manifest.json"
-MEDIA_PROJECT = "fieldops-b04-media"
+
+
+def checkout_fingerprint(root: Path) -> str:
+    normalized = str(root.resolve()).replace("\\", "/").casefold()
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:10]
+
+
+CHECKOUT_ID = checkout_fingerprint(ROOT)
+B02_PROJECT = os.environ.setdefault("FIELDOPS_B02_PROJECT", f"fieldops-b02-b04-{CHECKOUT_ID}")
+MEDIA_PROJECT = f"fieldops-b04-media-{CHECKOUT_ID}"
 MEDIA_COMPOSE = ROOT / "infra/b04/compose.yml"
 PORTS = {
     "onvif": 28084,
@@ -31,7 +41,6 @@ PORTS = {
     "webrtcUdp": 28189,
 }
 
-os.environ.setdefault("FIELDOPS_B02_PROJECT", "fieldops-b02-b04")
 os.environ.setdefault("FIELDOPS_B02_RUNTIME_DIR", str(RUNTIME / "b02"))
 os.environ.setdefault("FIELDOPS_B02_EXTRA_PROFILES", "b04-camera")
 
@@ -51,7 +60,7 @@ def ensure_runtime() -> dict[str, str]:
     token = token_path.read_text(encoding="utf-8").strip()
     env = os.environ.copy()
     env.update({
-        "FIELDOPS_B02_PROJECT": "fieldops-b02-b04",
+        "FIELDOPS_B02_PROJECT": B02_PROJECT,
         "FIELDOPS_B02_RUNTIME_DIR": str(RUNTIME / "b02"),
         "FIELDOPS_B02_EXTRA_PROFILES": "b04-camera",
         "B04_INTERNAL_TOKEN": token,

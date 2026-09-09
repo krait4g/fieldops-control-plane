@@ -34,5 +34,18 @@ class KeycloakPortPreflightTests(unittest.TestCase):
                 B04.preflight_ports()
 
 
+class CheckoutIsolationTests(unittest.TestCase):
+    def test_compose_projects_are_scoped_to_this_checkout(self) -> None:
+        self.assertEqual(B04.B02_PROJECT, f"fieldops-b02-b04-{B04.CHECKOUT_ID}")
+        self.assertEqual(B04.MEDIA_PROJECT, f"fieldops-b04-media-{B04.CHECKOUT_ID}")
+        self.assertEqual(B04.b02.PROJECT, B04.B02_PROJECT)
+
+    def test_different_checkout_paths_have_different_fingerprints(self) -> None:
+        self.assertNotEqual(
+            B04.checkout_fingerprint(ROOT / "clone-a"),
+            B04.checkout_fingerprint(ROOT / "clone-b"),
+        )
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
