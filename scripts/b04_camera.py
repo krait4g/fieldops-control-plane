@@ -367,12 +367,23 @@ def action_verify(_: argparse.Namespace) -> None:
         action_fault(argparse.Namespace(component="onvif", state="up"))
     results["G9"] = "PASS"
 
-    b02.action_verify(argparse.Namespace())
+    verify_b02_with_startup_retry()
     results["G10"] = "PASS"
     result = {"verifiedAt": b02.now(), "results": results, "count": "10/10",
               "media": "RTSP_H264_TO_WEBRTC", "publicRelease": "NOT_RELEASED"}
     (RUNTIME / "last-verify.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
+
+
+def verify_b02_with_startup_retry() -> None:
+    for attempt in range(2):
+        try:
+            b02.action_verify(argparse.Namespace())
+            return
+        except b02.B02Error as error:
+            if attempt or "condition not reached" not in str(error):
+                raise
+            time.sleep(2)
 
 
 def action_down(_: argparse.Namespace) -> None:

@@ -47,5 +47,24 @@ class CheckoutIsolationTests(unittest.TestCase):
         )
 
 
+class ObserveReadinessTests(unittest.TestCase):
+    def test_one_startup_timeout_is_retried(self) -> None:
+        startup_timeout = B04.b02.B02Error("condition not reached in 30s; last=''")
+        with patch.object(
+            B04.b02, "action_verify", side_effect=[startup_timeout, None]
+        ) as verify, patch.object(B04.time, "sleep") as sleep:
+            B04.verify_b02_with_startup_retry()
+        self.assertEqual(verify.call_count, 2)
+        sleep.assert_called_once_with(2)
+
+    def test_non_readiness_error_is_not_retried(self) -> None:
+        with patch.object(
+            B04.b02, "action_verify", side_effect=B04.b02.B02Error("process stopped")
+        ) as verify:
+            with self.assertRaisesRegex(B04.b02.B02Error, "process stopped"):
+                B04.verify_b02_with_startup_retry()
+        verify.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
