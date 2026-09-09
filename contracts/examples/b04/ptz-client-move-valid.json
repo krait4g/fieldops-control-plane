@@ -1,0 +1,10 @@
+{
+  "type": "MOVE",
+  "sessionId": "9c9709e4-7d52-4472-b532-7a4277fa96ca",
+  "generation": 7,
+  "seq": 18,
+  "pan": 0.7,
+  "tilt": -0.25,
+  "zoom": 0,
+  "timeoutMs": 500
+}

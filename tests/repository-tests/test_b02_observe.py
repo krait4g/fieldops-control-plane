@@ -111,5 +111,26 @@ class KeycloakPortTests(unittest.TestCase):
             B02.PORTS["keycloak"] = original_port
 
 
+class RuntimeIsolationTests(unittest.TestCase):
+    def test_default_runtime_remains_unchanged(self) -> None:
+        self.assertEqual(B02.resolve_runtime(None), ROOT / ".fieldops-b02")
+
+    def test_nested_task_runtime_is_allowed(self) -> None:
+        self.assertEqual(B02.resolve_runtime(".fieldops-b04/b02"), ROOT / ".fieldops-b04" / "b02")
+
+    def test_runtime_outside_repository_is_rejected(self) -> None:
+        with self.assertRaises(RuntimeError):
+            B02.resolve_runtime(str(ROOT.parent / "outside-b02"))
+
+    def test_one_shot_simulator_does_not_inherit_vertical_slice_profile(self) -> None:
+        with (
+            mock.patch.object(B02, "java_executable", return_value="java"),
+            mock.patch.object(B02, "jar_for", return_value=Path("simulator.jar")),
+            mock.patch.object(B02, "run", return_value="ok") as run_mock,
+        ):
+            B02.simulator({"SPRING_PROFILES_ACTIVE": "local-observe,b04-camera"}, ["--count=1"])
+        self.assertEqual(run_mock.call_args.kwargs["env"]["SPRING_PROFILES_ACTIVE"], "local-observe")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

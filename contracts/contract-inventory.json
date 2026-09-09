@@ -43,6 +43,34 @@
       "path": "contracts/json-schema/b02-telemetry-normalized.schema.json",
       "lifecycle": "B02_DEVELOPMENT",
       "mapsTo": ["fieldops.telemetry.normalized.v1"]
+    },
+    {
+      "id": "m2-camera-rest",
+      "kind": "openapi",
+      "path": "contracts/openapi/fieldops-m2-camera.yaml",
+      "lifecycle": "B04_DEVELOPMENT",
+      "mapsTo": ["B04 camera read model", "B04 control lease REST"]
+    },
+    {
+      "id": "b04-ptz-websocket",
+      "kind": "asyncapi",
+      "path": "contracts/asyncapi/fieldops-camera-control-v1.yaml",
+      "lifecycle": "B04_DEVELOPMENT",
+      "mapsTo": ["B04 ephemeral PTZ WebSocket"]
+    },
+    {
+      "id": "b04-ptz-client-message",
+      "kind": "json-schema",
+      "path": "contracts/json-schema/ptz-client-message-v1.schema.json",
+      "lifecycle": "B04_DEVELOPMENT",
+      "mapsTo": ["B04 browser to server PTZ messages"]
+    },
+    {
+      "id": "b04-ptz-server-message",
+      "kind": "json-schema",
+      "path": "contracts/json-schema/ptz-server-message-v1.schema.json",
+      "lifecycle": "B04_DEVELOPMENT",
+      "mapsTo": ["B04 server to browser PTZ messages"]
     }
   ],
   "foundationContracts": [
@@ -104,6 +132,26 @@
     {
       "contract": "problem-details-from-m1-openapi",
       "path": "contracts/examples/m0/problem-details-invalid-status.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "b04-ptz-client-message",
+      "path": "contracts/examples/b04/ptz-client-move-valid.json",
+      "expected": "valid"
+    },
+    {
+      "contract": "b04-ptz-client-message",
+      "path": "contracts/examples/b04/ptz-client-move-timeout-invalid.json",
+      "expected": "invalid"
+    },
+    {
+      "contract": "b04-ptz-server-message",
+      "path": "contracts/examples/b04/ptz-server-pose-valid.json",
+      "expected": "valid"
+    },
+    {
+      "contract": "b04-ptz-server-message",
+      "path": "contracts/examples/b04/ptz-server-unknown-code-invalid.json",
       "expected": "invalid"
     }
   ]

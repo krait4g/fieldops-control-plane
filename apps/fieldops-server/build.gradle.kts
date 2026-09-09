@@ -6,7 +6,9 @@ plugins {
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(project(":modules:telemetry-domain"))
+    implementation(project(":modules:camera-control"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")

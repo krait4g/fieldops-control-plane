@@ -1,0 +1,18 @@
+# B04 localhost-only synthetic media plane. No HLS, Kafka, telemetry, or public binding.
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.0@sha256:19fddade8d6110a3d718ac0045681fbeba344ae563a066205fe5929a87f7582f
+    restart: "no"
+    command: ["/mediamtx.yml"]
+    ports:
+      - "127.0.0.1:${B04_RTSP_PORT:?B04_RTSP_PORT is required}:8554"
+      - "127.0.0.1:${B04_WEBRTC_PORT:?B04_WEBRTC_PORT is required}:8889"
+      - "127.0.0.1:${B04_MEDIAMTX_API_PORT:?B04_MEDIAMTX_API_PORT is required}:9997"
+      - "127.0.0.1:${B04_WEBRTC_UDP_PORT:?B04_WEBRTC_UDP_PORT is required}:28189/udp"
+    volumes:
+      - type: bind
+        source: ./mediamtx.yml
+        target: /mediamtx.yml
+        read_only: true
+        bind:
+          create_host_path: false

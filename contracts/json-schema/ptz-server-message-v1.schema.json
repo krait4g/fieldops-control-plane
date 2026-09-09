@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fieldops.dev/contracts/ptz-server-message-v1.schema.json",
+  "title": "FieldOps PTZ server message v1",
+  "oneOf": [
+    { "$ref": "#/$defs/ack" },
+    { "$ref": "#/$defs/pose" },
+    { "$ref": "#/$defs/controlLost" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "seq", "generation", "acceptedAt"],
+      "properties": {
+        "type": { "const": "ACK" },
+        "seq": { "type": "integer", "minimum": 1 },
+        "generation": { "type": "integer", "minimum": 1 },
+        "acceptedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "pose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "generation", "pan", "tilt", "zoom", "moving", "observedAt"],
+      "properties": {
+        "type": { "const": "POSE" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "pan": { "type": "number", "minimum": -1, "maximum": 1 },
+        "tilt": { "type": "number", "minimum": -1, "maximum": 1 },
+        "zoom": { "type": "number", "minimum": 0, "maximum": 1 },
+        "moving": { "type": "boolean" },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "controlLost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "generation", "reason"],
+      "properties": {
+        "type": { "const": "CONTROL_LOST" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "reason": { "type": "string", "enum": ["LEASE_EXPIRED", "LEASE_REPLACED", "SESSION_RELEASED"] }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "code", "detail"],
+      "properties": {
+        "type": { "const": "ERROR" },
+        "seq": { "type": "integer", "minimum": 1 },
+        "code": { "type": "string", "enum": ["INVALID_MESSAGE", "NON_MONOTONIC_SEQUENCE", "CONTROL_SESSION_STALE", "GATEWAY_REJECTED", "DEVICE_UNAVAILABLE"] },
+        "detail": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    }
+  }
+}

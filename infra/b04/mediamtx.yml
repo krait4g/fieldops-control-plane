@@ -1,0 +1,32 @@
+logLevel: info
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+        path: camera-a-01
+      - action: read
+        path: camera-a-01
+      - action: api
+api: true
+apiAddress: :9997
+playback: false
+rtsp: true
+rtspTransports: [tcp]
+rtspAddress: :8554
+hls: false
+rtmp: false
+srt: false
+moq: false
+webrtc: true
+webrtcAddress: :8889
+webrtcAllowOrigins: ["http://localhost:3000"]
+webrtcLocalUDPAddress: :28189
+webrtcLocalTCPAddress: ""
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: [127.0.0.1]
+paths:
+  camera-a-01:
+    source: publisher

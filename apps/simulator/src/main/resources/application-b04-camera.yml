@@ -1,0 +1,25 @@
+spring:
+  main:
+    web-application-type: servlet
+
+server:
+  address: 127.0.0.1
+  port: ${B04_ONVIF_PORT:28084}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [health, info]
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+fieldops:
+  b04:
+    camera:
+      id: camera-a-01
+      profile-token: profile-main
+      public-origin: http://127.0.0.1:${B04_ONVIF_PORT:28084}
+      rtsp-uri: rtsp://127.0.0.1:${B04_RTSP_PORT:28554}/camera-a-01

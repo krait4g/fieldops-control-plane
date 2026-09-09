@@ -119,6 +119,34 @@ public class ScopeService {
         }
     }
 
+    public void requireCamera(OidcUser user, String tenantId, String cameraId, String... permissions) {
+        requireTenant(user, tenantId, permissions);
+        PrincipalRef principal = principal(user);
+        boolean exists = jdbc.sql("""
+                SELECT COUNT(*)
+                FROM b04_camera c
+                JOIN b02_membership m ON m.tenant_id = c.tenant_id
+                  AND m.issuer = :issuer AND m.subject = :subject AND m.status = 'ACTIVE'
+                WHERE c.tenant_id = :tenantId AND c.camera_id = :cameraId
+                  AND (m.all_sites = TRUE OR EXISTS (
+                    SELECT 1 FROM b02_membership_site ms
+                    WHERE ms.issuer = m.issuer AND ms.subject = m.subject
+                      AND ms.tenant_id = m.tenant_id AND ms.site_id = c.site_id
+                  ))
+                """)
+                .param("issuer", principal.issuer())
+                .param("subject", principal.subject())
+                .param("tenantId", tenantId)
+                .param("cameraId", cameraId)
+                .query(Integer.class)
+                .single() > 0;
+        if (!exists) throw new ScopeDeniedException("Camera is outside the authenticated site scope");
+    }
+
+    public String subject(OidcUser user) {
+        return principal(user).subject();
+    }
+
     private MembershipView membership(PrincipalRef principal, String tenantId, String tenantName,
             String timezone, String role) {
         List<String> permissions = jdbc.sql("""

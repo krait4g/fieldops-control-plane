@@ -13,16 +13,22 @@ for (const entry of entries) {
   await fs.access(path.join(root, entry.path));
 }
 
-const openapiEntry = inventory.canonicalContracts.find((entry) => entry.kind === "openapi");
-await SwaggerParser.validate(path.join(root, openapiEntry.path));
+const openapiEntries = inventory.canonicalContracts.filter((entry) => entry.kind === "openapi");
+for (const entry of openapiEntries) {
+  await SwaggerParser.validate(path.join(root, entry.path));
+}
 
-const asyncapiEntry = inventory.canonicalContracts.find((entry) => entry.kind === "asyncapi");
-const parsedAsyncApi = await fromFile(new Parser(), path.join(root, asyncapiEntry.path)).parse();
-const asyncApiErrors = parsedAsyncApi.diagnostics.filter(
-  (diagnostic) => diagnostic.severity === DiagnosticSeverity.Error,
-);
-if (!parsedAsyncApi.document || asyncApiErrors.length > 0) {
-  throw new Error(`AsyncAPI validation failed:\n${asyncApiErrors.map(diagnosticText).join("\n")}`);
+const asyncapiEntries = inventory.canonicalContracts.filter((entry) => entry.kind === "asyncapi");
+for (const entry of asyncapiEntries) {
+  const parsedAsyncApi = await fromFile(new Parser(), path.join(root, entry.path)).parse();
+  const asyncApiErrors = parsedAsyncApi.diagnostics.filter(
+    (diagnostic) => diagnostic.severity === DiagnosticSeverity.Error,
+  );
+  if (!parsedAsyncApi.document || asyncApiErrors.length > 0) {
+    throw new Error(
+      `${entry.path} AsyncAPI validation failed:\n${asyncApiErrors.map(diagnosticText).join("\n")}`,
+    );
+  }
 }
 
 const schemaEntries = entries.filter((entry) => entry.kind === "json-schema");
@@ -45,5 +51,5 @@ if (invalidFoundationEntries.length > 0) {
 }
 
 console.log(
-  `contract:lint PASS (OpenAPI=1, AsyncAPI=1, JSON Schema=${schemaEntries.length}, inventory entries=${entries.length})`,
+  `contract:lint PASS (OpenAPI=${openapiEntries.length}, AsyncAPI=${asyncapiEntries.length}, JSON Schema=${schemaEntries.length}, inventory entries=${entries.length})`,
 );

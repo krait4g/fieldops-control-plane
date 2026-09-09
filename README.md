@@ -2,12 +2,12 @@
 
 > **서로 다른 현장 장비의 데이터를 공통 모델로 모으고, 상태 확인부터 조치 결과까지 연결하는 백엔드 중심 포트폴리오 프로젝트**
 
-[![Status](https://img.shields.io/badge/status-local%20observe%20verified%20%2F%20public%20sync-16A34A)](docs/project-status.md)
+[![Status](https://img.shields.io/badge/status-local%20observe%20%2B%20camera%2FPTZ%20verified-16A34A)](docs/project-status.md)
 [![Java](https://img.shields.io/badge/Java-21-007396)](#기술-구성)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)](#기술-구성)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**v0.2 Local Observe Preview의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 이벤트가 Java Gateway와 Kafka를 거쳐 PostgreSQL History·Redis Latest State에 반영되고, Keycloak OIDC 기반 Session과 Tenant/Site 권한을 통해 REST/SSE 운영 화면까지 연결됩니다.
+**Local Observe와 Synthetic Camera/PTZ의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 이벤트의 History/Latest State 경로에 더해, H.264 RTSP → MediaMTX → WebRTC 미리보기와 Redis generation fencing을 적용한 실시간 ONVIF PTZ 경로를 localhost에서 실행할 수 있습니다.
 
 이 Public Repository는 채용·리뷰를 위한 **curated snapshot**입니다. 현재 master에는 제품·아키텍처 문서, 실제 UI 캡처, localhost-only Synthetic 실행 경로가 공개되어 있습니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
 
@@ -37,11 +37,28 @@
 |---|---|
 | <img src="docs/assets/implementation/local-observe-devices-ko.png" alt="FieldOps Local Observe 실제 구현 장비 목록 화면"> | <img src="docs/assets/implementation/local-observe-members-mobile-ko.png" alt="FieldOps Local Observe 실제 구현 모바일 구성원 화면"> |
 
+### Realtime Camera Preview & PTZ Control
+
+이 Slice는 영상과 제어의 실패 경계를 분리했습니다. FFmpeg의 Synthetic H.264는
+RTSP로 MediaMTX에 publish되고 브라우저는 WebRTC로 읽습니다. 제어권은 Redis의
+단일-owner lease와 증가하는 generation으로 fence하며, Device Gateway는 ONVIF
+전송 직전에 owner/generation을 다시 검증합니다. WebSocket 입력은 latest-wins로
+처리하고 priority stop, server dead-man, `ContinuousMove`의 유한 device timeout을
+겹쳐 오래된 입력이 계속 실행되지 않도록 했습니다.
+
+<p align="center">
+  <img src="docs/assets/implementation/camera-ptz-control-ko.png" alt="FieldOps Synthetic Camera WebRTC 미리보기와 실시간 PTZ 제어 화면" width="100%">
+</p>
+
+| WebRTC Preview | Mobile PTZ |
+|---|---|
+| <img src="docs/assets/implementation/camera-webrtc-preview-ko.png" alt="FieldOps Synthetic Camera WebRTC 미리보기 화면"> | <img src="docs/assets/implementation/camera-ptz-mobile-ko.png" alt="FieldOps Synthetic Camera PTZ 모바일 화면"> |
+
 ## 로컬에서 실행하기
 
 Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니다. Clone한 뒤 `pnpm --version`으로 준비 상태를 확인하고 Windows에서는 `py -3 scripts/b02_observe.py up`, Linux에서는 `python3 scripts/b02_observe.py up`으로 시작합니다. 이어서 `status`, `demo --device all --scenario portfolio`, `verify`를 실행하고 <http://localhost:3000/login>에서 생성된 Synthetic Credential로 확인합니다. 작업이 끝나면 반드시 `down`을 실행하세요.
 
-[전체 명령과 Browser 확인 절차](docs/LOCAL_OBSERVE_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
+[Local Observe 전체 명령](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ 전체 명령](docs/CAMERA_PTZ_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
 
 ## 제품 비전 — 콘셉트 이미지
 
@@ -59,6 +76,7 @@ Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니�
 |---|---|---|
 | UI Preview | Login, Overview, 장비 목록·상세·차트, 구성원 조회, Error/Stale/Reconnecting, Desktop/Mobile | 실제 한국어 UI 캡처 공개 완료 |
 | Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 선별 실행 소스·Quick Start 공개 완료 |
+| Camera/PTZ | Synthetic H.264 RTSP → MediaMTX → WebRTC + Redis lease/fencing → WebSocket → Synthetic ONVIF | 선별 실행 소스·Quick Start·실제 화면 3장 공개 |
 | 인증·권한 | Keycloak Authorization Code + PKCE, 서버 Session, Tenant/Site/Device Scope | 설계·검증 결과 우선 공개 |
 | 정합성 | 중복·역순 처리, DB Commit 이후 Kafka ACK, Redis 장애 시 History 지속 + DB Snapshot/Stale fallback | Evidence 요약부터 공개 |
 | 계약·검증 | OpenAPI/AsyncAPI/JSON Schema, Testcontainers, Clean-clone Drill, GitHub Actions | 문서와 공개 Gate 순차 동기화 |
@@ -116,15 +134,15 @@ Local Observe Preview에서는 History 저장과 최신 상태 처리를 분리�
 
 ### 3. 연결 성공과 데이터 최신성을 구분
 
-REST는 Snapshot·조회, SSE는 상태 변경, WebSocket은 후속 PTZ 입력에 사용합니다. SSE 연결이 살아 있어도 장비가 Offline이거나 값이 오래됐을 수 있습니다.
+REST는 Snapshot·조회와 PTZ lease, SSE는 sensor 상태 변경, WebSocket은 PTZ 입력에 사용합니다. SSE 연결이 살아 있어도 장비가 Offline이거나 값이 오래됐을 수 있습니다.
 
-현재 Remote Preview에서는 Snapshot 이후 SSE를 연결하고, Scope·상태 세대·Revision을 비교해 늦은 이벤트가 최신 상태를 되돌리지 않도록 합니다. 연결 재시도와 DB fallback을 검증했지만, 무손실 장기 Replay나 분산 Exactly-once를 주장하지 않습니다.
+현재 Remote Preview에서는 Snapshot 이후 SSE를 연결하고, Scope·상태 세대·Revision을 비교해 늦은 이벤트가 최신 상태를 되돌리지 않도록 합니다. Camera 제어는 별도 WebSocket handshake에서 Scope와 lease를 다시 확인합니다. 연결 재시도와 DB fallback을 검증했지만, 무손실 장기 Replay나 분산 Exactly-once를 주장하지 않습니다.
 
 ### 4. 일반 명령과 순간 제어를 분리
 
 펌프·밸브의 명령은 승인, 원장, 중복 처리와 결과 확인이 중요합니다. 반면 PTZ Joystick의 오래된 입력은 나중에 실행되면 안 됩니다. 따라서 일반 명령은 내구성 있는 경로로, PTZ는 최신 입력만 다루는 별도 경로로 설계합니다.
 
-`ACKNOWLEDGED`와 `SUCCEEDED`는 다릅니다. 장비가 실제 수행했는지 모르면 `UNKNOWN`으로 남깁니다. Lease·Fencing만으로 물리 정지가 보장되는 것은 아니므로 PTZ는 지원 장비의 Timeout과 최종 실행 경계를 검증한 뒤 추가합니다.
+`ACKNOWLEDGED`와 `SUCCEEDED`는 다릅니다. B04 PTZ는 durable 명령 경로와 분리하고, Redis lease/generation fencing, Gateway 최종 재검증, priority stop, server dead-man, Synthetic ONVIF의 유한 timeout을 함께 검증했습니다. 이 Synthetic 검증을 모든 실제 장비의 물리 정지 보장으로 확대해 해석하지 않습니다.
 
 ### 5. 복잡도를 늘리기 전에 작은 결과를 공개
 
@@ -134,7 +152,7 @@ REST는 Snapshot·조회, SSE는 상태 변경, WebSocket은 후속 PTZ 입력�
   <img src="docs/assets/capability-overview.webp" alt="장비 연동과 운영 기능의 목표 구성을 나타낸 콘셉트 이미지" width="100%">
 </p>
 
-## 현재 v0.2 구현 구조와 후속 경로
+## 현재 구현 구조와 후속 경로
 
 아래 실선은 Local Observe Preview에서 실제 구현·검증한 책임 흐름입니다. 점선은 이후 작은 증분으로 추가할 후보입니다.
 
@@ -149,9 +167,12 @@ flowchart LR
     API --> PG
     API --> RD
     K --> API
-    EXT[TCP / Polling / ONVIF - Later] -.-> GW
-    CAM[RTSP Camera - Later] -.-> MEDIA[Media Gateway - Later]
-    MEDIA -.-> WEB
+    EXT[TCP / Polling - Later] -.-> GW
+    CAM[Synthetic H.264 / RTSP] --> MEDIA[MediaMTX / WebRTC]
+    MEDIA --> WEB
+    WEB -->|PTZ WebSocket| API
+    API -->|fenced control| GW
+    GW -->|ONVIF| CAM
 ```
 
 영상 원본은 Kafka·Telemetry 저장 경로에 넣지 않습니다. 논리 모듈마다 Microservice를 만드는 대신 Gateway·Worker·API의 책임과 실패 경계를 먼저 검증합니다. [아키텍처 상세](docs/architecture.md)
@@ -164,7 +185,8 @@ flowchart LR
 |---|---|---|---|
 | v0.1 UI Preview | **구현·검증 완료 / 실제 화면 공개** | Fixture Login, Overview, 장비 목록·상세·차트, 회원 조회, 실패·재연결 표현 | 실제 Backend 연동을 Fixture 검증으로 대체하지 않음 |
 | v0.2 실제 관측 | **Local Preview 구현·검증 완료 / 실제 화면 공개** | Synthetic MQTT → Kafka → History/Latest State → REST/SSE 화면, 실제 인증·Scope, 핵심 장애 경계 | Camera·Command·AI·과금 전체 구현 |
-| v0.3 이후 증분 | 계획 | TCP 또는 Polling 한 종류, Camera Preview, 안전 명령 한 종류 등을 각각 검증 후 추가 | 모든 프로토콜·Vendor를 한 번에 지원 |
+| v0.3 Camera/PTZ Slice | **구현·검증 완료 / 실제 화면 공개** | Synthetic RTSP → WebRTC 미리보기, lease/fencing, WebSocket PTZ, ONVIF pose | 실제 Vendor 전체 호환, durable command, preset |
+| 이후 증분 | 계획 | TCP 또는 Polling 한 종류, 안전 명령 한 종류 등을 각각 검증 후 추가 | 모든 프로토콜·Vendor를 한 번에 지원 |
 | 선택 확장 | 계획 | PTZ 고도화, 관측성·성능 개선, AI 보조, 사용량 기능 | 앞선 완성본의 공개를 지연시키는 선행 작업 |
 
 첫 포트폴리오 결과는 실제 관측 흐름과 그 구조를 선택한 근거입니다. 후속 기능의 개수보다 실행 방법, 핵심 실패 테스트, 실제 화면을 함께 제공하는 것을 우선합니다. [단계별 완료 기준](docs/product/ROADMAP.ko.md)
@@ -184,7 +206,8 @@ flowchart LR
 | 운영 화면과 조회 | Next.js App Router, TypeScript, TanStack Query, ECharts | Fixture + Remote UI 검증 |
 | 실제 원격 인증 | Keycloak OIDC, 서버 소유 Session | Code+PKCE와 Scope 검증 |
 | 검증과 실행 | JUnit, Testcontainers, Playwright, Docker Compose, GitHub Actions | Clean-clone/CI 포함 검증 |
-| 후속 연동·관측성 | Netty TCP, HTTP Polling, ONVIF/RTSP, OpenTelemetry, Prometheus/Grafana | 후속 후보 |
+| Camera 미디어와 제어 | MediaMTX, RTSP/WebRTC, Redis lease, WebSocket, Synthetic ONVIF | localhost Synthetic Slice에서 사용·검증 |
+| 후속 연동·관측성 | Netty TCP, HTTP Polling, OpenTelemetry, Prometheus/Grafana | 후속 후보 |
 
 실제 사용·검증 여부는 각 Slice의 코드와 Evidence를 기준으로 표시합니다. 측정하지 않은 처리량이나 지연 수치를 성과로 쓰지 않습니다.
 

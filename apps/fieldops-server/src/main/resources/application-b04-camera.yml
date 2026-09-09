@@ -1,0 +1,16 @@
+fieldops:
+  b04:
+    browser-origin: http://localhost:3000
+    preview-url: http://127.0.0.1:${B04_WEBRTC_PORT:28889}/camera-a-01/?controls=false&muted=true&autoplay=true
+    websocket-base-url: ws://localhost:${B02_SERVER_PORT:28082}
+    gateway:
+      base-url: http://127.0.0.1:${B02_GATEWAY_PORT:28081}
+      internal-token: ${B04_INTERNAL_TOKEN}
+    media:
+      base-url: http://127.0.0.1:${B04_MEDIAMTX_API_PORT:29997}
+    lease:
+      ttl: 5s
+      heartbeat-interval: 1s
+    ptz:
+      dispatch-interval: 75ms
+      dead-man: 400ms

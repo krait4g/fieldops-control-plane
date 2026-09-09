@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fieldops.dev/contracts/ptz-client-message-v1.schema.json",
+  "title": "FieldOps PTZ client message v1",
+  "oneOf": [
+    { "$ref": "#/$defs/move" },
+    { "$ref": "#/$defs/stop" },
+    { "$ref": "#/$defs/heartbeat" }
+  ],
+  "$defs": {
+    "move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "sessionId", "generation", "seq", "pan", "tilt", "zoom", "timeoutMs"],
+      "properties": {
+        "type": { "const": "MOVE" },
+        "sessionId": { "type": "string", "format": "uuid" },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "seq": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "pan": { "type": "number", "minimum": -1, "maximum": 1 },
+        "tilt": { "type": "number", "minimum": -1, "maximum": 1 },
+        "zoom": { "type": "number", "minimum": -1, "maximum": 1 },
+        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 500 }
+      }
+    },
+    "stop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "sessionId", "generation", "seq", "reason"],
+      "properties": {
+        "type": { "const": "STOP" },
+        "sessionId": { "type": "string", "format": "uuid" },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "seq": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "reason": {
+          "type": "string",
+          "enum": ["INPUT_RELEASED", "WINDOW_BLUR", "VISIBILITY_HIDDEN", "PAGE_HIDE", "SOCKET_CLOSED", "LEASE_LOST", "DEAD_MAN", "USER_REQUEST"]
+        }
+      }
+    },
+    "heartbeat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "sessionId", "generation", "seq"],
+      "properties": {
+        "type": { "const": "HEARTBEAT" },
+        "sessionId": { "type": "string", "format": "uuid" },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "seq": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+      }
+    }
+  }
+}

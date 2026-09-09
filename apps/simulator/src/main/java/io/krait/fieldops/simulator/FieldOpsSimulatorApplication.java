@@ -9,7 +9,9 @@ public class FieldOpsSimulatorApplication {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(FieldOpsSimulatorApplication.class, args);
-        int exitCode = SpringApplication.exit(context);
-        System.exit(exitCode);
+        if (!context.getEnvironment().matchesProfiles("b04-camera")) {
+            int exitCode = SpringApplication.exit(context);
+            System.exit(exitCode);
+        }
     }
 }

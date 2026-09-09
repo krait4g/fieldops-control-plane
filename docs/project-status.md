@@ -1,6 +1,6 @@
 # 현재 공개 상태
 
-마지막 업데이트: 2026-09-08. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
+마지막 업데이트: 2026-09-09. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
 
 ## 한눈에 보는 현재 상태
 
@@ -9,13 +9,15 @@
 | 제품 정의·UX·아키텍처 | Public 문서 공개 |
 | v0.1 UI Preview | 구현·검증 완료, 실제 UI Capture Public 공개 완료 |
 | v0.2 Local Observe Preview | `VERIFIED_SCOPE: local-observe-preview`, 실제 UI Capture Public 공개 완료 |
+| v0.3 Synthetic Camera/PTZ | `VERIFIED_SCOPE: synthetic-camera-preview-ptz`, WebRTC/PTZ 실제 UI Capture 3장 공개 완료 |
 | 실제 Remote 인증 | Keycloak Code+PKCE + 서버 Session + Tenant/Site Scope 검증 완료 |
 | MQTT/History/Redis/REST/SSE 통합 | Synthetic 데이터로 Local End-to-End 검증 완료 |
 | UI | Overview, 장비 목록·상세·차트, 구성원 조회, Desktop/Mobile 구현 완료 |
 | 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
-| Public 실행 소스 | Local Observe 최소 실행 폐쇄와 Quick Start 공개 완료 |
-| Public runnable validation | 동일 Public head에서 Ubuntu smoke와 Windows fresh-clone Browser journey `PASS` |
-| 장비 제어·Camera·AI·과금 | 후속 또는 선택 범위 |
+| Public 실행 소스 | Local Observe + Camera/PTZ 최소 실행 폐쇄와 Quick Start 공개 완료 |
+| Public runnable validation | 동일 Public head에서 Ubuntu Camera smoke와 Windows fresh-clone Browser journey `PASS` |
+| 장비 제어 | Synthetic Camera PTZ만 검증 완료. durable command·alarm·preset은 후속 범위 |
+| AI·과금 | 후속 또는 선택 범위 |
 | 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
 | Public Release | NOT_RELEASED. Local Preview와 별도 Release Gate 유지 |
 
@@ -52,6 +54,21 @@ Synthetic Sensor
 
 이 결과는 localhost-only Synthetic Portfolio Preview의 검증 범위입니다. Production, 외부 고객 데이터, HA, 무손실 장기 Replay, 모든 Vendor 호환을 주장하지 않습니다.
 
+## 현재 검증된 Synthetic Camera/PTZ Slice
+
+한 대의 Synthetic Camera에서 다음 흐름을 실행·검증했습니다.
+
+```text
+FFmpeg H.264 → RTSP → MediaMTX → WebRTC Preview
+Browser → REST Lease → Redis Generation Fencing → WebSocket PTZ
+       → Device Gateway Final Revalidation → Synthetic ONVIF
+```
+
+G1-G10은 scope/permission, 단일-owner lease, generation fencing, monotonic
+sequence, latest-wins dispatch, priority stop, server dead-man, device-side finite
+timeout, media/control 장애 격리, 기존 Local Observe 회귀를 포함합니다. 실제
+Vendor Camera나 Production 안전 인증을 의미하지 않습니다.
+
 ## Public 동기화 상태와 다음 단계
 
 Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이도록 작은 단위로 계속 갱신합니다.
@@ -59,8 +76,9 @@ Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이�
 1. **현재 구현 상태 공개** — 이 문서와 README에서 Local Observe Preview의 실제 구현 범위를 공개
 2. **최종 UI 캡처 공개 — 완료** — 한국어 기본 UI의 Overview / Devices / Device Detail / Members Mobile 실제 Remote Screenshot 공개
 3. **Quick Start + 선별 실행 소스 공개 — 완료** — stable process identity fix와 Ubuntu/Windows 동일-head 수용을 거쳐 master에 반영
-4. **다음 제품 Slice 공개** — TCP/Polling, Camera/Control 등은 각각 검증된 Vertical Slice 단위로 추가
-5. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
+4. **Synthetic Camera/PTZ 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 3장을 같은 Public head에 반영
+5. **다음 제품 Slice 공개** — TCP/Polling, durable Command/Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
+6. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
 Public 동기화를 빠르게 하기 위해 미완성 기능 수를 늘리기보다, 이미 검증된 Slice의 코드·실행 방법·Evidence를 우선 공개합니다.
 
@@ -82,6 +100,15 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 공개한 실행 소스와 Quick Start는 localhost-only Synthetic Portfolio Preview 범위입니다. 전체 제품이나 Production Release를 의미하지 않습니다.
 
+### v0.3 — Synthetic Camera Preview + Realtime PTZ
+
+상태: **IMPLEMENTED / VERIFIED_SCOPE: synthetic-camera-preview-ptz · 실제 UI Capture Public 공개 완료**
+
+Synthetic H.264 RTSP → MediaMTX → WebRTC 영상과 Redis lease/generation fencing,
+WebSocket PTZ, Gateway 최종 재검증, Synthetic ONVIF `ContinuousMove`/`Stop`,
+dead-man과 유한 device timeout을 검증했습니다. 실행 방법은 Camera/PTZ Quick
+Start에 공개했습니다.
+
 ## Release와 구별
 
 현재 Local Preview는 제품 동작과 포트폴리오 검증을 위한 내부 실행 범위입니다. Public/Release 후보는 별도 Gate를 둡니다.
@@ -94,6 +121,6 @@ UI Preview를 Backend 통합 완료로 부르지 않습니다. 이 범위의 검
 
 ## 공개 근거
 
-같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu `up/status/demo/verify/down`, Windows fresh-clone `up/status/demo/verify/down`과 실제 Browser Login / Overview / Device Detail을 통과했습니다. Windows에서는 명시적 `B02_KEYCLOAK_PORT=28083` 경로도 검증했으며 다른 프로세스를 종료하지 않았습니다. Container image vulnerability review는 여전히 Release blocker입니다.
+같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu Camera `up/status/verify/down`, Windows fresh-clone Camera `up/status/verify/down`과 실제 Browser Login → Cameras → Detail → WebRTC → Lease → PTZ pose change → Stop/Release를 통과했습니다. MediaMTX exact-digest Trivy scan은 실행과 report identity를 별도로 검증하며, 이를 제품 Release나 전체 image security PASS로 확대하지 않습니다.
 
-[README](../README.md) · [Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)
+[README](../README.md) · [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ Quick Start](CAMERA_PTZ_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)

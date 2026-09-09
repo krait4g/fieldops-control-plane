@@ -10,6 +10,10 @@ import type {
   OverviewResponse,
   SessionResponse,
   TelemetrySeriesResponse,
+  CameraControlSession,
+  CameraDetail,
+  CameraListResponse,
+  CameraStatus,
 } from "../types";
 import type { components, operations } from "../generated/fieldops-m1";
 import { activeFixtureScenario, FIXTURE_SCENARIO_HEADER } from "../mock/fixture-scenario";
@@ -109,6 +113,24 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
+async function mutate<T>(url: string, method: "POST" | "DELETE", options?: RequestOptions): Promise<T> {
+  const csrf = await request<CsrfTokenResponse>("/api/v1/auth/csrf", options);
+  const response = await fetch(url, {
+    method,
+    credentials: "include",
+    headers: { ...JSON_HEADERS, [csrf.headerName]: csrf.token },
+    signal: options?.signal,
+  });
+  if (!response.ok) {
+    const problem = await parseProblem(response);
+    const traceId = response.headers.get("x-trace-id");
+    if (traceId && problem) problem.traceId = traceId;
+    throw new HttpError(response.status, problem);
+  }
+  if (response.status === 204) return undefined as T;
+  return (await response.json()) as T;
+}
+
 export interface FieldOpsClient {
   getSession(options?: RequestOptions): Promise<SessionResponse>;
   logout(options?: RequestOptions): Promise<void>;
@@ -140,6 +162,12 @@ export interface FieldOpsClient {
     input: MemberListQuery,
     options?: RequestOptions,
   ): Promise<MemberListResponse>;
+  getCameras(tenantId: string, siteId: string, options?: RequestOptions): Promise<CameraListResponse>;
+  getCamera(cameraId: string, tenantId: string, options?: RequestOptions): Promise<CameraDetail>;
+  getCameraStatus(cameraId: string, tenantId: string, options?: RequestOptions): Promise<CameraStatus>;
+  acquireCameraControl(cameraId: string, tenantId: string, options?: RequestOptions): Promise<CameraControlSession>;
+  releaseCameraControl(cameraId: string, sessionId: string, tenantId: string,
+    generation: number, options?: RequestOptions): Promise<void>;
 }
 
 function encodePath(value: string): string {
@@ -237,6 +265,38 @@ export const fieldOpsClient: FieldOpsClient = {
         cursor: input.cursor,
         pageSize: input.pageSize,
       }),
+      options,
+    );
+  },
+  getCameras(tenantId, siteId, options) {
+    return request<CameraListResponse>(buildUrl("/api/v1/cameras", { tenantId, siteId }), options);
+  },
+  getCamera(cameraId, tenantId, options) {
+    return request<CameraDetail>(
+      buildUrl(`/api/v1/cameras/${encodePath(cameraId)}`, { tenantId }),
+      options,
+    );
+  },
+  getCameraStatus(cameraId, tenantId, options) {
+    return request<CameraStatus>(
+      buildUrl(`/api/v1/cameras/${encodePath(cameraId)}/status`, { tenantId }),
+      options,
+    );
+  },
+  acquireCameraControl(cameraId, tenantId, options) {
+    return mutate<CameraControlSession>(
+      buildUrl(`/api/v1/cameras/${encodePath(cameraId)}/control-sessions`, { tenantId }),
+      "POST",
+      options,
+    );
+  },
+  releaseCameraControl(cameraId, sessionId, tenantId, generation, options) {
+    return mutate<void>(
+      buildUrl(
+        `/api/v1/cameras/${encodePath(cameraId)}/control-sessions/${encodePath(sessionId)}`,
+        { tenantId, generation },
+      ),
+      "DELETE",
       options,
     );
   },

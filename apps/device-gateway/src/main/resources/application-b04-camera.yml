@@ -1,0 +1,17 @@
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: ${B02_REDIS_PORT:26379}
+      password: ${B02_REDIS_PASSWORD}
+      timeout: 750ms
+
+fieldops:
+  b04:
+    internal-token: ${B04_INTERNAL_TOKEN}
+    camera:
+      id: camera-a-01
+      device-service-url: http://127.0.0.1:${B04_ONVIF_PORT:28084}/onvif/device_service
+      media-service-url: http://127.0.0.1:${B04_ONVIF_PORT:28084}/onvif/media_service
+      ptz-service-url: http://127.0.0.1:${B04_ONVIF_PORT:28084}/onvif/ptz_service
+      profile-token: profile-main
