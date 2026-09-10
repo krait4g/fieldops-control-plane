@@ -65,6 +65,30 @@
       "credentials": [
         { "type": "password", "value": "__B02_USER_PASSWORD__", "temporary": false }
       ]
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000005a1",
+      "username": "b05-operator-a",
+      "enabled": true,
+      "email": "b05-operator-a@example.invalid",
+      "firstName": "B05",
+      "lastName": "Operator A",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "__B02_USER_PASSWORD__", "temporary": false }
+      ]
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000005a2",
+      "username": "b05-approver-a",
+      "enabled": true,
+      "email": "b05-approver-a@example.invalid",
+      "firstName": "B05",
+      "lastName": "Approver A",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "__B02_USER_PASSWORD__", "temporary": false }
+      ]
     }
   ]
 }

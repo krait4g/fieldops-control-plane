@@ -24,17 +24,22 @@ import { useSessionQuery } from "./use-session";
 import { membershipForTenant, resolveContext, type ResolvedContext } from "./context-resolution";
 import { parseRange } from "./url-state";
 import { cameraCopy } from "@/shared/lib/camera-copy";
+import { commandCopy } from "@/shared/lib/command-copy";
 import { useSiteEvents } from "@/shared/realtime/use-site-events";
 import {
   RequiredSnapshotProvider,
   useRequiredSnapshotCoordinator,
 } from "@/shared/realtime/snapshot-coordinator";
 
-function buildNavigation(permissions: string[], messages: CopyCatalog, cameraLabel: string): NavigationItemView[] {
-  const entries = [
+function buildNavigation(permissions: string[], messages: CopyCatalog, cameraLabel: string,
+  commandLabel: string): NavigationItemView[] {
+  const entries: Array<{ id: string; label: string; href: string; iconName: string;
+    required?: string; requiredAny?: string[] }> = [
     { id: "overview", label: messages.navigation.overview, href: "/overview", iconName: "overview", required: "OVERVIEW_READ" },
     { id: "devices", label: messages.navigation.devices, href: "/devices", iconName: "devices", required: "DEVICE_READ" },
     { id: "cameras", label: cameraLabel, href: "/cameras", iconName: "cameras", required: "CAMERA_READ" },
+    { id: "commands", label: commandLabel, href: "/commands", iconName: "commands",
+      requiredAny: ["DEVICE_COMMAND_REQUEST", "DEVICE_COMMAND_APPROVE"] },
     { id: "members", label: messages.navigation.members, href: "/admin/members", iconName: "members", required: "MEMBER_READ" },
   ];
   return entries.map((entry) => ({
@@ -44,7 +49,9 @@ function buildNavigation(permissions: string[], messages: CopyCatalog, cameraLab
     iconName: entry.iconName,
     active: false,
     disabled: false,
-    hidden: !permissions.includes(entry.required),
+    hidden: entry.requiredAny
+      ? !entry.requiredAny.some((permission) => permissions.includes(permission))
+      : !entry.required || !permissions.includes(entry.required),
   }));
 }
 
@@ -183,6 +190,8 @@ function AuthedShell({
     ? messages.navigation.members
     : pathname.startsWith("/cameras")
       ? cameraCopy[locale].navigation
+    : pathname.startsWith("/commands")
+      ? commandCopy[locale].navigation
     : pathname.startsWith("/devices")
       ? messages.navigation.devices
       : messages.navigation.overview;
@@ -207,7 +216,8 @@ function AuthedShell({
   return (
     <SessionContext.Provider value={value}>
       <AppShell
-        navigation={buildNavigation(membership.permissions, messages, cameraCopy[locale].navigation)}
+        navigation={buildNavigation(membership.permissions, messages, cameraCopy[locale].navigation,
+          commandCopy[locale].navigation)}
         breadcrumb={[{ label: sectionLabel }]}
         tenants={tenants}
         sites={sites}

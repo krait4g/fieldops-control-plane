@@ -7,6 +7,7 @@ dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(project(":modules:telemetry-domain"))
     implementation(project(":modules:camera-control"))
+    implementation(project(":modules:command-domain"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

@@ -2,12 +2,12 @@
 
 > **서로 다른 현장 장비의 데이터를 공통 모델로 모으고, 상태 확인부터 조치 결과까지 연결하는 백엔드 중심 포트폴리오 프로젝트**
 
-[![Status](https://img.shields.io/badge/status-local%20observe%20%2B%20camera%2FPTZ%20verified-16A34A)](docs/project-status.md)
+[![Status](https://img.shields.io/badge/status-observe%20%2B%20camera%2FPTZ%20%2B%20durable%20command-16A34A)](docs/project-status.md)
 [![Java](https://img.shields.io/badge/Java-21-007396)](#기술-구성)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)](#기술-구성)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Local Observe와 Synthetic Camera/PTZ의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 이벤트의 History/Latest State 경로에 더해, H.264 RTSP → MediaMTX → WebRTC 미리보기와 Redis generation fencing을 적용한 실시간 ONVIF PTZ 경로를 localhost에서 실행할 수 있습니다.
+**Local Observe, Synthetic Camera/PTZ, Durable Command의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 관측과 WebRTC/PTZ에 더해, Synthetic Valve의 요청·분리 승인·PostgreSQL 원장·배타적 claim·Gateway dedup·실제 상태 확인 경로를 localhost에서 실행할 수 있습니다.
 
 이 Public Repository는 채용·리뷰를 위한 **curated snapshot**입니다. 현재 master에는 제품·아키텍처 문서, 실제 UI 캡처, localhost-only Synthetic 실행 경로가 공개되어 있습니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
 
@@ -54,11 +54,23 @@ RTSP로 MediaMTX에 publish되고 브라우저는 WebRTC로 읽습니다. 제어
 |---|---|
 | <img src="docs/assets/implementation/camera-webrtc-preview-ko.png" alt="FieldOps Synthetic Camera WebRTC 미리보기 화면"> | <img src="docs/assets/implementation/camera-ptz-mobile-ko.png" alt="FieldOps Synthetic Camera PTZ 모바일 화면"> |
 
+### Durable Command & Approval
+
+`valve-a-01`의 OPEN/CLOSE는 요청과 승인을 분리하고 PostgreSQL durable ledger에서
+`FOR UPDATE SKIP LOCKED`로 한 worker만 claim합니다. Gateway는 `commandId` receipt를
+dedup하며, `ACKNOWLEDGED` 뒤 실제 밸브 상태가 확인되어야 `SUCCEEDED`가 됩니다.
+deadline을 넘긴 HANG은 `UNKNOWN`으로 남고 자동 재전송하지 않습니다. 이 경로는
+B04의 realtime PTZ transport와 합치지 않으며 exactly-once 실행을 주장하지 않습니다.
+
+| Pending Approval | Succeeded Timeline |
+|---|---|
+| <img src="docs/assets/implementation/command-pending-approval-ko.png" alt="FieldOps Durable Command 승인 대기 화면"> | <img src="docs/assets/implementation/command-succeeded-timeline-ko.png" alt="FieldOps Durable Command 성공 전환 Timeline 화면"> |
+
 ## 로컬에서 실행하기
 
 Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니다. Clone한 뒤 `pnpm --version`으로 준비 상태를 확인하고 Windows에서는 `py -3 scripts/b02_observe.py up`, Linux에서는 `python3 scripts/b02_observe.py up`으로 시작합니다. 이어서 `status`, `demo --device all --scenario portfolio`, `verify`를 실행하고 <http://localhost:3000/login>에서 생성된 Synthetic Credential로 확인합니다. 작업이 끝나면 반드시 `down`을 실행하세요.
 
-[Local Observe 전체 명령](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ 전체 명령](docs/CAMERA_PTZ_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
+[Local Observe 전체 명령](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ 전체 명령](docs/CAMERA_PTZ_QUICKSTART.md) · [Durable Command 전체 명령](docs/COMMAND_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
 
 ## 제품 비전 — 콘셉트 이미지
 
@@ -77,6 +89,7 @@ Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니�
 | UI Preview | Login, Overview, 장비 목록·상세·차트, 구성원 조회, Error/Stale/Reconnecting, Desktop/Mobile | 실제 한국어 UI 캡처 공개 완료 |
 | Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 선별 실행 소스·Quick Start 공개 완료 |
 | Camera/PTZ | Synthetic H.264 RTSP → MediaMTX → WebRTC + Redis lease/fencing → WebSocket → Synthetic ONVIF | 선별 실행 소스·Quick Start·실제 화면 3장 공개 |
+| Durable Command | Synthetic Valve 요청 → 분리 승인 → PostgreSQL SKIP LOCKED dispatcher → Gateway dedup → 상태 확인 | 선별 실행 소스·Quick Start·실제 화면 2장 공개 |
 | 인증·권한 | Keycloak Authorization Code + PKCE, 서버 Session, Tenant/Site/Device Scope | 설계·검증 결과 우선 공개 |
 | 정합성 | 중복·역순 처리, DB Commit 이후 Kafka ACK, Redis 장애 시 History 지속 + DB Snapshot/Stale fallback | Evidence 요약부터 공개 |
 | 계약·검증 | OpenAPI/AsyncAPI/JSON Schema, Testcontainers, Clean-clone Drill, GitHub Actions | 문서와 공개 Gate 순차 동기화 |
@@ -186,6 +199,7 @@ flowchart LR
 | v0.1 UI Preview | **구현·검증 완료 / 실제 화면 공개** | Fixture Login, Overview, 장비 목록·상세·차트, 회원 조회, 실패·재연결 표현 | 실제 Backend 연동을 Fixture 검증으로 대체하지 않음 |
 | v0.2 실제 관측 | **Local Preview 구현·검증 완료 / 실제 화면 공개** | Synthetic MQTT → Kafka → History/Latest State → REST/SSE 화면, 실제 인증·Scope, 핵심 장애 경계 | Camera·Command·AI·과금 전체 구현 |
 | v0.3 Camera/PTZ Slice | **구현·검증 완료 / 실제 화면 공개** | Synthetic RTSP → WebRTC 미리보기, lease/fencing, WebSocket PTZ, ONVIF pose | 실제 Vendor 전체 호환, durable command, preset |
+| v0.4 Durable Command Slice | **구현·검증 완료 / 실제 화면 공개** | Synthetic Valve OPEN/CLOSE, idempotency, 분리 승인, durable claim, dedup, UNKNOWN | Kafka command transport, exactly-once, 다단계 승인, 자동 재전송 |
 | 이후 증분 | 계획 | TCP 또는 Polling 한 종류, 안전 명령 한 종류 등을 각각 검증 후 추가 | 모든 프로토콜·Vendor를 한 번에 지원 |
 | 선택 확장 | 계획 | PTZ 고도화, 관측성·성능 개선, AI 보조, 사용량 기능 | 앞선 완성본의 공개를 지연시키는 선행 작업 |
 
@@ -207,6 +221,7 @@ flowchart LR
 | 실제 원격 인증 | Keycloak OIDC, 서버 소유 Session | Code+PKCE와 Scope 검증 |
 | 검증과 실행 | JUnit, Testcontainers, Playwright, Docker Compose, GitHub Actions | Clean-clone/CI 포함 검증 |
 | Camera 미디어와 제어 | MediaMTX, RTSP/WebRTC, Redis lease, WebSocket, Synthetic ONVIF | localhost Synthetic Slice에서 사용·검증 |
+| Durable 명령과 승인 | PostgreSQL ledger, `FOR UPDATE SKIP LOCKED`, Gateway receipt dedup, Synthetic Valve | localhost Synthetic Slice에서 사용·검증 |
 | 후속 연동·관측성 | Netty TCP, HTTP Polling, OpenTelemetry, Prometheus/Grafana | 후속 후보 |
 
 실제 사용·검증 여부는 각 Slice의 코드와 Evidence를 기준으로 표시합니다. 측정하지 않은 처리량이나 지연 수치를 성과로 쓰지 않습니다.

@@ -93,6 +93,17 @@ public class ScopeService {
         }
     }
 
+    public void requireSiteWithAnyPermission(OidcUser user, String tenantId, String siteId,
+            String... permissions) {
+        MembershipView membership = requireTenant(user, tenantId);
+        if (membership.sites().stream().noneMatch(site -> site.id().equals(siteId))) {
+            throw new ScopeDeniedException("Site is outside the authenticated membership");
+        }
+        Set<String> granted = Set.copyOf(membership.permissions());
+        boolean allowed = java.util.Arrays.stream(permissions).anyMatch(granted::contains);
+        if (!allowed) throw new ScopeDeniedException("Required command permission is missing");
+    }
+
     public void requireDevice(OidcUser user, String tenantId, String deviceId, String... permissions) {
         requireTenant(user, tenantId, permissions);
         PrincipalRef principal = principal(user);
@@ -117,6 +128,17 @@ public class ScopeService {
         if (!exists) {
             throw new ScopeDeniedException("Device is outside the authenticated site scope");
         }
+    }
+
+    public void requireDeviceAtSite(OidcUser user, String tenantId, String siteId,
+            String deviceId, String... permissions) {
+        requireDevice(user, tenantId, deviceId, permissions);
+        boolean matches = jdbc.sql("""
+                SELECT COUNT(*) FROM b02_device
+                WHERE tenant_id=:tenantId AND site_id=:siteId AND device_id=:deviceId
+                """).param("tenantId", tenantId).param("siteId", siteId).param("deviceId", deviceId)
+                .query(Integer.class).single() > 0;
+        if (!matches) throw new ScopeDeniedException("Device does not belong to the requested site");
     }
 
     public void requireCamera(OidcUser user, String tenantId, String cameraId, String... permissions) {

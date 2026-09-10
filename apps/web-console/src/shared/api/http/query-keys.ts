@@ -93,6 +93,10 @@ export const queryKeys = {
     status: (tenantId: string, siteId: string, cameraId: string) =>
       ["camera-status", tenantId, siteId, cameraId] as const,
   },
+  commands: {
+    list: (tenantId: string, siteId: string) => ["commands", tenantId, siteId] as const,
+    detail: (tenantId: string, commandId: string) => ["command", tenantId, commandId] as const,
+  },
   members: {
     list: (tenantId: string, filters: MemberFilters, cursor?: string) =>
       ["members", tenantId, normalizeMemberFilters(filters), cursor ?? null] as const,

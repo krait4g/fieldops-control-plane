@@ -1,6 +1,6 @@
 # 현재 공개 상태
 
-마지막 업데이트: 2026-09-09. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
+마지막 업데이트: 2026-09-10. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
 
 ## 한눈에 보는 현재 상태
 
@@ -10,13 +10,14 @@
 | v0.1 UI Preview | 구현·검증 완료, 실제 UI Capture Public 공개 완료 |
 | v0.2 Local Observe Preview | `VERIFIED_SCOPE: local-observe-preview`, 실제 UI Capture Public 공개 완료 |
 | v0.3 Synthetic Camera/PTZ | `VERIFIED_SCOPE: synthetic-camera-preview-ptz`, WebRTC/PTZ 실제 UI Capture 3장 공개 완료 |
+| v0.4 Durable Command/Approval | `VERIFIED_SCOPE: durable-command-approval-valve`, 승인 대기·성공 Timeline 실제 UI Capture 2장 공개 완료 |
 | 실제 Remote 인증 | Keycloak Code+PKCE + 서버 Session + Tenant/Site Scope 검증 완료 |
 | MQTT/History/Redis/REST/SSE 통합 | Synthetic 데이터로 Local End-to-End 검증 완료 |
 | UI | Overview, 장비 목록·상세·차트, 구성원 조회, Desktop/Mobile 구현 완료 |
 | 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
-| Public 실행 소스 | Local Observe + Camera/PTZ 최소 실행 폐쇄와 Quick Start 공개 완료 |
-| Public runnable validation | 동일 Public head에서 Ubuntu Camera smoke와 Windows fresh-clone Browser journey `PASS` |
-| 장비 제어 | Synthetic Camera PTZ만 검증 완료. durable command·alarm·preset은 후속 범위 |
+| Public 실행 소스 | Local Observe + Camera/PTZ + Durable Command 최소 실행 폐쇄와 Quick Start 공개 완료 |
+| Public runnable validation | 동일 Public head에서 Ubuntu G1-G10/B02/B04와 actual Chromium command journey `PASS` |
+| 장비 제어 | Synthetic Camera PTZ와 Synthetic Valve 승인형 durable command 검증 완료. alarm·preset은 후속 범위 |
 | AI·과금 | 후속 또는 선택 범위 |
 | 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
 | Public Release | NOT_RELEASED. Local Preview와 별도 Release Gate 유지 |
@@ -69,6 +70,23 @@ sequence, latest-wins dispatch, priority stop, server dead-man, device-side fini
 timeout, media/control 장애 격리, 기존 Local Observe 회귀를 포함합니다. 실제
 Vendor Camera나 Production 안전 인증을 의미하지 않습니다.
 
+## 현재 검증된 Durable Command/Approval Slice
+
+Synthetic Valve 한 대에서 다음 흐름을 실행·검증했습니다.
+
+```text
+Request → PENDING_APPROVAL → Approve → APPROVED
+        → PostgreSQL FOR UPDATE SKIP LOCKED claim → DISPATCHING
+        → Gateway commandId dedup → ACKNOWLEDGED
+        → actual valve state proof → SUCCEEDED / FAILED / UNKNOWN
+        → append-only transition timeline
+```
+
+G1-G10은 tenant/device scope, API idempotency, self-approval 차단, reject 미전송,
+concurrent claim 배타성, duplicate delivery dedup, ACK와 성공의 시간적 분리,
+REJECT 실패, HANG deadline의 UNKNOWN/no-auto-retry, B02/B04 회귀를 포함합니다.
+Kafka는 telemetry 전용으로 유지하며 command transport로 사용하지 않습니다.
+
 ## Public 동기화 상태와 다음 단계
 
 Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이도록 작은 단위로 계속 갱신합니다.
@@ -77,8 +95,9 @@ Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이�
 2. **최종 UI 캡처 공개 — 완료** — 한국어 기본 UI의 Overview / Devices / Device Detail / Members Mobile 실제 Remote Screenshot 공개
 3. **Quick Start + 선별 실행 소스 공개 — 완료** — stable process identity fix와 Ubuntu/Windows 동일-head 수용을 거쳐 master에 반영
 4. **Synthetic Camera/PTZ 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 3장을 같은 Public head에 반영
-5. **다음 제품 Slice 공개** — TCP/Polling, durable Command/Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
-6. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
+5. **Durable Command/Approval 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 2장을 같은 Public head에 반영
+6. **다음 제품 Slice 공개** — TCP/Polling, Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
+7. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
 Public 동기화를 빠르게 하기 위해 미완성 기능 수를 늘리기보다, 이미 검증된 Slice의 코드·실행 방법·Evidence를 우선 공개합니다.
 
@@ -109,6 +128,14 @@ WebSocket PTZ, Gateway 최종 재검증, Synthetic ONVIF `ContinuousMove`/`Stop`
 dead-man과 유한 device timeout을 검증했습니다. 실행 방법은 Camera/PTZ Quick
 Start에 공개했습니다.
 
+### v0.4 — Durable Command / Idempotency / Approval
+
+상태: **IMPLEMENTED / VERIFIED_SCOPE: durable-command-approval-valve · 실제 UI Capture Public 공개 완료**
+
+Synthetic Valve OPEN/CLOSE 요청, 요청자와 승인자의 분리, PostgreSQL durable ledger,
+`FOR UPDATE SKIP LOCKED` claim, Gateway `commandId` receipt dedup, ACK 이후 실제 상태
+확인, FAILED/UNKNOWN 경계를 검증했습니다. UNKNOWN은 자동 재전송하지 않습니다.
+
 ## Release와 구별
 
 현재 Local Preview는 제품 동작과 포트폴리오 검증을 위한 내부 실행 범위입니다. Public/Release 후보는 별도 Gate를 둡니다.
@@ -121,6 +148,6 @@ Start에 공개했습니다.
 
 ## 공개 근거
 
-같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu Camera `up/status/verify/down`, Windows fresh-clone Camera `up/status/verify/down`과 실제 Browser Login → Cameras → Detail → WebRTC → Lease → PTZ pose change → Stop/Release를 통과했습니다. MediaMTX exact-digest Trivy scan은 실행과 report identity를 별도로 검증하며, 이를 제품 Release나 전체 image security PASS로 확대하지 않습니다.
+같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu Local Observe와 Camera 및 Durable Command `up/status/verify/down`, 실제 Chromium의 operator request → approver approval → ACKNOWLEDGED → SUCCEEDED → Timeline을 통과했습니다. MediaMTX exact-digest Trivy scan은 실행과 report identity를 별도로 검증하며, 이를 제품 Release나 전체 image security PASS로 확대하지 않습니다.
 
-[README](../README.md) · [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ Quick Start](CAMERA_PTZ_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)
+[README](../README.md) · [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ Quick Start](CAMERA_PTZ_QUICKSTART.md) · [Durable Command Quick Start](COMMAND_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)

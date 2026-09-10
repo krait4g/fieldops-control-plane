@@ -11,6 +11,10 @@ const contracts = [
     "../../contracts/openapi/fieldops-m2-camera.yaml",
     "src/shared/api/generated/fieldops-m2-camera.d.ts",
   ],
+  [
+    "../../contracts/openapi/fieldops-m3-command.yaml",
+    "src/shared/api/generated/fieldops-m3-command.d.ts",
+  ],
 ];
 
 function normalize(text) {

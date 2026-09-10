@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(project(":modules:telemetry-domain"))
+    implementation(project(":modules:command-domain"))
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-json")
     implementation("org.springframework.boot:spring-boot-starter-web")

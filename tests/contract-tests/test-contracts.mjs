@@ -15,6 +15,7 @@ const ptzServerSchema = await readJson("contracts/json-schema/ptz-server-message
 const openapi = await readYaml("contracts/openapi/fieldops-m1-ui.yaml");
 const asyncapi = await readYaml("contracts/asyncapi/fieldops-m1-realtime.yaml");
 const cameraOpenapi = await readYaml("contracts/openapi/fieldops-m2-camera.yaml");
+const commandOpenapi = await readYaml("contracts/openapi/fieldops-m3-command.yaml");
 const cameraAsyncapi = await readYaml("contracts/asyncapi/fieldops-camera-control-v1.yaml");
 const problemSchema = problemDetailsSchema(openapi);
 const englishCopy = await readJson("contracts/ui/m1-copy.en.json");
@@ -82,6 +83,32 @@ if (!openapiBrokenReferenceRejected) {
 }
 
 await SwaggerParser.validate(structuredClone(cameraOpenapi));
+await SwaggerParser.validate(structuredClone(commandOpenapi));
+const commandOperationIds = Object.values(commandOpenapi.paths).flatMap((pathItem) =>
+  Object.values(pathItem)
+    .filter((operation) => operation && typeof operation === "object" && operation.operationId)
+    .map((operation) => operation.operationId),
+);
+if (commandOpenapi.info.version !== "1.0.0" || commandOperationIds.length !== 5 ||
+    new Set(commandOperationIds).size !== 5) {
+  throw new Error("M3 command OpenAPI must expose five unique version 1.0.0 operations");
+}
+const requestCommand = commandOpenapi.paths["/api/v1/commands"].post;
+if (!requestCommand.parameters.some((item) => item.$ref === "#/components/parameters/IdempotencyKey") ||
+    JSON.stringify(requestCommand["x-fieldops-ui"].permissions) !== JSON.stringify(["DEVICE_COMMAND_REQUEST"])) {
+  throw new Error("B05 command request must require idempotency and request permission");
+}
+for (const action of ["approve", "reject"]) {
+  const operation = commandOpenapi.paths[`/api/v1/commands/{commandId}/${action}`].post;
+  if (JSON.stringify(operation["x-fieldops-ui"].permissions) !==
+      JSON.stringify(["DEVICE_COMMAND_APPROVE"])) {
+    throw new Error(`B05 ${action} must require approval permission`);
+  }
+}
+if (!commandOpenapi.info.description.includes("ACKNOWLEDGED is non-terminal") ||
+    !commandOpenapi.info.description.includes("UNKNOWN is terminal")) {
+  throw new Error("B05 command contract lost its acknowledged/unknown safety boundary");
+}
 const cameraOperationIds = Object.values(cameraOpenapi.paths).flatMap((pathItem) =>
   Object.values(pathItem)
     .filter((operation) => operation && typeof operation === "object" && operation.operationId)

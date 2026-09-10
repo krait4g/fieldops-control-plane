@@ -7,6 +7,7 @@ import io.krait.fieldops.server.auth.ScopeDeniedException;
 import io.krait.fieldops.server.camera.CameraNotFoundException;
 import io.krait.fieldops.server.camera.CameraUnavailableException;
 import io.krait.fieldops.server.camera.ControlLeaseException;
+import io.krait.fieldops.server.command.CommandException;
 import io.krait.fieldops.server.query.ObserveQueryService.InvalidQueryException;
 import io.krait.fieldops.server.query.ObserveQueryService.StateUnavailableException;
 
@@ -54,6 +55,21 @@ public class ApiExceptionHandler {
     ProblemDetail cameraUnavailable(CameraUnavailableException error) {
         return problem(HttpStatus.SERVICE_UNAVAILABLE, "CAMERA_UNAVAILABLE",
                 "Camera unavailable", error.getMessage());
+    }
+
+    @ExceptionHandler(CommandException.class)
+    ProblemDetail command(CommandException error) {
+        HttpStatus status = error.code().equals("COMMAND_NOT_FOUND") ? HttpStatus.NOT_FOUND
+                : error.code().equals("SELF_APPROVAL_DENIED") ? HttpStatus.FORBIDDEN
+                : error.code().equals("INVALID_IDEMPOTENCY_KEY") ? HttpStatus.valueOf(422)
+                : HttpStatus.CONFLICT;
+        return problem(status, error.code(), "Durable command rejected", error.getMessage());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    ProblemDetail invalidCommandState(IllegalStateException error) {
+        return problem(HttpStatus.CONFLICT, "COMMAND_STATE_CONFLICT",
+                "Durable command state conflict", error.getMessage());
     }
 
     private static ProblemDetail problem(HttpStatus status, String code, String title, String detail) {

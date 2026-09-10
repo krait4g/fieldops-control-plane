@@ -153,13 +153,14 @@ def ensure_runtime() -> dict[str, str]:
         "mqttGateway": load_or_create("mqtt-gateway-password"),
         "mqttTenantA": load_or_create("mqtt-tenant-a-password"),
         "mqttTenantB": load_or_create("mqtt-tenant-b-password"),
+        "b05Internal": load_or_create("b05-internal-token"),
     }
     template = (ROOT / "infra/b02/fieldops-b02-realm.template.json").read_text(encoding="utf-8")
     realm = template.replace("__B02_CLIENT_SECRET__", values["keycloakClient"])
     realm = realm.replace("__B02_USER_PASSWORD__", values["keycloakUser"])
     (RUNTIME / "fieldops-b02-realm.json").write_text(realm, encoding="utf-8")
     credentials = {
-        "users": ["b02-admin-a", "b02-multi"],
+        "users": ["b02-admin-a", "b02-multi", "b05-operator-a", "b05-approver-a"],
         "password": values["keycloakUser"],
         "note": "Synthetic localhost-only credentials generated for this checkout.",
     }
@@ -200,6 +201,8 @@ def ensure_runtime() -> dict[str, str]:
         "B02_KEYCLOAK_CLIENT_SECRET": values["keycloakClient"],
         "B02_SERVER_PORT": str(PORTS["server"]),
         "B02_GATEWAY_PORT": str(PORTS["gateway"]),
+        "B05_INTERNAL_TOKEN": values["b05Internal"],
+        "B05_VALVE_PORT": os.environ.get("B05_VALVE_PORT", "28085"),
         "SPRING_PROFILES_ACTIVE": "local-observe" + (f",{extra_profiles}" if extra_profiles else ""),
         "NEXT_PUBLIC_FIELDOPS_DATA_MODE": "remote",
         "FIELDOPS_API_ORIGIN": f"http://127.0.0.1:{PORTS['server']}",

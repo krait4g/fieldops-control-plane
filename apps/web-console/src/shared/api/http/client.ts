@@ -14,6 +14,9 @@ import type {
   CameraDetail,
   CameraListResponse,
   CameraStatus,
+  DurableCommand,
+  DurableCommandList,
+  DurableCommandRequest,
 } from "../types";
 import type { components, operations } from "../generated/fieldops-m1";
 import { activeFixtureScenario, FIXTURE_SCENARIO_HEADER } from "../mock/fixture-scenario";
@@ -131,6 +134,26 @@ async function mutate<T>(url: string, method: "POST" | "DELETE", options?: Reque
   return (await response.json()) as T;
 }
 
+async function mutateJson<T>(url: string, body: unknown, extraHeaders: Record<string, string> = {},
+  options?: RequestOptions): Promise<T> {
+  const csrf = await request<CsrfTokenResponse>("/api/v1/auth/csrf", options);
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    headers: { ...JSON_HEADERS, "Content-Type": "application/json", ...extraHeaders,
+      [csrf.headerName]: csrf.token },
+    body: JSON.stringify(body),
+    signal: options?.signal,
+  });
+  if (!response.ok) {
+    const problem = await parseProblem(response);
+    const traceId = response.headers.get("x-trace-id");
+    if (traceId && problem) problem.traceId = traceId;
+    throw new HttpError(response.status, problem);
+  }
+  return (await response.json()) as T;
+}
+
 export interface FieldOpsClient {
   getSession(options?: RequestOptions): Promise<SessionResponse>;
   logout(options?: RequestOptions): Promise<void>;
@@ -168,6 +191,12 @@ export interface FieldOpsClient {
   acquireCameraControl(cameraId: string, tenantId: string, options?: RequestOptions): Promise<CameraControlSession>;
   releaseCameraControl(cameraId: string, sessionId: string, tenantId: string,
     generation: number, options?: RequestOptions): Promise<void>;
+  getCommands(tenantId: string, siteId: string, options?: RequestOptions): Promise<DurableCommandList>;
+  getCommand(commandId: string, tenantId: string, options?: RequestOptions): Promise<DurableCommand>;
+  requestCommand(tenantId: string, key: string, command: DurableCommandRequest,
+    options?: RequestOptions): Promise<DurableCommand>;
+  approveCommand(commandId: string, tenantId: string, options?: RequestOptions): Promise<DurableCommand>;
+  rejectCommand(commandId: string, tenantId: string, options?: RequestOptions): Promise<DurableCommand>;
 }
 
 function encodePath(value: string): string {
@@ -299,5 +328,23 @@ export const fieldOpsClient: FieldOpsClient = {
       "DELETE",
       options,
     );
+  },
+  getCommands(tenantId, siteId, options) {
+    return request<DurableCommandList>(buildUrl("/api/v1/commands", { tenantId, siteId }), options);
+  },
+  getCommand(commandId, tenantId, options) {
+    return request<DurableCommand>(buildUrl(`/api/v1/commands/${encodePath(commandId)}`, { tenantId }), options);
+  },
+  requestCommand(tenantId, key, command, options) {
+    return mutateJson<DurableCommand>(buildUrl("/api/v1/commands", { tenantId }), command,
+      { "Idempotency-Key": key }, options);
+  },
+  approveCommand(commandId, tenantId, options) {
+    return mutateJson<DurableCommand>(
+      buildUrl(`/api/v1/commands/${encodePath(commandId)}/approve`, { tenantId }), {}, {}, options);
+  },
+  rejectCommand(commandId, tenantId, options) {
+    return mutateJson<DurableCommand>(
+      buildUrl(`/api/v1/commands/${encodePath(commandId)}/reject`, { tenantId }), {}, {}, options);
   },
 };

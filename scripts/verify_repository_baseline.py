@@ -24,6 +24,10 @@ IMPLEMENTATION_IMAGES = {
         "98c59d6c00e52d2bab6151e0e992adf834924c1437ce9575940421314451d21c",
     "docs/assets/implementation/camera-ptz-mobile-ko.png":
         "ab73670dcdd43f8a3143d5cbe9bbf87dba6113b0976c68dc28618ca2212462c4",
+    "docs/assets/implementation/command-pending-approval-ko.png":
+        "85f43d3f960dfab3585280866018e7fa656dd377587e0b51310a743240527840",
+    "docs/assets/implementation/command-succeeded-timeline-ko.png":
+        "0678e0e72e0a604aa56ce00da70fd5298428c2453365857b32f8ac2f33c3d8fd",
 }
 REQUIRED = [
     "README.md", "LICENSE", "CONTRIBUTING.md", "SECURITY.md",
@@ -42,13 +46,15 @@ REQUIRED = [
     "docs/product/UX_DESIGN.ko.md", "docs/product/ROADMAP.ko.md",
     "docs/product/AI_PRODUCT_BUILDING.ko.md", "docs/product/PRD_CHANGELOG.ko.md",
     "docs/assets/README.md", "docs/runnable-snapshot.md", "docs/LOCAL_OBSERVE_QUICKSTART.md",
-    "docs/CAMERA_PTZ_QUICKSTART.md",
+    "docs/CAMERA_PTZ_QUICKSTART.md", "docs/COMMAND_QUICKSTART.md",
     "docs/decisions/0015-b04-camera-preview-ptz-boundary.md",
+    "docs/adr/0016-b05-durable-command-dispatch.md",
     "contracts/README.md", "infra/README.md", "scripts/b02_observe.py",
     "tests/repository-tests/test_b02_observe.py",
     "tests/repository-tests/test_b04_image_scan_report.py",
     "tests/repository-tests/test_b04_camera.py",
-    "scripts/b04_camera.py", "scripts/verify_b04_image_scan_report.py",
+    "scripts/b04_camera.py", "scripts/verify_b04_image_scan_report.py", "scripts/b05_command.py",
+    "tests/repository-tests/test_b05_command.py",
     "infra/compose/compose.yml", "infra/b02/compose.override.yml",
     "apps/fieldops-server/build.gradle.kts", "apps/device-gateway/build.gradle.kts",
     "apps/fieldops-worker/build.gradle.kts", "apps/simulator/build.gradle.kts",
@@ -79,7 +85,7 @@ TEXT_SUFFIXES = {
 }
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
 IGNORED_TREE_PARTS = {
-    ".git", ".gradle", ".next", ".fieldops-b02", ".fieldops-b04", "node_modules", "build", "out",
+    ".git", ".gradle", ".next", ".fieldops-b02", ".fieldops-b04", ".fieldops-b05", "node_modules", "build", "out",
     "coverage", "playwright-report", "test-results", "__pycache__",
 }
 errors: list[str] = []
@@ -170,10 +176,10 @@ for rel, expected_sha256 in IMPLEMENTATION_IMAGES.items():
     path = ROOT / rel
     if path.exists():
         if path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
-            errors.append(f"B04 implementation asset is not a PNG: {rel}")
+            errors.append(f"implementation asset is not a PNG: {rel}")
         actual_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
         if actual_sha256 != expected_sha256:
-            errors.append(f"B04 implementation asset hash mismatch: {rel}")
+            errors.append(f"implementation asset hash mismatch: {rel}")
 if "콘셉트 이미지" not in readme or "구현 완료 스크린샷" not in readme:
     errors.append("README must distinguish concept and implementation screenshots")
 version = re.search(r"(?m)^> 버전: `([^`]+)`", read("docs/product/PRD.ko.md"))
@@ -187,6 +193,8 @@ if "docs/LOCAL_OBSERVE_QUICKSTART.md" not in readme:
     errors.append("README must link the Local Observe Quick Start")
 if "docs/CAMERA_PTZ_QUICKSTART.md" not in readme:
     errors.append("README must link the Camera/PTZ Quick Start")
+if "docs/COMMAND_QUICKSTART.md" not in readme:
+    errors.append("README must link the Durable Command Quick Start")
 
 for rel in (
     "infra/compose/compose.yml", "infra/compose/mqtt.compose.yml",
