@@ -13,6 +13,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     implementation(libs.paho.mqtt.v5)
     runtimeOnly("org.postgresql:postgresql")
 

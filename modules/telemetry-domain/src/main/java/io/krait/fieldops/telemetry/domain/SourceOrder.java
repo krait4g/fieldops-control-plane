@@ -1,14 +1,9 @@
 package io.krait.fieldops.telemetry.domain;
 
 import java.time.Instant;
-import java.util.Comparator;
 
 public record SourceOrder(Instant sessionStartedAt, long sequence) implements Comparable<SourceOrder> {
     public static final long MAX_SAFE_INTEGER = 9_007_199_254_740_991L;
-    private static final Comparator<SourceOrder> ORDER = Comparator
-            .comparing(SourceOrder::sessionStartedAt)
-            .thenComparingLong(SourceOrder::sequence);
-
     public SourceOrder {
         if (sessionStartedAt == null) throw new NullPointerException("sessionStartedAt");
         long epochMillis = sessionStartedAt.toEpochMilli();
@@ -24,6 +19,7 @@ public record SourceOrder(Instant sessionStartedAt, long sequence) implements Co
 
     @Override
     public int compareTo(SourceOrder other) {
-        return ORDER.compare(this, other);
+        int sessionOrder = Long.compare(sessionStartedAtMillis(), other.sessionStartedAtMillis());
+        return sessionOrder != 0 ? sessionOrder : Long.compare(sequence, other.sequence);
     }
 }

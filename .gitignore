@@ -52,6 +52,8 @@ infra/compose/volumes/
 .fieldops-b02/
 .fieldops-b04/
 .fieldops-b05/
+.fieldops-b06/
+.fieldops-b02-b06-regression/
 
 # Temporary files
 .tmp/

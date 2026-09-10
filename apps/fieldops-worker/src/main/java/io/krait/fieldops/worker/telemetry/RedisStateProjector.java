@@ -15,6 +15,7 @@ import io.krait.fieldops.telemetry.domain.SourceOrder;
 import io.krait.fieldops.telemetry.domain.StateCondition;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,8 @@ public class RedisStateProjector {
     private final Counter older;
     private final Counter conflicts;
     private final Counter redisErrors;
+    private final Timer projectionDuration;
+    private final Timer endToEndDuration;
     private final Clock clock = Clock.systemUTC();
 
     public RedisStateProjector(ObjectMapper mapper, StringRedisTemplate redis, KafkaTemplate<String, String> kafka,
@@ -96,10 +99,22 @@ public class RedisStateProjector {
         this.older = meters.counter("fieldops.worker.projection", "result", "older");
         this.conflicts = meters.counter("fieldops.worker.projection", "result", "conflict");
         this.redisErrors = meters.counter("fieldops.worker.projection", "result", "redis_error");
+        this.projectionDuration = meters.timer("fieldops.worker.projection.duration");
+        this.endToEndDuration = meters.timer("fieldops.worker.projection.e2e.duration");
     }
 
-    @KafkaListener(topics = "${fieldops.b02.kafka.normalized-topic}", groupId = "fieldops-b02-state")
+    @KafkaListener(topics = "${fieldops.b02.kafka.normalized-topic}", groupId = "fieldops-b02-state",
+            concurrency = "${fieldops.b06.listener-concurrency:1}")
     public void project(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) throws Exception {
+        Timer.Sample projectionSample = Timer.start();
+        try {
+            projectMeasured(record, acknowledgment);
+        } finally {
+            projectionSample.stop(projectionDuration);
+        }
+    }
+
+    private void projectMeasured(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) throws Exception {
         NormalizedTelemetry telemetry = mapper.readValue(record.value(), NormalizedTelemetry.class);
         long revision = safeRevision(record.offset());
         String epoch = epochs.epoch(record.topic(), record.partition());
@@ -148,6 +163,8 @@ public class RedisStateProjector {
                 mapper.writeValueAsString(event)).get(10, TimeUnit.SECONDS);
         acknowledgment.acknowledge();
         if (result == 1) accepted.increment(); else duplicate.increment();
+        java.time.Duration elapsed = java.time.Duration.between(telemetry.receivedAt(), clock.instant());
+        if (!elapsed.isNegative()) endToEndDuration.record(elapsed);
     }
 
     private void recordRejection(NormalizedTelemetry telemetry, String reason) {
@@ -181,14 +198,17 @@ public class RedisStateProjector {
                 .orElse(null);
     }
 
-    private static Long compareSnapshot(SnapshotOrder snapshot, NormalizedTelemetry telemetry) {
+    static Long compareSnapshot(SnapshotOrder snapshot, NormalizedTelemetry telemetry) {
         int comparison = new SourceOrder(telemetry.sessionStartedAt(), telemetry.sequence())
                 .compareTo(new SourceOrder(snapshot.sessionStartedAt(), snapshot.sequence()));
         if (comparison < 0) return 0L;
         if (comparison > 0) return null;
+        // On a Redis miss, an exact PostgreSQL snapshot is the authoritative
+        // lower bound and must be rebuilt into Redis. Result 2 is reserved for
+        // an existing Redis key whose CAS payload already matches.
         return snapshot.eventId().equals(telemetry.eventId())
                 && snapshot.sessionId().equals(telemetry.sessionId())
-                && snapshot.payloadDigest().equals(telemetry.payloadDigest()) ? 2L : -1L;
+                && snapshot.payloadDigest().equals(telemetry.payloadDigest()) ? null : -1L;
     }
 
     public static String stateKey(String tenantId, String deviceId) {
@@ -219,6 +239,6 @@ public class RedisStateProjector {
 
     public record StatePayload(String connectivity, String readiness, String freshness, String source,
             Instant observedAt, Instant receivedAt, Instant staleAt, List<NormalizedMetric> metrics) {}
-    private record SnapshotOrder(String eventId, String sessionId, Instant sessionStartedAt,
+    record SnapshotOrder(String eventId, String sessionId, Instant sessionStartedAt,
             long sequence, String payloadDigest) {}
 }

@@ -2,12 +2,12 @@
 
 > **서로 다른 현장 장비의 데이터를 공통 모델로 모으고, 상태 확인부터 조치 결과까지 연결하는 백엔드 중심 포트폴리오 프로젝트**
 
-[![Status](https://img.shields.io/badge/status-observe%20%2B%20camera%2FPTZ%20%2B%20durable%20command-16A34A)](docs/project-status.md)
+[![Status](https://img.shields.io/badge/status-observe%20%2B%20camera%2FPTZ%20%2B%20durable%20command%20%2B%20measured%20resilience-16A34A)](docs/project-status.md)
 [![Java](https://img.shields.io/badge/Java-21-007396)](#기술-구성)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)](#기술-구성)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Local Observe, Synthetic Camera/PTZ, Durable Command의 선별 실행 소스와 Quick Start를 공개했습니다.** Synthetic MQTT 관측과 WebRTC/PTZ에 더해, Synthetic Valve의 요청·분리 승인·PostgreSQL 원장·배타적 claim·Gateway dedup·실제 상태 확인 경로를 localhost에서 실행할 수 있습니다.
+**Local Observe, Synthetic Camera/PTZ, Durable Command의 선별 실행 소스와 Quick Start, 그리고 B06 측정 근거를 공개했습니다.** Synthetic MQTT 관측과 WebRTC/PTZ에 더해, Synthetic Valve의 요청·분리 승인·PostgreSQL 원장·배타적 claim·Gateway dedup·실제 상태 확인 경로를 localhost에서 실행할 수 있습니다.
 
 이 Public Repository는 채용·리뷰를 위한 **curated snapshot**입니다. 현재 master에는 제품·아키텍처 문서, 실제 UI 캡처, localhost-only Synthetic 실행 경로가 공개되어 있습니다. 측정하지 않은 처리량·지연이나 Production 수준을 주장하지 않습니다.
 
@@ -70,7 +70,7 @@ B04의 realtime PTZ transport와 합치지 않으며 exactly-once 실행을 주�
 
 Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니다. Clone한 뒤 `pnpm --version`으로 준비 상태를 확인하고 Windows에서는 `py -3 scripts/b02_observe.py up`, Linux에서는 `python3 scripts/b02_observe.py up`으로 시작합니다. 이어서 `status`, `demo --device all --scenario portfolio`, `verify`를 실행하고 <http://localhost:3000/login>에서 생성된 Synthetic Credential로 확인합니다. 작업이 끝나면 반드시 `down`을 실행하세요.
 
-[Local Observe 전체 명령](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ 전체 명령](docs/CAMERA_PTZ_QUICKSTART.md) · [Durable Command 전체 명령](docs/COMMAND_QUICKSTART.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
+[Local Observe 전체 명령](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ 전체 명령](docs/CAMERA_PTZ_QUICKSTART.md) · [Durable Command 전체 명령](docs/COMMAND_QUICKSTART.md) · [Performance/Resilience 전체 명령](docs/PERFORMANCE_QUICKSTART.md) · [측정 결과](docs/PERFORMANCE_RESILIENCE.md) · [공개 실행 소스 범위](docs/runnable-snapshot.md)
 
 ## 제품 비전 — 콘셉트 이미지
 
@@ -90,6 +90,7 @@ Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose가 필요합니�
 | Local Observe | 6개 Synthetic Sensor → MQTT → Kafka Raw/Normalized → PostgreSQL History + Redis Latest → REST/SSE | 선별 실행 소스·Quick Start 공개 완료 |
 | Camera/PTZ | Synthetic H.264 RTSP → MediaMTX → WebRTC + Redis lease/fencing → WebSocket → Synthetic ONVIF | 선별 실행 소스·Quick Start·실제 화면 3장 공개 |
 | Durable Command | Synthetic Valve 요청 → 분리 승인 → PostgreSQL SKIP LOCKED dispatcher → Gateway dedup → 상태 확인 | 선별 실행 소스·Quick Start·실제 화면 2장 공개 |
+| Performance/Resilience | 동일 로컬 환경의 controlled load → 병목 진단 → 단일 최적화 → Worker/Redis 복구 | 반복 측정 summary·재현 Quick Start·결정적 SVG 2장 공개 |
 | 인증·권한 | Keycloak Authorization Code + PKCE, 서버 Session, Tenant/Site/Device Scope | 설계·검증 결과 우선 공개 |
 | 정합성 | 중복·역순 처리, DB Commit 이후 Kafka ACK, Redis 장애 시 History 지속 + DB Snapshot/Stale fallback | Evidence 요약부터 공개 |
 | 계약·검증 | OpenAPI/AsyncAPI/JSON Schema, Testcontainers, Clean-clone Drill, GitHub Actions | 문서와 공개 Gate 순차 동기화 |
@@ -126,7 +127,6 @@ PostgreSQL History   Redis Latest State
 ```text
 장비 데이터 수집 → 최신 상태·추세 확인 → 문제 조사
                                     → 조치 요청·승인 → 실제 결과 확인
-                                      (후속 버전)
 ```
 
 ## 핵심 설계 결정
@@ -200,10 +200,21 @@ flowchart LR
 | v0.2 실제 관측 | **Local Preview 구현·검증 완료 / 실제 화면 공개** | Synthetic MQTT → Kafka → History/Latest State → REST/SSE 화면, 실제 인증·Scope, 핵심 장애 경계 | Camera·Command·AI·과금 전체 구현 |
 | v0.3 Camera/PTZ Slice | **구현·검증 완료 / 실제 화면 공개** | Synthetic RTSP → WebRTC 미리보기, lease/fencing, WebSocket PTZ, ONVIF pose | 실제 Vendor 전체 호환, durable command, preset |
 | v0.4 Durable Command Slice | **구현·검증 완료 / 실제 화면 공개** | Synthetic Valve OPEN/CLOSE, idempotency, 분리 승인, durable claim, dedup, UNKNOWN | Kafka command transport, exactly-once, 다단계 승인, 자동 재전송 |
+| v0.5 Measured Performance & Resilience | **반복 측정·검증 완료 / Evidence 공개** | controlled local load, 병목 근거, 단일 최적화 before/after, Worker·Redis 복구 | Production capacity, 최대 TPS, Kafka outage, Grafana/HA |
 | 이후 증분 | 계획 | TCP 또는 Polling 한 종류, 안전 명령 한 종류 등을 각각 검증 후 추가 | 모든 프로토콜·Vendor를 한 번에 지원 |
 | 선택 확장 | 계획 | PTZ 고도화, 관측성·성능 개선, AI 보조, 사용량 기능 | 앞선 완성본의 공개를 지연시키는 선행 작업 |
 
 첫 포트폴리오 결과는 실제 관측 흐름과 그 구조를 선택한 근거입니다. 후속 기능의 개수보다 실행 방법, 핵심 실패 테스트, 실제 화면을 함께 제공하는 것을 우선합니다. [단계별 완료 기준](docs/product/ROADMAP.ko.md)
+
+> **Production capacity가 아니라 명시된 단일 로컬 benchmark 환경에서 반복 측정한 결과**입니다. Canonical before/after는 동일 Windows 11 호스트에서 3회씩 측정한 median이며, CI runner 숫자는 성능 근거로 사용하지 않습니다. [측정 결과와 claim boundary](docs/PERFORMANCE_RESILIENCE.md)
+
+<p align="center">
+  <img src="docs/assets/implementation/performance-before-after.svg" alt="B06 동일 로컬 환경 성능 before-after 차트" width="100%">
+</p>
+
+<p align="center">
+  <img src="docs/assets/implementation/resilience-recovery.svg" alt="B06 Worker와 Redis 복구 측정 차트" width="100%">
+</p>
 
 <p align="center">
   <img src="docs/assets/screen-overview.webp" alt="Overview와 장비 상세의 목표 화면을 나타낸 콘셉트 이미지" width="100%">

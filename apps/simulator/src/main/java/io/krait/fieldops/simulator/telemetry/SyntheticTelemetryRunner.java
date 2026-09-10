@@ -9,6 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 
 import io.krait.fieldops.telemetry.domain.DeviceSample;
 import io.krait.fieldops.telemetry.domain.RawMetric;
@@ -66,12 +74,124 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
         Map<DeviceRef, MqttClient> clients = new LinkedHashMap<>();
         try {
             for (DeviceRef device : selected) clients.put(device, connect(device));
+            if (options.scenario().equals("load")) {
+                publishControlledLoad(clients, selected, sessionId, sessionStartedAt, options);
+                return;
+            }
             for (DeviceRef device : selected) {
                 publishDevice(clients.get(device), device, sessionId, sessionStartedAt, options);
             }
         } finally {
             for (MqttClient client : clients.values()) close(client);
         }
+    }
+
+    private void publishControlledLoad(Map<DeviceRef, MqttClient> clients, List<DeviceRef> devices,
+            String sessionId, Instant sessionStartedAt, Options options) throws Exception {
+        int measuredEvents = Math.multiplyExact(options.rate(), options.durationSeconds());
+        if (measuredEvents > 60_000) {
+            throw new IllegalArgumentException("B06 measured load must not exceed 60000 events");
+        }
+        int warmupEvents = Math.multiplyExact(options.rate(), options.warmupSeconds());
+        AtomicLong attempted = new AtomicLong();
+        AtomicLong published = new AtomicLong();
+        AtomicLong errors = new AtomicLong();
+        AtomicLong payloadBytes = new AtomicLong();
+        AtomicLong measurementStart = new AtomicLong();
+        AtomicLong measurementEnd = new AtomicLong();
+        CountDownLatch ready = new CountDownLatch(devices.size());
+        CountDownLatch start = new CountDownLatch(1);
+        CyclicBarrier measurementBarrier = new CyclicBarrier(devices.size(),
+                () -> measurementStart.set(System.nanoTime()));
+        ExecutorService executor = Executors.newFixedThreadPool(devices.size());
+        List<Future<?>> tasks = new ArrayList<>();
+        for (int index = 0; index < devices.size(); index++) {
+            final int deviceIndex = index;
+            DeviceRef device = devices.get(index);
+            tasks.add(executor.submit(() -> {
+                try {
+                    ready.countDown();
+                    start.await();
+                    Random random = new Random(options.seed() + device.deviceId().hashCode());
+                    long sequence = 1;
+                    sequence = publishLoadPhase(clients.get(device), device, sessionId, sessionStartedAt,
+                            random, sequence, share(warmupEvents, devices.size(), deviceIndex),
+                            options.warmupSeconds(), false, attempted, published, errors, payloadBytes);
+                    measurementBarrier.await();
+                    publishLoadPhase(clients.get(device), device, sessionId, sessionStartedAt,
+                            random, sequence, share(measuredEvents, devices.size(), deviceIndex),
+                            options.durationSeconds(), true, attempted, published, errors, payloadBytes);
+                    measurementEnd.accumulateAndGet(System.nanoTime(), Math::max);
+                } catch (Exception error) {
+                    throw new IllegalStateException(error);
+                }
+            }));
+        }
+        ready.await(15, TimeUnit.SECONDS);
+        start.countDown();
+        try {
+            for (Future<?> task : tasks) task.get(options.warmupSeconds() + options.durationSeconds() + 30L,
+                    TimeUnit.SECONDS);
+        } finally {
+            executor.shutdownNow();
+        }
+        long elapsedNanos = Math.max(1, measurementEnd.get() - measurementStart.get());
+        double achieved = published.get() * 1_000_000_000.0 / elapsedNanos;
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("scenario", "load");
+        summary.put("sessionId", sessionId);
+        summary.put("offeredEventsPerSecond", options.rate());
+        summary.put("attempted", attempted.get());
+        summary.put("published", published.get());
+        summary.put("publishErrors", errors.get());
+        summary.put("elapsedMs", TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
+        summary.put("achievedEventsPerSecond", Math.round(achieved * 100.0) / 100.0);
+        summary.put("payloadBytes", payloadBytes.get());
+        summary.put("devices", devices.size());
+        System.out.println("B06_LOAD_SUMMARY=" + mapper.writeValueAsString(summary));
+    }
+
+    private long publishLoadPhase(MqttClient client, DeviceRef device, String sessionId,
+            Instant sessionStartedAt, Random random, long firstSequence, int count, int durationSeconds,
+            boolean measured, AtomicLong attempted, AtomicLong published, AtomicLong errors,
+            AtomicLong payloadBytes) throws Exception {
+        if (count == 0) return firstSequence;
+        long started = System.nanoTime();
+        long durationNanos = TimeUnit.SECONDS.toNanos(durationSeconds);
+        for (int index = 0; index < count; index++) {
+            long target = started + (durationNanos * index / count);
+            long remaining;
+            while ((remaining = target - System.nanoTime()) > 0) LockSupport.parkNanos(remaining);
+            long sequence = firstSequence + index;
+            Instant observedAt = clock.instant();
+            DeviceSample sample = new DeviceSample(
+                    sessionId + ":" + device.deviceId() + ":" + sequence,
+                    "2.0.0", device.tenantId(), device.siteId(), device.deviceId(), sessionId,
+                    sessionStartedAt, sequence, observedAt,
+                    List.of(
+                            new RawMetric("soil.moisture.pct", 30 + random.nextDouble() * 20, "%"),
+                            new RawMetric("soil.temperature.c", 18 + random.nextDouble() * 8, "Cel")));
+            byte[] payload = mapper.writeValueAsBytes(sample);
+            if (measured) attempted.incrementAndGet();
+            try {
+                publishConfirmed(client, device, payload);
+                if (measured) {
+                    published.incrementAndGet();
+                    payloadBytes.addAndGet(payload.length);
+                }
+            } catch (Exception error) {
+                if (measured) errors.incrementAndGet();
+                else throw error;
+            }
+        }
+        long phaseEnd = started + durationNanos;
+        long remaining;
+        while ((remaining = phaseEnd - System.nanoTime()) > 0) LockSupport.parkNanos(remaining);
+        return firstSequence + count;
+    }
+
+    static int share(int total, int devices, int index) {
+        return total / devices + (index < total % devices ? 1 : 0);
     }
 
     private void publishDevice(MqttClient client, DeviceRef device, String sessionId,
@@ -162,6 +282,14 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
         client.publish(topic, payload, 1, false);
     }
 
+    private static void publishConfirmed(MqttClient client, DeviceRef device, byte[] payload) throws Exception {
+        String topic = "fieldops/local/%s/%s/%s/telemetry"
+                .formatted(device.tenantId(), device.siteId(), device.deviceId());
+        // MqttClient is the synchronous Paho facade; QoS1 publish returns only
+        // after its delivery token completes or raises an exception.
+        client.publish(topic, payload, 1, false);
+    }
+
     private static void close(MqttClient client) {
         try {
             if (client.isConnected()) client.disconnect();
@@ -175,7 +303,8 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
     private record Credential(String username, String password) {}
 
     record Options(String device, int count, long seed, boolean duplicate,
-            boolean reorder, long pauseMillis, long intervalMillis, String scenario) {
+            boolean reorder, long pauseMillis, long intervalMillis, String scenario,
+            int rate, int durationSeconds, int warmupSeconds, boolean summaryOnly) {
         static Options parse(String[] args) {
             Map<String, String> values = new LinkedHashMap<>();
             for (String arg : args) {
@@ -185,8 +314,14 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
                         separator > 2 ? arg.substring(separator + 1) : "true");
             }
             String scenario = values.getOrDefault("scenario", "random");
-            if (!scenario.equals("random") && !scenario.equals("portfolio")) {
+            if (!scenario.equals("random") && !scenario.equals("portfolio") && !scenario.equals("load")) {
                 throw new IllegalArgumentException("Unknown simulator scenario: " + scenario);
+            }
+            int rate = Integer.parseInt(values.getOrDefault("rate", "50"));
+            int duration = Integer.parseInt(values.getOrDefault("duration-seconds", "10"));
+            int warmup = Integer.parseInt(values.getOrDefault("warmup-seconds", "0"));
+            if (scenario.equals("load") && (rate <= 0 || duration <= 0 || warmup < 0)) {
+                throw new IllegalArgumentException("B06 load rate/duration must be positive and warmup non-negative");
             }
             return new Options(values.getOrDefault("device", "all"),
                     Integer.parseInt(values.getOrDefault("count", "3")),
@@ -195,7 +330,8 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
                     Boolean.parseBoolean(values.getOrDefault("reorder", "false")),
                     Long.parseLong(values.getOrDefault("pause-ms", "0")),
                     Long.parseLong(values.getOrDefault("interval-ms", "2000")),
-                    scenario);
+                    scenario, rate, duration, warmup,
+                    Boolean.parseBoolean(values.getOrDefault("summary-only", "true")));
         }
     }
 }

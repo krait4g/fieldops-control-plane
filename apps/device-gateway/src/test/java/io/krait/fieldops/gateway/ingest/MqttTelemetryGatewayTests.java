@@ -118,14 +118,43 @@ class MqttTelemetryGatewayTests {
         MqttTelemetryGateway gateway = gateway(kafkaTemplate());
         ThreadPoolExecutor workers = (ThreadPoolExecutor) ReflectionTestUtils.getField(gateway, "workers");
 
+        assertThat(workers.getCorePoolSize()).isEqualTo(2);
+        assertThat(workers.getMaximumPoolSize()).isEqualTo(4);
         assertThat(workers.getQueue().remainingCapacity()).isEqualTo(4);
         assertThat(workers.getRejectedExecutionHandler())
                 .isInstanceOf(ThreadPoolExecutor.CallerRunsPolicy.class);
     }
 
+    @Test
+    void b06CanActivateTheExistingBoundedGatewayParallelism() {
+        MqttTelemetryGateway gateway = new MqttTelemetryGateway(new ObjectMapper(), kafkaTemplate(), null,
+                new SimpleMeterRegistry(), "tcp://127.0.0.1:21883", "gateway", "secret",
+                "test-gateway", 65_536, 4, 256, "raw");
+        ThreadPoolExecutor workers = (ThreadPoolExecutor) ReflectionTestUtils.getField(gateway, "workers");
+
+        assertThat(workers.getCorePoolSize()).isEqualTo(4);
+        assertThat(workers.getMaximumPoolSize()).isEqualTo(4);
+        assertThat(workers.getQueue().remainingCapacity()).isEqualTo(256);
+    }
+
+    @Test
+    void b06MetricsHaveOnlyBoundedTagKeys() {
+        SimpleMeterRegistry meters = new SimpleMeterRegistry();
+        new MqttTelemetryGateway(new ObjectMapper(), kafkaTemplate(), null, meters,
+                "tcp://127.0.0.1:21883", "gateway", "secret", "test-gateway", 65_536, 2, 4, "raw");
+
+        assertThat(meters.find("fieldops.gateway.ingest.duration").timer()).isNotNull();
+        assertThat(meters.find("fieldops.gateway.device.validation.duration").timer()).isNotNull();
+        assertThat(meters.find("fieldops.gateway.kafka.publish.duration").timer()).isNotNull();
+        assertThat(meters.find("fieldops.gateway.ingest.queue.depth").gauge()).isNotNull();
+        assertThat(meters.getMeters()).allSatisfy(meter ->
+                assertThat(meter.getId().getTags()).allSatisfy(tag ->
+                        assertThat(tag.getKey()).isIn("stage", "result", "component")));
+    }
+
     private static MqttTelemetryGateway gateway(KafkaTemplate<String, String> kafka) {
         return new MqttTelemetryGateway(new ObjectMapper(), kafka, null, new SimpleMeterRegistry(),
-                "tcp://127.0.0.1:21883", "gateway", "secret", "test-gateway", 65_536, 4, "raw");
+                "tcp://127.0.0.1:21883", "gateway", "secret", "test-gateway", 65_536, 2, 4, "raw");
     }
 
     private static MqttMessage message() {

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="405" viewBox="0 0 960 405">
+  <style>
+    .bg { fill: #0b1220; } .title { fill: #f8fafc; font: 700 28px system-ui,sans-serif; }
+    .subtitle { fill: #94a3b8; font: 15px system-ui,sans-serif; }
+    .label { fill: #cbd5e1; font: 14px system-ui,sans-serif; }
+    .value { fill: #f8fafc; font: 600 14px ui-monospace,monospace; }
+    .track { fill: #1e293b; } .note { fill: #94a3b8; font: 13px system-ui,sans-serif; }
+  </style>
+  <rect class="bg" width="960" height="405" rx="18"/>
+  <text x="48" y="52" class="title">B06 Recovery Characterization</text>
+  <text x="48" y="80" class="subtitle">Owned Worker restart and Redis outage</text>
+  <text x="48" y="120" class="label">Fault start → healthy (ms, includes 5s outage)</text>
+  <text x="48" y="135" class="label">Worker restart</text><rect x="48" y="142" width="650" height="20" rx="4" class="track"/><rect x="48" y="142" width="650" height="20" rx="4" fill="#38bdf8"/><text x="710" y="157" class="value">16891</text>
+  <text x="48" y="189" class="label">Redis outage</text><rect x="48" y="196" width="650" height="20" rx="4" class="track"/><rect x="48" y="196" width="369" height="20" rx="4" fill="#a78bfa"/><text x="710" y="211" class="value">9594</text>
+  <text x="48" y="278" class="value">Worker: missing 0, final Redis 6/6</text>
+  <text x="48" y="310" class="value">Redis: missing 0, final Redis 6/6</text>
+  <text x="48" y="364" class="note">65 EPS controlled load; History completeness 100%; all final consumer lag drained to zero.</text>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="450" viewBox="0 0 960 450">
+  <style>
+    .bg { fill: #0b1220; } .title { fill: #f8fafc; font: 700 28px system-ui,sans-serif; }
+    .subtitle { fill: #94a3b8; font: 15px system-ui,sans-serif; }
+    .label { fill: #cbd5e1; font: 14px system-ui,sans-serif; }
+    .value { fill: #f8fafc; font: 600 14px ui-monospace,monospace; }
+    .track { fill: #1e293b; } .note { fill: #94a3b8; font: 13px system-ui,sans-serif; }
+  </style>
+  <rect class="bg" width="960" height="450" rx="18"/>
+  <text x="48" y="52" class="title">B06 Before / After</text>
+  <text x="48" y="80" class="subtitle">Bounded pipeline concurrency alignment</text>
+  <text x="48" y="120" class="label">100 EPS drain time (ms, lower is better)</text>
+  <text x="48" y="135" class="label">Baseline</text><rect x="48" y="142" width="650" height="20" rx="4" class="track"/><rect x="48" y="142" width="650" height="20" rx="4" fill="#f97316"/><text x="710" y="157" class="value">42391</text>
+  <text x="48" y="189" class="label">Candidate</text><rect x="48" y="196" width="650" height="20" rx="4" class="track"/><rect x="48" y="196" width="88" height="20" rx="4" fill="#22c55e"/><text x="710" y="211" class="value">5719</text>
+  <text x="48" y="268" class="label">250 EPS History completeness (%, higher is better)</text>
+  <text x="48" y="283" class="label">Baseline</text><rect x="48" y="290" width="650" height="20" rx="4" class="track"/><rect x="48" y="290" width="387" height="20" rx="4" fill="#f97316"/><text x="710" y="305" class="value">59.49</text>
+  <text x="48" y="337" class="label">Candidate</text><rect x="48" y="344" width="650" height="20" rx="4" class="track"/><rect x="48" y="344" width="650" height="20" rx="4" fill="#22c55e"/><text x="710" y="359" class="value">100</text>
+  <text x="48" y="410" class="note">Three runs per rate; medians shown. Single local benchmark environment, not production capacity.</text>
+</svg>

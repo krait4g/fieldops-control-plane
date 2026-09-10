@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,6 +22,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import tools.jackson.databind.ObjectMapper;
 
 class RedisStateProjectorTests {
+    private JdbcClient jdbc;
     private StringRedisTemplate redis;
     private KafkaTemplate<String, String> kafka;
     private RedisStateProjector projector;
@@ -28,7 +30,7 @@ class RedisStateProjectorTests {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setUp() {
-        JdbcClient jdbc = JdbcClient.create(new DriverManagerDataSource(
+        jdbc = JdbcClient.create(new DriverManagerDataSource(
                 "jdbc:h2:mem:projector-" + System.nanoTime() + ";MODE=PostgreSQL;DB_CLOSE_DELAY=-1", "sa", ""));
         jdbc.sql("""
                 CREATE TABLE b02_device_snapshot(tenant_id VARCHAR, device_id VARCHAR, event_id VARCHAR,
@@ -73,5 +75,49 @@ class RedisStateProjectorTests {
         verify(redis).hasKey(RedisStateProjector.stateKey("tenant-a", "device-a-soil-01"));
         verifyNoMoreInteractions(redis);
         verify(kafka, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void anExactPostgresSnapshotRebuildsAMissingRedisLatestKey() throws Exception {
+        String exact = """
+                {"eventId":"exact-event","schemaVersion":"2.0.0","tenantId":"tenant-a",
+                 "siteId":"site-a","deviceId":"device-a-soil-01","sessionId":"exact-session",
+                 "sessionStartedAt":"2026-09-08T00:01:00Z","sequence":5,
+                 "observedAt":"2026-09-08T00:01:01Z","receivedAt":"2026-09-08T00:01:02Z",
+                 "metrics":[{"code":"soil.moisture.pct","displayName":"Soil moisture",
+                   "value":42.5,"unit":"%","quality":"GOOD","observedAt":"2026-09-08T00:01:01Z"}],
+                 "payloadDigest":"sha256:exact","traceId":"trace","correlationId":"exact-event"}
+                """;
+        io.krait.fieldops.telemetry.domain.NormalizedTelemetry telemetry =
+                new ObjectMapper().readValue(exact,
+                        io.krait.fieldops.telemetry.domain.NormalizedTelemetry.class);
+        RedisStateProjector.SnapshotOrder snapshot = new RedisStateProjector.SnapshotOrder(
+                "exact-event", "exact-session", Instant.parse("2026-09-08T00:01:00Z"),
+                5, "sha256:exact");
+
+        org.assertj.core.api.Assertions.assertThat(
+                RedisStateProjector.compareSnapshot(snapshot, telemetry)).isNull();
+    }
+
+    @Test
+    void postgresMicrosecondRoundingCannotMakeTheSameSessionLookNewer() throws Exception {
+        String exact = """
+                {"eventId":"exact-event","schemaVersion":"2.0.0","tenantId":"tenant-a",
+                 "siteId":"site-a","deviceId":"device-a-soil-01","sessionId":"exact-session",
+                 "sessionStartedAt":"2026-09-08T00:01:00.000100Z","sequence":5,
+                 "observedAt":"2026-09-08T00:01:01Z","receivedAt":"2026-09-08T00:01:02Z",
+                 "metrics":[{"code":"soil.moisture.pct","displayName":"Soil moisture",
+                   "value":42.5,"unit":"%","quality":"GOOD","observedAt":"2026-09-08T00:01:01Z"}],
+                 "payloadDigest":"sha256:exact","traceId":"trace","correlationId":"exact-event"}
+                """;
+        io.krait.fieldops.telemetry.domain.NormalizedTelemetry telemetry =
+                new ObjectMapper().readValue(exact,
+                        io.krait.fieldops.telemetry.domain.NormalizedTelemetry.class);
+        RedisStateProjector.SnapshotOrder roundedSnapshot = new RedisStateProjector.SnapshotOrder(
+                "exact-event", "exact-session", Instant.parse("2026-09-08T00:01:00.000101Z"),
+                5, "sha256:exact");
+
+        org.assertj.core.api.Assertions.assertThat(
+                RedisStateProjector.compareSnapshot(roundedSnapshot, telemetry)).isNull();
     }
 }

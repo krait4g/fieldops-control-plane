@@ -1,0 +1,59 @@
+name: B06 Performance Harness
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "scripts/b02_observe.py"
+      - "scripts/b06_perf.py"
+      - "tests/repository-tests/test_b06_perf.py"
+      - "docs/adr/0017-b06-performance-characterization.md"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - ".github/workflows/b06-performance-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  b06-correctness-smoke:
+    name: Ubuntu low-rate metrics/correctness smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+      - run: pnpm install --frozen-lockfile
+      - name: Verify parser and ownership guards
+        run: python tests/repository-tests/test_b06_perf.py
+      - name: Start isolated B06 correctness runtime
+        run: python scripts/b06_perf.py up
+      - name: Run low-rate correctness smoke only
+        run: python scripts/b06_perf.py smoke
+      - name: Stop only B06-owned runtime
+        if: always()
+        run: python scripts/b06_perf.py down
+      - name: Publish low-rate correctness evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v7
+        with:
+          name: b06-low-rate-smoke-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 14
+          path: .fieldops-b06/results/smoke-*.json
