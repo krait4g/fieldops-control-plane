@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:${B02_POSTGRES_PORT:25432}/${B02_POSTGRES_DB:fieldops_b02}
+    username: ${B02_POSTGRES_USER:fieldops_b02}
+    password: ${B02_POSTGRES_PASSWORD}
+
+fieldops:
+  b05:
+    device-id: valve-a-01
+    internal-token: ${B05_INTERNAL_TOKEN}
+    simulator-base-url: http://127.0.0.1:${B05_VALVE_PORT:28085}

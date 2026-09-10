@@ -19,6 +19,7 @@
 - [`project-status.md`](project-status.md) — 현재 공개 상태
 - [`LOCAL_OBSERVE_QUICKSTART.md`](LOCAL_OBSERVE_QUICKSTART.md) — localhost Synthetic Preview 실행 방법
 - [`CAMERA_PTZ_QUICKSTART.md`](CAMERA_PTZ_QUICKSTART.md) — Synthetic WebRTC Camera와 realtime PTZ 실행 방법
+- [`COMMAND_QUICKSTART.md`](COMMAND_QUICKSTART.md) — Synthetic Valve durable command와 분리 승인 실행 방법
 - [`runnable-snapshot.md`](runnable-snapshot.md) — 공개 실행 소스 범위와 제외 항목
 - [`decisions/README.md`](decisions/README.md) — 주요 Architecture Decision
 

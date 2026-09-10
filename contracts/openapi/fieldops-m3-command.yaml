@@ -1,0 +1,186 @@
+openapi: 3.1.0
+info:
+  title: FieldOps M3 Durable Command API
+  version: 1.0.0
+  description: |
+    B05 approval-gated durable valve commands. PostgreSQL is the command ledger;
+    ACKNOWLEDGED is non-terminal and UNKNOWN is terminal with no automatic redispatch.
+servers:
+  - url: /
+security:
+  - sessionCookie: []
+paths:
+  /api/v1/commands:
+    get:
+      operationId: listCommands
+      x-fieldops-ui: { route: /commands, permissions: [DEVICE_COMMAND_REQUEST, DEVICE_COMMAND_APPROVE] }
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/SiteId'
+      responses:
+        '200':
+          description: Commands visible in the authorized site
+          content: { application/json: { schema: { $ref: '#/components/schemas/CommandList' } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      operationId: requestCommand
+      x-fieldops-ui: { route: /commands, permissions: [DEVICE_COMMAND_REQUEST] }
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CommandRequest' } } }
+      responses:
+        '200':
+          description: Existing command for the same key and semantic payload
+          content: { application/json: { schema: { $ref: '#/components/schemas/Command' } } }
+        '201':
+          description: New pending approval command
+          content: { application/json: { schema: { $ref: '#/components/schemas/Command' } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/v1/commands/{commandId}:
+    get:
+      operationId: getCommand
+      x-fieldops-ui: { route: /commands, permissions: [DEVICE_COMMAND_REQUEST, DEVICE_COMMAND_APPROVE] }
+      parameters:
+        - $ref: '#/components/parameters/CommandId'
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Command and append-only transition timeline
+          content: { application/json: { schema: { $ref: '#/components/schemas/Command' } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/commands/{commandId}/approve:
+    post:
+      operationId: approveCommand
+      x-fieldops-ui: { route: /commands, permissions: [DEVICE_COMMAND_APPROVE] }
+      parameters:
+        - $ref: '#/components/parameters/CommandId'
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '200':
+          description: Approved command
+          content: { application/json: { schema: { $ref: '#/components/schemas/Command' } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/v1/commands/{commandId}/reject:
+    post:
+      operationId: rejectCommand
+      x-fieldops-ui: { route: /commands, permissions: [DEVICE_COMMAND_APPROVE] }
+      parameters:
+        - $ref: '#/components/parameters/CommandId'
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '200':
+          description: Rejected terminal command
+          content: { application/json: { schema: { $ref: '#/components/schemas/Command' } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+components:
+  securitySchemes:
+    sessionCookie: { type: apiKey, in: cookie, name: FIELDOPS_SESSION }
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    SiteId:
+      name: siteId
+      in: query
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    CommandId:
+      name: commandId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, pattern: '^[A-Za-z0-9._:-]{8,128}$' }
+    CsrfToken:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      schema: { type: string, minLength: 1 }
+  responses:
+    Forbidden:
+      description: Scope or permission denied, including self approval
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } }
+    NotFound:
+      description: Command not found in the authorized tenant
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } }
+    Conflict:
+      description: Idempotency payload mismatch or invalid current lifecycle state
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } }
+  schemas:
+    CommandRequest:
+      type: object
+      additionalProperties: false
+      required: [siteId, deviceId, type, scenario]
+      properties:
+        siteId: { type: string, const: site-a }
+        deviceId: { type: string, const: valve-a-01 }
+        type: { $ref: '#/components/schemas/CommandType' }
+        scenario: { $ref: '#/components/schemas/CommandScenario' }
+    CommandList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Command' }
+    Command:
+      type: object
+      additionalProperties: false
+      required: [commandId, tenantId, siteId, deviceId, type, scenario, status, requester, createdAt, updatedAt, deadlineAt, transitions]
+      properties:
+        commandId: { type: string, format: uuid }
+        tenantId: { type: string }
+        siteId: { type: string }
+        deviceId: { type: string }
+        type: { $ref: '#/components/schemas/CommandType' }
+        scenario: { $ref: '#/components/schemas/CommandScenario' }
+        status: { $ref: '#/components/schemas/CommandStatus' }
+        requester: { type: string }
+        approver: { type: [string, 'null'] }
+        outcomeReason: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        deadlineAt: { type: string, format: date-time }
+        transitions:
+          type: array
+          items: { $ref: '#/components/schemas/CommandTransition' }
+    CommandTransition:
+      type: object
+      additionalProperties: false
+      required: [sequence, fromStatus, toStatus, actor, occurredAt]
+      properties:
+        sequence: { type: integer, minimum: 1 }
+        fromStatus: { anyOf: [{ $ref: '#/components/schemas/CommandStatus' }, { type: 'null' }] }
+        toStatus: { $ref: '#/components/schemas/CommandStatus' }
+        actor: { type: string }
+        reason: { type: [string, 'null'] }
+        occurredAt: { type: string, format: date-time }
+    CommandType: { type: string, enum: [OPEN, CLOSE] }
+    CommandScenario: { type: string, enum: [SUCCESS, REJECT, HANG] }
+    CommandStatus:
+      type: string
+      enum: [PENDING_APPROVAL, APPROVED, REJECTED, DISPATCHING, ACKNOWLEDGED, SUCCEEDED, FAILED, UNKNOWN]
+    ProblemDetails:
+      type: object
+      additionalProperties: true
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { type: string }
+        detail: { type: string }

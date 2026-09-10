@@ -21,3 +21,5 @@ jobs:
         run: |
           python scripts/verify_repository_baseline.py
           python tests/repository-tests/test_b02_observe.py
+          python tests/repository-tests/test_b04_camera.py
+          python tests/repository-tests/test_b05_command.py

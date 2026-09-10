@@ -1,0 +1,12 @@
+spring:
+  main:
+    web-application-type: servlet
+
+server:
+  address: 127.0.0.1
+  port: ${B05_VALVE_PORT:28085}
+
+fieldops:
+  b05:
+    device-id: valve-a-01
+    success-delay: 750ms

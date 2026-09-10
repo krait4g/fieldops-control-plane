@@ -1,5 +1,6 @@
 import type { components } from "./generated/fieldops-m1";
 import type { components as cameraComponents } from "./generated/fieldops-m2-camera";
+import type { components as commandComponents } from "./generated/fieldops-m3-command";
 
 export type Schemas = components["schemas"];
 
@@ -62,3 +63,9 @@ export type CameraStatus = CameraSchemas["CameraStatus"];
 export type CameraPose = CameraSchemas["Pose"];
 export type CameraControlSession = CameraSchemas["ControlSession"];
 export type CameraListResponse = { items: CameraSummary[] };
+
+type CommandSchemas = commandComponents["schemas"];
+export type DurableCommand = CommandSchemas["Command"];
+export type DurableCommandRequest = CommandSchemas["CommandRequest"];
+export type DurableCommandStatus = CommandSchemas["CommandStatus"];
+export type DurableCommandList = CommandSchemas["CommandList"];

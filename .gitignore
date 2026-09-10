@@ -51,6 +51,7 @@ secrets/
 infra/compose/volumes/
 .fieldops-b02/
 .fieldops-b04/
+.fieldops-b05/
 
 # Temporary files
 .tmp/

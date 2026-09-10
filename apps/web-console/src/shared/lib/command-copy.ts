@@ -1,0 +1,51 @@
+import type { Locale } from "./copy";
+
+const ko = {
+  navigation: "명령",
+  title: "내구성 명령",
+  subtitle: "승인 분리, 멱등성, 전달 결과를 하나의 감사 타임라인에서 확인합니다.",
+  request: "명령 요청",
+  open: "밸브 열기",
+  close: "밸브 닫기",
+  scenario: "Synthetic 시나리오",
+  success: "성공",
+  rejectScenario: "장치 거부",
+  hang: "응답 불명",
+  approve: "승인",
+  reject: "거절",
+  requester: "요청자",
+  approver: "승인자",
+  timeline: "감사 타임라인",
+  noCommands: "아직 명령이 없습니다.",
+  loadFailed: "명령 원장을 불러올 수 없습니다.",
+  requestFailed: "명령 요청을 완료하지 못했습니다.",
+  decisionFailed: "승인 결정을 완료하지 못했습니다.",
+  durableBoundary: "PostgreSQL ledger · SKIP LOCKED dispatcher",
+  pendingNotice: "요청자 본인은 승인할 수 없습니다. 별도 승인자 계정이 필요합니다.",
+};
+
+const en: typeof ko = {
+  navigation: "Commands",
+  title: "Durable commands",
+  subtitle: "Inspect approval separation, idempotency, and delivery outcomes in one audit timeline.",
+  request: "Request command",
+  open: "Open valve",
+  close: "Close valve",
+  scenario: "Synthetic scenario",
+  success: "Success",
+  rejectScenario: "Device reject",
+  hang: "Unknown outcome",
+  approve: "Approve",
+  reject: "Reject",
+  requester: "Requester",
+  approver: "Approver",
+  timeline: "Audit timeline",
+  noCommands: "No commands yet.",
+  loadFailed: "Could not load the command ledger.",
+  requestFailed: "Could not request the command.",
+  decisionFailed: "Could not complete the approval decision.",
+  durableBoundary: "PostgreSQL ledger · SKIP LOCKED dispatcher",
+  pendingNotice: "The requester cannot self-approve. A separate approver account is required.",
+};
+
+export const commandCopy: Record<Locale, typeof ko> = { ko, en };

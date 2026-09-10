@@ -1,0 +1,65 @@
+name: B05 Durable Command
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "modules/command-*/**"
+      - "contracts/**"
+      - "infra/**"
+      - "scripts/b02_observe.py"
+      - "scripts/b05_command.py"
+      - "tests/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/b05-command-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  b05-command-gate:
+    name: Ubuntu PostgreSQL/Chromium G1-G10
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install actual Chromium
+        run: pnpm --filter @fieldops/web-console exec playwright install --with-deps chromium
+      - name: Start isolated B05 runtime
+        run: python3 scripts/b05_command.py up
+      - name: Inspect B05 runtime status
+        run: python3 scripts/b05_command.py status
+      - name: Verify B05 G1-G10
+        run: python3 scripts/b05_command.py verify
+      - name: Stop only B05-owned runtime
+        if: always()
+        run: python3 scripts/b05_command.py down
+      - name: Publish B05 canonical evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v7
+        with:
+          name: b05-command-evidence-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            .fieldops-b05/last-verify.json
+            docs/assets/implementation/command-pending-approval-ko.png
+            docs/assets/implementation/command-succeeded-timeline-ko.png

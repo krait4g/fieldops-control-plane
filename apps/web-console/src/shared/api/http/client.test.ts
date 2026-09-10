@@ -86,4 +86,31 @@ describe("FieldOpsClient frozen request mapping", () => {
       headers: { "X-XSRF-TOKEN": "token-1" },
     });
   });
+
+  it("posts a durable command with CSRF, JSON, and the caller idempotency key", async () => {
+    const fetchSpy = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        headerName: "X-XSRF-TOKEN", parameterName: "_csrf", token: "token-1",
+      }), { status: 200, headers: { "content-type": "application/json" } }))
+      .mockResolvedValueOnce(jsonResponse());
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await fieldOpsClient.requestCommand("tenant-a", "b05-idem-client-1", {
+      siteId: "site-a", deviceId: "valve-a-01", type: "OPEN", scenario: "SUCCESS",
+    });
+
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("/api/v1/commands?tenantId=tenant-a");
+    expect(fetchSpy.mock.calls[1]?.[1]).toMatchObject({
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Idempotency-Key": "b05-idem-client-1",
+        "X-XSRF-TOKEN": "token-1",
+      },
+      body: JSON.stringify({ siteId: "site-a", deviceId: "valve-a-01", type: "OPEN", scenario: "SUCCESS" }),
+    });
+  });
 });

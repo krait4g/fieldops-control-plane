@@ -71,6 +71,13 @@
       "path": "contracts/json-schema/ptz-server-message-v1.schema.json",
       "lifecycle": "B04_DEVELOPMENT",
       "mapsTo": ["B04 server to browser PTZ messages"]
+    },
+    {
+      "id": "m3-durable-command-rest",
+      "kind": "openapi",
+      "path": "contracts/openapi/fieldops-m3-command.yaml",
+      "lifecycle": "B05_DEVELOPMENT",
+      "mapsTo": ["B05 durable command ledger", "B05 approval and audit timeline"]
     }
   ],
   "foundationContracts": [

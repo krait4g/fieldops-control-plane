@@ -1,0 +1,11 @@
+spring:
+  main:
+    web-application-type: none
+
+fieldops:
+  b05:
+    worker-id: b05-worker-1
+    gateway-base-url: http://127.0.0.1:${B02_GATEWAY_PORT:28081}
+    internal-token: ${B05_INTERNAL_TOKEN}
+    dispatch-interval: 200ms
+    observation-interval: 200ms
