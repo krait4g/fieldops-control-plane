@@ -1,6 +1,20 @@
 name: B05 Durable Command
 
 on:
+  push:
+    paths:
+      - "apps/**"
+      - "modules/command-*/**"
+      - "contracts/**"
+      - "infra/**"
+      - "scripts/b02_observe.py"
+      - "scripts/b05_command.py"
+      - "tests/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/b05-command-ci.yml"
   pull_request:
     paths:
       - "apps/**"
