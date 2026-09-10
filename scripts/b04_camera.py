@@ -180,6 +180,14 @@ def wait_json(url: str, predicate, timeout: int = 90) -> dict[str, Any]:
     raise B04Error(f"timed out waiting for {url}: {last}")
 
 
+def wait_process_stopped(record: dict[str, Any], timeout: float = 10) -> None:
+    deadline = time.monotonic() + timeout
+    while b02.process_alive(record):
+        if time.monotonic() >= deadline:
+            raise B04Error(f"owned fault process did not stop within {timeout:g}s")
+        time.sleep(0.1)
+
+
 def start_onvif(manifest: dict[str, Any], env: dict[str, str]) -> None:
     current = manifest.setdefault("processes", {}).get("onvif")
     if current and b02.process_alive(current): return
@@ -276,7 +284,9 @@ def action_fault(args: argparse.Namespace) -> None:
     if manifest.get("status") != "running": raise B04Error("B04 must be running")
     record = manifest.get("processes", {}).get(args.component)
     if args.state == "down":
-        if record: b02.terminate_process(record)
+        if record:
+            b02.terminate_process(record)
+            wait_process_stopped(record)
         manifest["processes"].pop(args.component, None)
         write_manifest(manifest)
     elif args.component == "ffmpeg": start_ffmpeg(manifest, env)

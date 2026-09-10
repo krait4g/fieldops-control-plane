@@ -6,6 +6,11 @@ spring:
       password: ${B02_REDIS_PASSWORD}
       timeout: 750ms
 
+management:
+  health:
+    redis:
+      enabled: true
+
 fieldops:
   b04:
     internal-token: ${B04_INTERNAL_TOKEN}

@@ -32,3 +32,8 @@ fieldops:
 logging:
   level:
     io.krait.fieldops: INFO
+
+management:
+  health:
+    redis:
+      enabled: false
