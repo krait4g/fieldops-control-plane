@@ -193,10 +193,13 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.13"
-      - name: Show Docker and FFmpeg capabilities
+      - name: Provision and verify Docker and FFmpeg capabilities
         run: |
           docker compose version
-          ffmpeg -hide_banner -encoders | grep libx264
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version
+          ffmpeg -hide_banner -encoders | grep -F libx264
       - name: Install locked dependencies and Chromium
         run: |
           pnpm install --frozen-lockfile

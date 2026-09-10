@@ -117,6 +117,13 @@ jobs:
       - name: Start Local Observe
         run: python3 scripts/b02_observe.py up
 
+      - name: Diagnose Local Observe startup failure
+        if: failure()
+        run: |
+          curl -sS -i --max-time 3 http://127.0.0.1:28081/actuator/health || true
+          tail -n 200 .fieldops-b02/logs/gateway.log || true
+          docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' || true
+
       - name: Check Local Observe status
         run: python3 scripts/b02_observe.py status
 
