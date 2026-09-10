@@ -23,5 +23,6 @@ include(
     ":apps:simulator",
     ":modules:telemetry-domain",
     ":modules:telemetry-application",
-    ":modules:camera-control"
+    ":modules:camera-control",
+    ":modules:command-domain"
 )
