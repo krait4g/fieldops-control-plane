@@ -18,7 +18,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.krait.fieldops.telemetry.domain.DeviceSample;
 import io.krait.fieldops.telemetry.domain.RawTelemetry;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.client.MqttClient;
@@ -60,6 +62,9 @@ public class MqttTelemetryGateway implements SmartLifecycle {
     private final Counter accepted;
     private final Counter rejected;
     private final Counter brokerErrors;
+    private final Timer ingestDuration;
+    private final Timer deviceValidationDuration;
+    private final Timer kafkaPublishDuration;
     private final AtomicBoolean running = new AtomicBoolean();
     private final AtomicLong connectionGeneration = new AtomicLong();
     private final Clock clock = Clock.systemUTC();
@@ -72,6 +77,7 @@ public class MqttTelemetryGateway implements SmartLifecycle {
             @Value("${fieldops.b02.mqtt.password}") String password,
             @Value("${fieldops.b02.mqtt.client-id}") String clientId,
             @Value("${fieldops.b02.mqtt.max-payload-bytes}") int maxPayloadBytes,
+            @Value("${fieldops.b02.mqtt.worker-threads:2}") int workerThreads,
             @Value("${fieldops.b02.mqtt.max-inflight}") int maxInflight,
             @Value("${fieldops.b02.kafka.raw-topic}") String rawTopic) {
         this.mapper = mapper;
@@ -83,11 +89,21 @@ public class MqttTelemetryGateway implements SmartLifecycle {
         this.clientId = clientId;
         this.rawTopic = rawTopic;
         this.maxPayloadBytes = maxPayloadBytes;
-        this.workers = new ThreadPoolExecutor(2, 4, 30, TimeUnit.SECONDS,
+        if (workerThreads < 1 || workerThreads > 4) {
+            throw new IllegalArgumentException("MQTT worker threads must be between 1 and 4");
+        }
+        this.workers = new ThreadPoolExecutor(workerThreads, 4, 30, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(maxInflight), new ThreadPoolExecutor.CallerRunsPolicy());
         this.accepted = meters.counter("fieldops.gateway.telemetry", "result", "accepted");
         this.rejected = meters.counter("fieldops.gateway.telemetry", "result", "rejected");
         this.brokerErrors = meters.counter("fieldops.gateway.telemetry", "result", "kafka_error");
+        this.ingestDuration = meters.timer("fieldops.gateway.ingest.duration");
+        this.deviceValidationDuration = meters.timer("fieldops.gateway.device.validation.duration");
+        this.kafkaPublishDuration = meters.timer("fieldops.gateway.kafka.publish.duration");
+        Gauge.builder("fieldops.gateway.ingest.queue.depth", workers,
+                executor -> executor.getQueue().size()).register(meters);
+        Gauge.builder("fieldops.gateway.ingest.active", workers,
+                ThreadPoolExecutor::getActiveCount).register(meters);
     }
 
     @Override
@@ -138,6 +154,7 @@ public class MqttTelemetryGateway implements SmartLifecycle {
     }
 
     private void ingest(String topic, MqttMessage message, long generation) {
+        Timer.Sample ingestSample = Timer.start();
         try {
             if (message.getPayload().length > maxPayloadBytes) {
                 rejectAndAcknowledge(message, "payload-too-large");
@@ -145,7 +162,12 @@ public class MqttTelemetryGateway implements SmartLifecycle {
             }
             TopicScope scope = TopicScope.parse(topic);
             DeviceSample sample = mapper.readValue(message.getPayload(), DeviceSample.class);
-            validate(scope, sample);
+            Timer.Sample validationSample = Timer.start();
+            try {
+                validate(scope, sample);
+            } finally {
+                validationSample.stop(deviceValidationDuration);
+            }
             Instant receivedAt = clock.instant();
             String digest = "sha256:" + sha256(message.getPayload());
             RawTelemetry raw = new RawTelemetry(sample.eventId(), sample.schemaVersion(), sample.tenantId(),
@@ -160,6 +182,8 @@ public class MqttTelemetryGateway implements SmartLifecycle {
         } catch (Exception error) {
             brokerErrors.increment();
             LOGGER.error("B02 raw Kafka publish exhausted bounded retries; MQTT message remains unacknowledged", error);
+        } finally {
+            ingestSample.stop(ingestDuration);
         }
     }
 
@@ -214,6 +238,7 @@ public class MqttTelemetryGateway implements SmartLifecycle {
     void sendRawThenAcknowledge(String key, String json, MqttMessage message, long generation) throws Exception {
         Exception lastFailure = null;
         for (int attempt = 1; attempt <= KAFKA_ATTEMPTS; attempt++) {
+            Timer.Sample publishSample = Timer.start();
             try {
                 kafka.send(rawTopic, key, json).get(10, TimeUnit.SECONDS);
                 lastFailure = null;
@@ -223,6 +248,8 @@ public class MqttTelemetryGateway implements SmartLifecycle {
                 if (attempt < KAFKA_ATTEMPTS) {
                     Thread.sleep(KAFKA_RETRY_MILLIS * attempt);
                 }
+            } finally {
+                publishSample.stop(kafkaPublishDuration);
             }
         }
         if (lastFailure != null) throw lastFailure;

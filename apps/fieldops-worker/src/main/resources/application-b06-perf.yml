@@ -1,0 +1,31 @@
+spring:
+  main:
+    web-application-type: servlet
+
+server:
+  address: 127.0.0.1
+  port: ${B06_WORKER_METRICS_PORT:28086}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        fieldops.worker.normalization.duration: true
+        fieldops.worker.history.persist.duration: true
+        fieldops.worker.history.e2e.duration: true
+        fieldops.worker.projection.duration: true
+        fieldops.worker.projection.e2e.duration: true
+      percentiles:
+        fieldops.worker.normalization.duration: 0.5,0.95,0.99
+        fieldops.worker.history.persist.duration: 0.5,0.95,0.99
+        fieldops.worker.history.e2e.duration: 0.5,0.95,0.99
+        fieldops.worker.projection.duration: 0.5,0.95,0.99
+        fieldops.worker.projection.e2e.duration: 0.5,0.95,0.99
+
+fieldops:
+  b06:
+    listener-concurrency: 3

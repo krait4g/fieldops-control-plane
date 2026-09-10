@@ -11,15 +11,16 @@
 | v0.2 Local Observe Preview | `VERIFIED_SCOPE: local-observe-preview`, 실제 UI Capture Public 공개 완료 |
 | v0.3 Synthetic Camera/PTZ | `VERIFIED_SCOPE: synthetic-camera-preview-ptz`, WebRTC/PTZ 실제 UI Capture 3장 공개 완료 |
 | v0.4 Durable Command/Approval | `VERIFIED_SCOPE: durable-command-approval-valve`, 승인 대기·성공 Timeline 실제 UI Capture 2장 공개 완료 |
+| v0.5 Measured Performance/Resilience | `VERIFIED_SCOPE: measured-local-performance-resilience`, 반복 측정 summary·복구 evidence 공개 완료 |
 | 실제 Remote 인증 | Keycloak Code+PKCE + 서버 Session + Tenant/Site Scope 검증 완료 |
 | MQTT/History/Redis/REST/SSE 통합 | Synthetic 데이터로 Local End-to-End 검증 완료 |
 | UI | Overview, 장비 목록·상세·차트, 구성원 조회, Desktop/Mobile 구현 완료 |
 | 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
 | Public 실행 소스 | Local Observe + Camera/PTZ + Durable Command 최소 실행 폐쇄와 Quick Start 공개 완료 |
-| Public runnable validation | 동일 Public head에서 Ubuntu G1-G10/B02/B04와 actual Chromium command journey `PASS` |
+| Public runnable validation | 동일 Public head에서 B06 low-rate smoke, Ubuntu B02/B04/B05와 actual Chromium journey `PASS` |
 | 장비 제어 | Synthetic Camera PTZ와 Synthetic Valve 승인형 durable command 검증 완료. alarm·preset은 후속 범위 |
 | AI·과금 | 후속 또는 선택 범위 |
-| 성능·사용자 지표 | 미측정 또는 미검증. 성과로 표시하지 않음 |
+| 성능·복구 근거 | 동일 로컬 호스트 반복 측정과 Worker/Redis 복구 evidence 공개. Production capacity나 최대 TPS를 주장하지 않음 |
 | Public Release | NOT_RELEASED. Local Preview와 별도 Release Gate 유지 |
 
 임의의 설계 진척률이나 문서 수로 구현 완료를 추정하지 않습니다. README 상단의 실제 캡처는 구현 완료 스크린샷이고, 별도의 Concept 이미지는 후속 제품 방향을 설명하는 자료입니다.
@@ -96,8 +97,9 @@ Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이�
 3. **Quick Start + 선별 실행 소스 공개 — 완료** — stable process identity fix와 Ubuntu/Windows 동일-head 수용을 거쳐 master에 반영
 4. **Synthetic Camera/PTZ 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 3장을 같은 Public head에 반영
 5. **Durable Command/Approval 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 2장을 같은 Public head에 반영
-6. **다음 제품 Slice 공개** — TCP/Polling, Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
-7. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
+6. **Measured Performance/Resilience 공개 — 완료** — 동일 로컬 환경의 반복 측정 summary, 단일 최적화 before/after, Worker/Redis 복구 evidence를 공개
+7. **다음 제품 Slice 공개** — TCP/Polling, Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
+8. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
 Public 동기화를 빠르게 하기 위해 미완성 기능 수를 늘리기보다, 이미 검증된 Slice의 코드·실행 방법·Evidence를 우선 공개합니다.
 
@@ -136,6 +138,17 @@ Synthetic Valve OPEN/CLOSE 요청, 요청자와 승인자의 분리, PostgreSQL 
 `FOR UPDATE SKIP LOCKED` claim, Gateway `commandId` receipt dedup, ACK 이후 실제 상태
 확인, FAILED/UNKNOWN 경계를 검증했습니다. UNKNOWN은 자동 재전송하지 않습니다.
 
+### v0.5 — Measured Performance & Resilience
+
+상태: **IMPLEMENTED / VERIFIED_SCOPE: measured-local-performance-resilience · Evidence Public 공개 완료**
+
+6개 Synthetic device를 paced concurrent load로 실행하고 같은 로컬 환경에서 각 anchor를
+3회 측정해 median을 정본으로 삼았습니다. Gateway queue saturation과 Normalizer lag를 함께
+확인한 뒤 B06 profile의 bounded concurrency만 조정했습니다. 100 EPS drain median은
+42.391초에서 5.719초로 줄었고, 250 EPS History completeness는 59.49%에서 100%로
+올랐습니다. Worker와 Redis를 각각 약 5초 중단한 별도 drill에서도 History 누락 0,
+최종 lag 0, Redis 6/6 수렴을 확인했습니다. 이는 Production capacity나 최대 TPS가 아닙니다.
+
 ## Release와 구별
 
 현재 Local Preview는 제품 동작과 포트폴리오 검증을 위한 내부 실행 범위입니다. Public/Release 후보는 별도 Gate를 둡니다.
@@ -150,4 +163,4 @@ Synthetic Valve OPEN/CLOSE 요청, 요청자와 승인자의 분리, PostgreSQL 
 
 같은 Public source head에서 공개 baseline, Java/Web/계약 build, Ubuntu Local Observe와 Camera 및 Durable Command `up/status/verify/down`, 실제 Chromium의 operator request → approver approval → ACKNOWLEDGED → SUCCEEDED → Timeline을 통과했습니다. MediaMTX exact-digest Trivy scan은 실행과 report identity를 별도로 검증하며, 이를 제품 Release나 전체 image security PASS로 확대하지 않습니다.
 
-[README](../README.md) · [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ Quick Start](CAMERA_PTZ_QUICKSTART.md) · [Durable Command Quick Start](COMMAND_QUICKSTART.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)
+[README](../README.md) · [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ Quick Start](CAMERA_PTZ_QUICKSTART.md) · [Durable Command Quick Start](COMMAND_QUICKSTART.md) · [Performance Quick Start](PERFORMANCE_QUICKSTART.md) · [측정 결과](PERFORMANCE_RESILIENCE.md) · [실행 소스 범위](runnable-snapshot.md) · [로드맵](product/ROADMAP.ko.md)

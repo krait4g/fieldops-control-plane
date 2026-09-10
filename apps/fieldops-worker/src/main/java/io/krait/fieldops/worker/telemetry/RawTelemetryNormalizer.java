@@ -7,6 +7,7 @@ import io.krait.fieldops.telemetry.domain.NormalizedTelemetry;
 import io.krait.fieldops.telemetry.domain.RawTelemetry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ public class RawTelemetryNormalizer {
     private final String normalizedTopic;
     private final Counter accepted;
     private final Counter rejected;
+    private final Timer duration;
 
     public RawTelemetryNormalizer(ObjectMapper mapper, KafkaTemplate<String, String> kafka, MeterRegistry meters,
             @Value("${fieldops.b02.kafka.normalized-topic}") String normalizedTopic) {
@@ -36,10 +38,13 @@ public class RawTelemetryNormalizer {
         this.normalizedTopic = normalizedTopic;
         this.accepted = meters.counter("fieldops.worker.normalization", "result", "accepted");
         this.rejected = meters.counter("fieldops.worker.normalization", "result", "rejected");
+        this.duration = meters.timer("fieldops.worker.normalization.duration");
     }
 
-    @KafkaListener(topics = "${fieldops.b02.kafka.raw-topic}", groupId = "fieldops-b02-normalizer")
+    @KafkaListener(topics = "${fieldops.b02.kafka.raw-topic}", groupId = "fieldops-b02-normalizer",
+            concurrency = "${fieldops.b06.listener-concurrency:1}")
     public void normalize(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) throws Exception {
+        Timer.Sample sample = Timer.start();
         try {
             RawTelemetry raw = mapper.readValue(record.value(), RawTelemetry.class);
             NormalizedTelemetry normalized = normalizer.normalize(raw);
@@ -51,6 +56,8 @@ public class RawTelemetryNormalizer {
             rejected.increment();
             LOGGER.warn("Rejected B02 raw telemetry at offset {}: {}", record.offset(), error.getMessage());
             acknowledgment.acknowledge();
+        } finally {
+            sample.stop(duration);
         }
     }
 }

@@ -18,6 +18,18 @@ class SourceOrderTests {
     }
 
     @Test
+    void usesTheSameMillisecondPrecisionAsTheRedisCasBoundary() {
+        SourceOrder earlierSequence = new SourceOrder(
+                Instant.parse("2026-09-08T00:00:00.000100Z"), 4);
+        SourceOrder laterSequence = new SourceOrder(
+                Instant.parse("2026-09-08T00:00:00.000900Z"), 5);
+
+        assertThat(earlierSequence.sessionStartedAtMillis())
+                .isEqualTo(laterSequence.sessionStartedAtMillis());
+        assertThat(earlierSequence).isLessThan(laterSequence);
+    }
+
+    @Test
     void rejectsASequenceRedisCannotCompareExactly() {
         assertThatThrownBy(() -> new SourceOrder(Instant.EPOCH, SourceOrder.MAX_SAFE_INTEGER + 1))
                 .isInstanceOf(IllegalArgumentException.class);

@@ -8,6 +8,7 @@ import java.util.List;
 import io.krait.fieldops.telemetry.domain.NormalizedTelemetry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,8 @@ public class TelemetryHistoryWriter {
     private final Counter duplicate;
     private final Counter older;
     private final Counter conflict;
+    private final Timer persistDuration;
+    private final Timer endToEndDuration;
     private final Clock clock = Clock.systemUTC();
 
     public TelemetryHistoryWriter(ObjectMapper mapper, JdbcClient jdbc, TopicEpochProvider epochs,
@@ -44,13 +47,22 @@ public class TelemetryHistoryWriter {
         this.duplicate = meters.counter("fieldops.worker.history", "result", "duplicate");
         this.older = meters.counter("fieldops.worker.history", "result", "older");
         this.conflict = meters.counter("fieldops.worker.history", "result", "conflict");
+        this.persistDuration = meters.timer("fieldops.worker.history.persist.duration");
+        this.endToEndDuration = meters.timer("fieldops.worker.history.e2e.duration");
     }
 
-    @KafkaListener(topics = "${fieldops.b02.kafka.normalized-topic}", groupId = "fieldops-b02-history")
+    @KafkaListener(topics = "${fieldops.b02.kafka.normalized-topic}", groupId = "fieldops-b02-history",
+            concurrency = "${fieldops.b06.listener-concurrency:1}")
     public void store(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) throws Exception {
         NormalizedTelemetry telemetry = mapper.readValue(record.value(), NormalizedTelemetry.class);
         String metricsJson = mapper.writeValueAsString(telemetry.metrics());
-        StoreResult result = transactions.execute(status -> persist(record, telemetry, metricsJson));
+        Timer.Sample persistSample = Timer.start();
+        StoreResult result;
+        try {
+            result = transactions.execute(status -> persist(record, telemetry, metricsJson));
+        } finally {
+            persistSample.stop(persistDuration);
+        }
         if (result == null) throw new IllegalStateException("History transaction returned no result");
         switch (result) {
             case STORED -> stored.increment();
@@ -67,6 +79,12 @@ public class TelemetryHistoryWriter {
         // MANUAL_IMMEDIATE can commit the Kafka offset at this call, so it must
         // remain outside the JDBC TransactionTemplate's commit boundary.
         acknowledgment.acknowledge();
+        recordEndToEnd(telemetry);
+    }
+
+    private void recordEndToEnd(NormalizedTelemetry telemetry) {
+        java.time.Duration elapsed = java.time.Duration.between(telemetry.receivedAt(), clock.instant());
+        if (!elapsed.isNegative()) endToEndDuration.record(elapsed);
     }
 
     private StoreResult persist(ConsumerRecord<String, String> record, NormalizedTelemetry telemetry,

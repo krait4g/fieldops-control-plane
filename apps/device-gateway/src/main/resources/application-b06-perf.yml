@@ -1,0 +1,20 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        fieldops.gateway.ingest.duration: true
+        fieldops.gateway.device.validation.duration: true
+        fieldops.gateway.kafka.publish.duration: true
+      percentiles:
+        fieldops.gateway.ingest.duration: 0.5,0.95,0.99
+        fieldops.gateway.device.validation.duration: 0.5,0.95,0.99
+        fieldops.gateway.kafka.publish.duration: 0.5,0.95,0.99
+
+fieldops:
+  b02:
+    mqtt:
+      worker-threads: 4

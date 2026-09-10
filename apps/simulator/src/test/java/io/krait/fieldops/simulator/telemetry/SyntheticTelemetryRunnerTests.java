@@ -61,4 +61,25 @@ class SyntheticTelemetryRunnerTests {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unknown simulator scenario");
     }
+
+    @Test
+    void controlledLoadOptionsAreBoundedAndPaced() {
+        SyntheticTelemetryRunner.Options load = SyntheticTelemetryRunner.Options.parse(new String[] {
+                "--scenario=load", "--device=all", "--rate=250", "--duration-seconds=30",
+                "--warmup-seconds=10", "--seed=20260910", "--summary-only=true"
+        });
+        assertThat(load.rate()).isEqualTo(250);
+        assertThat(load.durationSeconds()).isEqualTo(30);
+        assertThat(load.warmupSeconds()).isEqualTo(10);
+        assertThat(load.summaryOnly()).isTrue();
+        assertThat(SyntheticTelemetryRunner.share(10, 6, 0)).isEqualTo(2);
+        assertThat(SyntheticTelemetryRunner.share(10, 6, 5)).isEqualTo(1);
+    }
+
+    @Test
+    void controlledLoadRejectsInvalidRate() {
+        assertThatThrownBy(() -> SyntheticTelemetryRunner.Options.parse(new String[] {
+                "--scenario=load", "--rate=0"
+        })).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("rate/duration");
+    }
 }

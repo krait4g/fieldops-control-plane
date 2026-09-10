@@ -127,9 +127,10 @@ def run(command: list[str], *, env: dict[str, str] | None = None,
 
 
 def ensure_runtime() -> dict[str, str]:
-    if not re.fullmatch(r"fieldops-b02(?:-[a-z0-9][a-z0-9-]{0,31})?", PROJECT):
+    if not (re.fullmatch(r"fieldops-b02(?:-[a-z0-9][a-z0-9-]{0,31})?", PROJECT)
+            or re.fullmatch(r"fieldops-b06-[0-9a-f]{10}", PROJECT)):
         raise B02Error(
-            "FIELDOPS_B02_PROJECT must be fieldops-b02 or a fieldops-b02-<lowercase-suffix> name"
+            "FIELDOPS_B02_PROJECT must be a scoped fieldops-b02 or fieldops-b06 project name"
         )
     PORTS["keycloak"] = resolve_keycloak_port(os.environ.get("B02_KEYCLOAK_PORT"))
     extra_profiles = os.environ.get("FIELDOPS_B02_EXTRA_PROFILES", "").strip()
@@ -236,7 +237,7 @@ def validate_compose(env: dict[str, str]) -> None:
 
 
 def source_head() -> str:
-    return run(["git", "rev-parse", "HEAD"], capture=True)
+    return run(["git", "-c", "safe.directory=*", "rev-parse", "HEAD"], capture=True)
 
 
 def build_artifacts(env: dict[str, str]) -> None:

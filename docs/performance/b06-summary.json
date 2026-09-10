@@ -1,0 +1,193 @@
+{
+  "beforeAfter": {
+    "accepted": true,
+    "baselineSource": "de742d5a3288e5d08868509a2542ad8ed1252100",
+    "candidateSource": "cd22729aa69d4b658d3a2d92b74ee667cbc73174",
+    "improvement": {
+      "stressAcceptedIncreasePct": 68.1,
+      "stressCompletenessPercentagePoints": 40.51,
+      "sustainableDrainReductionPct": 86.51
+    },
+    "rates": {
+      "100": {
+        "baseline": {
+          "achievedEps": 99.96,
+          "drainTimeMs": 42391.0,
+          "gatewayAccepted": 4000.0,
+          "gatewayQueuePeak": 72.0,
+          "historyCompleteness": 1.0,
+          "historyE2EP95Seconds": 30.0,
+          "normalizerMaxLag": 2024.0,
+          "projectionE2EP95Seconds": 30.0
+        },
+        "candidate": {
+          "achievedEps": 99.95,
+          "drainTimeMs": 5719.0,
+          "gatewayAccepted": 4000.0,
+          "gatewayQueuePeak": 2.0,
+          "historyCompleteness": 1.0,
+          "historyE2EP95Seconds": 15.748213416,
+          "normalizerMaxLag": 1191.0,
+          "projectionE2EP95Seconds": 15.748213416
+        }
+      },
+      "250": {
+        "baseline": {
+          "achievedEps": 249.91,
+          "drainTimeMs": 64172.0,
+          "gatewayAccepted": 5949.0,
+          "gatewayQueuePeak": 253.0,
+          "historyCompleteness": 0.5949,
+          "historyE2EP95Seconds": 30.0,
+          "normalizerMaxLag": 3259.0,
+          "projectionE2EP95Seconds": 30.0
+        },
+        "candidate": {
+          "achievedEps": 249.94,
+          "drainTimeMs": 29421.0,
+          "gatewayAccepted": 10000.0,
+          "gatewayQueuePeak": 227.0,
+          "historyCompleteness": 1.0,
+          "historyE2EP95Seconds": 28.633115306,
+          "normalizerMaxLag": 4990.0,
+          "projectionE2EP95Seconds": 28.633115306
+        }
+      }
+    },
+    "schemaVersion": 1
+  },
+  "bottleneck": {
+    "finding": "Bounded pipeline concurrency was under-utilized relative to offered load.",
+    "signals": [
+      "Gateway queue reached 253/256 at 250 EPS with only two active core workers.",
+      "Normalizer lag median reached 3259 while CPU and Hikari pending remained low."
+    ]
+  },
+  "claimBoundary": "Measured on one stated local environment; not production capacity or maximum TPS.",
+  "gates": {
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "PASS",
+    "G6": "PASS",
+    "G7": "PASS",
+    "G8": "PASS",
+    "G9": "PASS",
+    "G10": "PASS"
+  },
+  "environment": {
+    "architecture": "AMD64",
+    "benchmarkVersion": 1,
+    "devices": 6,
+    "dockerComposeVersion": "Docker Compose version v5.5.0",
+    "dockerVersion": "29.7.2",
+    "images": {
+      "kafka": {
+        "identity": "apache/kafka@sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837",
+        "reference": "apache/kafka:4.3.1@sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837"
+      },
+      "keycloak": {
+        "identity": "quay.io/keycloak/keycloak@sha256:ff4257d0d64efbe99ed1ddfaf07765cc3c36dc7518bf8324d41961327f441c54",
+        "reference": "quay.io/keycloak/keycloak:26.7.3@sha256:ff4257d0d64efbe99ed1ddfaf07765cc3c36dc7518bf8324d41961327f441c54"
+      },
+      "mosquitto": {
+        "identity": "eclipse-mosquitto@sha256:212f89e1eaeb2c322d6441b64396e3346026674db8fa9c27beac293405c32b3c",
+        "reference": "eclipse-mosquitto:2.0.22@sha256:212f89e1eaeb2c322d6441b64396e3346026674db8fa9c27beac293405c32b3c"
+      },
+      "postgres": {
+        "identity": "postgres@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af",
+        "reference": "postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af"
+      },
+      "redis": {
+        "identity": "redis@sha256:7d1e4ce8b9395088377ab382d1f6cfdbd13b3690795198a0399ab8d683064d6d",
+        "reference": "redis:8.2.9-bookworm@sha256:7d1e4ce8b9395088377ab382d1f6cfdbd13b3690795198a0399ab8d683064d6d"
+      }
+    },
+    "javaVersion": "java version \"21.0.7\" 2025-04-15 LTS",
+    "logicalCpu": 22,
+    "memoryGiB": 32,
+    "os": "Windows 11",
+    "pythonVersion": "3.12.14",
+    "sourceHead": "cd22729aa69d4b658d3a2d92b74ee667cbc73174",
+    "topicPartitions": 3
+  },
+  "optimization": {
+    "count": 1,
+    "defaultProfilesChanged": false,
+    "gatewayCoreWorkers": {
+      "after": 4,
+      "before": 2
+    },
+    "name": "B06 bounded pipeline concurrency alignment",
+    "workerListenerConcurrency": {
+      "after": 3,
+      "before": 1
+    }
+  },
+  "resilience": {
+    "redisOutage": {
+      "achievedEps": 65.0,
+      "durationSeconds": 60,
+      "finalLag": {
+        "fieldops-b02-history": 0,
+        "fieldops-b02-normalizer": 0,
+        "fieldops-b02-state": 0
+      },
+      "historyContinuityDuringFault": true,
+      "historyExpected": 4225,
+      "historyMissing": 0,
+      "historyObserved": 4225,
+      "maxLag": {
+        "fieldops-b02-history": 6,
+        "fieldops-b02-normalizer": 331,
+        "fieldops-b02-state": 5
+      },
+      "outageSeconds": 5,
+      "passed": true,
+      "processingErrors": 0,
+      "rate": 65,
+      "recoveryToHealthyMs": 9594,
+      "recoveryToLagDrainMs": 48359,
+      "redisDevices": 6,
+      "sourceHead": "db0622f7bd48d0a15716d08cedbd1c20aef05859"
+    },
+    "workerRestart": {
+      "achievedEps": 64.99,
+      "durationSeconds": 60,
+      "finalLag": {
+        "fieldops-b02-history": 0,
+        "fieldops-b02-normalizer": 0,
+        "fieldops-b02-state": 0
+      },
+      "historyContinuityDuringFault": true,
+      "historyExpected": 4225,
+      "historyMissing": 0,
+      "historyObserved": 4225,
+      "maxLag": {
+        "fieldops-b02-history": 5,
+        "fieldops-b02-normalizer": 2775,
+        "fieldops-b02-state": 104
+      },
+      "outageSeconds": 5,
+      "passed": true,
+      "processingErrors": 0,
+      "rate": 65,
+      "recoveryToHealthyMs": 16891,
+      "recoveryToLagDrainMs": 48187,
+      "redisDevices": 6,
+      "sourceHead": "db0622f7bd48d0a15716d08cedbd1c20aef05859"
+    }
+  },
+  "schemaVersion": 1,
+  "selection": {
+    "baselineKneeCandidateEps": 250,
+    "baselineSustainableEps": 100,
+    "candidateHighestTestedEps": 250,
+    "devices": 6,
+    "measureSeconds": 30,
+    "runsPerAnchor": 3,
+    "warmupSeconds": 10
+  }
+}
+
