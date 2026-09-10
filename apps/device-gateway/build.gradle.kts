@@ -6,9 +6,11 @@ plugins {
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(project(":modules:telemetry-domain"))
+    implementation(project(":modules:camera-control"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation(libs.paho.mqtt.v5)
     runtimeOnly("org.postgresql:postgresql")

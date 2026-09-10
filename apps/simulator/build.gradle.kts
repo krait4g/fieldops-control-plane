@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":modules:telemetry-domain"))
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-json")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation(libs.paho.mqtt.v5)
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")

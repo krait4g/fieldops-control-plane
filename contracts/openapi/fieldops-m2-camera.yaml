@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: FieldOps M2 Camera API
+  version: 1.0.0
+  description: |
+    B04 camera read model and short-lived PTZ control lease contract.
+    This contract is separate from the frozen M1 device/telemetry API. Media is
+    delivered by WebRTC; joystick commands use the separate WebSocket contract.
+servers:
+  - url: /
+    description: Unified browser origin for authenticated REST calls.
+tags:
+  - name: Cameras
+  - name: Camera control
+security:
+  - sessionCookie: []
+paths:
+  /api/v1/cameras:
+    get:
+      operationId: listCameras
+      tags: [Cameras]
+      summary: List cameras in an authorized site
+      x-fieldops-ui:
+        route: /cameras
+        permissions: [CAMERA_READ]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SiteId"
+      responses:
+        "200":
+          description: Site camera list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/CameraSummary" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/v1/cameras/{cameraId}:
+    get:
+      operationId: getCamera
+      tags: [Cameras]
+      summary: Read camera identity and WebRTC preview descriptor
+      x-fieldops-ui:
+        route: /cameras/{cameraId}
+        permissions: [CAMERA_READ]
+      parameters:
+        - $ref: "#/components/parameters/CameraId"
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Camera detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CameraDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/v1/cameras/{cameraId}/status:
+    get:
+      operationId: getCameraStatus
+      tags: [Cameras]
+      summary: Read current synthetic ONVIF pose and preview readiness
+      parameters:
+        - $ref: "#/components/parameters/CameraId"
+        - $ref: "#/components/parameters/TenantId"
+      x-fieldops-ui:
+        route: /cameras/{cameraId}
+        permissions: [CAMERA_READ]
+      responses:
+        "200":
+          description: Current camera status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CameraStatus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
+  /api/v1/cameras/{cameraId}/control-sessions:
+    post:
+      operationId: acquireCameraControl
+      tags: [Camera control]
+      summary: Acquire the five-second camera control lease
+      parameters:
+        - $ref: "#/components/parameters/CameraId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CsrfToken"
+      x-fieldops-ui:
+        route: /cameras/{cameraId}
+        permissions: [CAMERA_CONTROL]
+      responses:
+        "201":
+          description: Lease acquired; heartbeat every second to retain it
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ControlSession" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/cameras/{cameraId}/control-sessions/{sessionId}:
+    delete:
+      operationId: releaseCameraControl
+      tags: [Camera control]
+      summary: Release the owned camera control lease
+      parameters:
+        - $ref: "#/components/parameters/CameraId"
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/Generation"
+        - $ref: "#/components/parameters/CsrfToken"
+      x-fieldops-ui:
+        route: /cameras/{cameraId}
+        permissions: [CAMERA_CONTROL]
+      responses:
+        "204":
+          description: Lease released after a best-effort priority STOP
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: SESSION
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    SiteId:
+      name: siteId
+      in: query
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    CameraId:
+      name: cameraId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Generation:
+      name: generation
+      in: query
+      required: true
+      schema: { type: integer, minimum: 1, maximum: 9007199254740991 }
+    CsrfToken:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      schema: { type: string, minLength: 1 }
+  responses:
+    Unauthorized:
+      description: Authentication is required
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Forbidden:
+      description: Tenant, site, or permission scope denied
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    NotFound:
+      description: Camera was not found in the authorized scope
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Conflict:
+      description: Control lease is held or the supplied session generation is stale
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    ServiceUnavailable:
+      description: Synthetic camera or gateway is unavailable
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+  schemas:
+    CameraSummary:
+      type: object
+      additionalProperties: false
+      required: [id, tenantId, siteId, name, zoneName, previewState, controlState]
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        siteId: { type: string }
+        name: { type: string }
+        zoneName: { type: string }
+        previewState: { $ref: "#/components/schemas/PreviewState" }
+        controlState: { $ref: "#/components/schemas/ControlState" }
+    CameraDetail:
+      allOf:
+        - $ref: "#/components/schemas/CameraSummary"
+        - type: object
+          additionalProperties: false
+          required: [id, tenantId, siteId, name, zoneName, previewState, controlState, preview]
+          properties:
+            id: { type: string }
+            tenantId: { type: string }
+            siteId: { type: string }
+            name: { type: string }
+            zoneName: { type: string }
+            previewState: { $ref: "#/components/schemas/PreviewState" }
+            controlState: { $ref: "#/components/schemas/ControlState" }
+            preview: { $ref: "#/components/schemas/PreviewDescriptor" }
+    PreviewDescriptor:
+      type: object
+      additionalProperties: false
+      required: [transport, url, aspectRatio]
+      properties:
+        transport: { type: string, const: WEBRTC }
+        url: { type: string, format: uri }
+        aspectRatio: { type: string, const: "16:9" }
+    CameraStatus:
+      type: object
+      additionalProperties: false
+      required: [cameraId, previewState, pose, observedAt]
+      properties:
+        cameraId: { type: string }
+        previewState: { $ref: "#/components/schemas/PreviewState" }
+        pose: { $ref: "#/components/schemas/Pose" }
+        observedAt: { type: string, format: date-time }
+    Pose:
+      type: object
+      additionalProperties: false
+      required: [pan, tilt, zoom, moving]
+      properties:
+        pan: { type: number, minimum: -1, maximum: 1 }
+        tilt: { type: number, minimum: -1, maximum: 1 }
+        zoom: { type: number, minimum: 0, maximum: 1 }
+        moving: { type: boolean }
+    ControlSession:
+      type: object
+      additionalProperties: false
+      required: [sessionId, cameraId, generation, leaseTtlMs, heartbeatIntervalMs, expiresAt, websocketUrl]
+      properties:
+        sessionId: { type: string, format: uuid }
+        cameraId: { type: string }
+        generation: { type: integer, minimum: 1, maximum: 9007199254740991 }
+        leaseTtlMs: { type: integer, const: 5000 }
+        heartbeatIntervalMs: { type: integer, const: 1000 }
+        expiresAt: { type: string, format: date-time }
+        websocketUrl: { type: string, format: uri-reference }
+    PreviewState:
+      type: string
+      enum: [READY, STARTING, UNAVAILABLE]
+    ControlState:
+      type: string
+      enum: [AVAILABLE, HELD, UNAVAILABLE]
+    ProblemDetails:
+      type: object
+      additionalProperties: true
+      required: [type, title, status, detail, code, traceId, timestamp]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        detail: { type: string }
+        code:
+          type: string
+          enum: [UNAUTHORIZED, SCOPE_DENIED, CAMERA_NOT_FOUND, CONTROL_LEASE_HELD, CONTROL_SESSION_STALE, CAMERA_UNAVAILABLE, INTERNAL_ERROR]
+        traceId: { type: string }
+        timestamp: { type: string, format: date-time }

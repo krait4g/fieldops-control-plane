@@ -1,4 +1,5 @@
 import type { components } from "./generated/fieldops-m1";
+import type { components as cameraComponents } from "./generated/fieldops-m2-camera";
 
 export type Schemas = components["schemas"];
 
@@ -53,3 +54,11 @@ export type DeviceStateResponse = Schemas["DeviceStateResponse"];
 export type MemberListResponse = Schemas["MemberListResponse"];
 export type MemberSummary = Schemas["MemberSummary"];
 export type ProblemDetails = Schemas["ProblemDetails"];
+
+type CameraSchemas = cameraComponents["schemas"];
+export type CameraSummary = CameraSchemas["CameraSummary"];
+export type CameraDetail = CameraSchemas["CameraDetail"];
+export type CameraStatus = CameraSchemas["CameraStatus"];
+export type CameraPose = CameraSchemas["Pose"];
+export type CameraControlSession = CameraSchemas["ControlSession"];
+export type CameraListResponse = { items: CameraSummary[] };

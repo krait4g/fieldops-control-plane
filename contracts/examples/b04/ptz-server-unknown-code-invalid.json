@@ -1,0 +1,5 @@
+{
+  "type": "ERROR",
+  "code": "REPLAY_LATER",
+  "detail": "PTZ commands are never replayed."
+}

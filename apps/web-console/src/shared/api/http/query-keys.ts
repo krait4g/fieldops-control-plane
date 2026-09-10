@@ -86,6 +86,13 @@ export const queryKeys = {
       bucket: TimeBucket,
     ) => ["device-series", tenantId, siteId, deviceId, range, metrics, bucket] as const,
   },
+  cameras: {
+    list: (tenantId: string, siteId: string) => ["cameras", tenantId, siteId] as const,
+    detail: (tenantId: string, siteId: string, cameraId: string) =>
+      ["camera", tenantId, siteId, cameraId] as const,
+    status: (tenantId: string, siteId: string, cameraId: string) =>
+      ["camera-status", tenantId, siteId, cameraId] as const,
+  },
   members: {
     list: (tenantId: string, filters: MemberFilters, cursor?: string) =>
       ["members", tenantId, normalizeMemberFilters(filters), cursor ?? null] as const,

@@ -1,0 +1,215 @@
+name: Runnable Camera PTZ
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runnable-camera-ptz-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MEDIAMTX_IMAGE: bluenviron/mediamtx:1.21.0@sha256:19fddade8d6110a3d718ac0045681fbeba344ae563a066205fe5929a87f7582f
+
+jobs:
+  foundation-java:
+    name: Foundation / Java
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up JDK 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Build and run Java and camera-control tests
+        run: ./gradlew clean test build --no-daemon
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check generated M1 and M2 clients
+        run: pnpm --filter @fieldops/web-console check:api
+      - name: Lint
+        run: pnpm --filter @fieldops/web-console lint
+      - name: Typecheck
+        run: pnpm --filter @fieldops/web-console typecheck
+      - name: Unit and component tests
+        run: pnpm --filter @fieldops/web-console test
+      - name: Production build
+        env:
+          NEXT_PUBLIC_FIELDOPS_DATA_MODE: remote
+          FIELDOPS_API_ORIGIN: http://127.0.0.1:28082
+        run: pnpm --filter @fieldops/web-console build
+
+  contract:
+    name: Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate frozen M1 and B04 M2 contracts
+        run: |
+          pnpm contract:lint
+          pnpm contract:test
+
+  repository-baseline:
+    name: Repository Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python 3.13
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+      - name: Verify public scope and orchestration regressions
+        run: |
+          python scripts/verify_repository_baseline.py
+          python tests/repository-tests/test_b02_observe.py
+          python tests/repository-tests/test_b04_camera.py
+          python tests/repository-tests/test_b04_image_scan_report.py
+
+  source-security:
+    name: Source / security checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Audit production pnpm dependencies
+        run: pnpm audit --prod --audit-level high
+      - name: Scan source, lockfiles, secrets, and configuration
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: "1"
+          format: table
+
+  mediamtx-security:
+    name: B04 MediaMTX exact-digest scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python 3.13
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+      - name: Verify report parser regressions
+        run: python tests/repository-tests/test_b04_image_scan_report.py
+      - name: Prepare ephemeral report directory
+        run: mkdir -p build/reports/trivy-b04
+      - name: Scan exact MediaMTX image
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: ${{ env.MEDIAMTX_IMAGE }}
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: "0"
+          format: json
+          output: build/reports/trivy-b04/mediamtx.json
+      - name: Verify exact report identity and zero HIGH/CRITICAL findings
+        run: python scripts/verify_b04_image_scan_report.py --require-zero
+
+  ubuntu-camera-smoke:
+    name: Ubuntu Public Camera Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up JDK 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Set up Python 3.13
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+      - name: Provision and verify Docker and FFmpeg capabilities
+        run: |
+          docker compose version
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version
+          ffmpeg -hide_banner -encoders | grep -F libx264
+      - name: Install locked dependencies and Chromium
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @fieldops/web-console exec playwright install --with-deps chromium
+      - name: Start camera slice
+        run: python3 scripts/b04_camera.py up
+      - name: Check camera slice status
+        run: python3 scripts/b04_camera.py status
+      - name: Verify G1-G10
+        run: python3 scripts/b04_camera.py verify
+      - name: Stop task-owned camera resources
+        if: always() && hashFiles('scripts/b04_camera.py') != ''
+        run: python3 scripts/b04_camera.py down

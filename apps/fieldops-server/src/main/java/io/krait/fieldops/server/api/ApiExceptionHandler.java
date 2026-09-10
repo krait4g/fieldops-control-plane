@@ -4,6 +4,9 @@ import java.net.URI;
 import java.time.Instant;
 
 import io.krait.fieldops.server.auth.ScopeDeniedException;
+import io.krait.fieldops.server.camera.CameraNotFoundException;
+import io.krait.fieldops.server.camera.CameraUnavailableException;
+import io.krait.fieldops.server.camera.ControlLeaseException;
 import io.krait.fieldops.server.query.ObserveQueryService.InvalidQueryException;
 import io.krait.fieldops.server.query.ObserveQueryService.StateUnavailableException;
 
@@ -35,6 +38,22 @@ public class ApiExceptionHandler {
     ProblemDetail notFound(EmptyResultDataAccessException error) {
         return problem(HttpStatus.NOT_FOUND, "DEVICE_NOT_FOUND", "Device not found",
                 "The requested resource does not exist in the authorized scope.");
+    }
+
+    @ExceptionHandler(CameraNotFoundException.class)
+    ProblemDetail cameraNotFound(CameraNotFoundException error) {
+        return problem(HttpStatus.NOT_FOUND, "CAMERA_NOT_FOUND", "Camera not found", error.getMessage());
+    }
+
+    @ExceptionHandler(ControlLeaseException.class)
+    ProblemDetail leaseConflict(ControlLeaseException error) {
+        return problem(HttpStatus.CONFLICT, error.code(), "Camera control conflict", error.getMessage());
+    }
+
+    @ExceptionHandler(CameraUnavailableException.class)
+    ProblemDetail cameraUnavailable(CameraUnavailableException error) {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "CAMERA_UNAVAILABLE",
+                "Camera unavailable", error.getMessage());
     }
 
     private static ProblemDetail problem(HttpStatus status, String code, String title, String detail) {

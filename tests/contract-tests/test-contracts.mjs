@@ -1,5 +1,5 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
-import { DiagnosticSeverity, Parser } from "@asyncapi/parser";
+import { DiagnosticSeverity, fromFile, Parser } from "@asyncapi/parser";
 
 import { createAjv, problemDetailsSchema, readJson, readYaml } from "./contract-support.mjs";
 
@@ -10,8 +10,12 @@ const rawTelemetrySchema = await readJson("contracts/json-schema/b02-telemetry-r
 const normalizedTelemetrySchema = await readJson(
   "contracts/json-schema/b02-telemetry-normalized.schema.json",
 );
+const ptzClientSchema = await readJson("contracts/json-schema/ptz-client-message-v1.schema.json");
+const ptzServerSchema = await readJson("contracts/json-schema/ptz-server-message-v1.schema.json");
 const openapi = await readYaml("contracts/openapi/fieldops-m1-ui.yaml");
 const asyncapi = await readYaml("contracts/asyncapi/fieldops-m1-realtime.yaml");
+const cameraOpenapi = await readYaml("contracts/openapi/fieldops-m2-camera.yaml");
+const cameraAsyncapi = await readYaml("contracts/asyncapi/fieldops-camera-control-v1.yaml");
 const problemSchema = problemDetailsSchema(openapi);
 const englishCopy = await readJson("contracts/ui/m1-copy.en.json");
 const koreanCopy = await readJson("contracts/ui/m1-copy.ko.json");
@@ -42,6 +46,8 @@ const validators = {
   "event-envelope-v1": createAjv().compile(eventSchema),
   "b02-telemetry-raw": createAjv().compile(rawTelemetrySchema),
   "b02-telemetry-normalized": createAjv().compile(normalizedTelemetrySchema),
+  "b04-ptz-client-message": createAjv().compile(ptzClientSchema),
+  "b04-ptz-server-message": createAjv().compile(ptzServerSchema),
   "problem-details-from-m1-openapi": createAjv().compile(problemSchema),
 };
 
@@ -73,6 +79,79 @@ try {
 }
 if (!openapiBrokenReferenceRejected) {
   throw new Error("OpenAPI validator accepted an in-memory missing reference");
+}
+
+await SwaggerParser.validate(structuredClone(cameraOpenapi));
+const cameraOperationIds = Object.values(cameraOpenapi.paths).flatMap((pathItem) =>
+  Object.values(pathItem)
+    .filter((operation) => operation && typeof operation === "object" && operation.operationId)
+    .map((operation) => operation.operationId),
+);
+if (cameraOpenapi.info.version !== "1.0.0" || cameraOperationIds.length !== 5) {
+  throw new Error("M2 camera OpenAPI must expose five unique version 1.0.0 operations");
+}
+if (new Set(cameraOperationIds).size !== cameraOperationIds.length) {
+  throw new Error("M2 camera OpenAPI operationIds must be unique");
+}
+for (const pathName of Object.keys(cameraOpenapi.paths)) {
+  for (const operation of Object.values(cameraOpenapi.paths[pathName])) {
+    if (!operation || typeof operation !== "object" || !operation.operationId) continue;
+    const parameters = operation.parameters ?? [];
+    if (!parameters.some((parameter) => parameter.$ref === "#/components/parameters/TenantId")) {
+      throw new Error(`${pathName} must require tenantId`);
+    }
+  }
+}
+const acquire = cameraOpenapi.paths["/api/v1/cameras/{cameraId}/control-sessions"].post;
+const release = cameraOpenapi.paths["/api/v1/cameras/{cameraId}/control-sessions/{sessionId}"].delete;
+for (const operation of [acquire, release]) {
+  if (
+    JSON.stringify(operation["x-fieldops-ui"].permissions) !== JSON.stringify(["CAMERA_CONTROL"]) ||
+    !operation.parameters.some((parameter) => parameter.$ref === "#/components/parameters/CsrfToken")
+  ) {
+    throw new Error("Control lease mutations must require CAMERA_CONTROL and CSRF");
+  }
+}
+for (const operationId of ["listCameras", "getCamera", "getCameraStatus"]) {
+  const operation = Object.values(cameraOpenapi.paths)
+    .flatMap((pathItem) => Object.values(pathItem))
+    .find((candidate) => candidate?.operationId === operationId);
+  if (JSON.stringify(operation["x-fieldops-ui"].permissions) !== JSON.stringify(["CAMERA_READ"])) {
+    throw new Error(`${operationId} must require CAMERA_READ`);
+  }
+}
+
+const parsedCameraAsyncApi = await fromFile(
+  new Parser(),
+  "contracts/asyncapi/fieldops-camera-control-v1.yaml",
+).parse();
+const cameraAsyncErrors = parsedCameraAsyncApi.diagnostics.filter(
+  (diagnostic) => diagnostic.severity === DiagnosticSeverity.Error,
+);
+if (!parsedCameraAsyncApi.document || cameraAsyncErrors.length > 0) {
+  throw new Error(`B04 AsyncAPI did not parse cleanly: ${JSON.stringify(cameraAsyncErrors)}`);
+}
+if (
+  cameraAsyncapi.info.version !== "1.0.0" ||
+  cameraAsyncapi.channels.cameraPtz.address !== "/cameras/{cameraId}/ptz" ||
+  !/never sent to\s+Kafka/.test(cameraAsyncapi.info.description)
+) {
+  throw new Error("B04 AsyncAPI changed its channel, version, or non-durable boundary");
+}
+
+const invalidPtzMutations = [
+  ["zero generation", (message) => (message.generation = 0)],
+  ["zero sequence", (message) => (message.seq = 0)],
+  ["out-of-range pan", (message) => (message.pan = 1.1)],
+  ["device timeout over 500ms", (message) => (message.timeoutMs = 501)],
+  ["unknown property", (message) => (message.replay = true)],
+];
+const validMove = await readJson("contracts/examples/b04/ptz-client-move-valid.json");
+const validatePtzClient = createAjv().compile(ptzClientSchema);
+for (const [label, mutate] of invalidPtzMutations) {
+  const candidate = structuredClone(validMove);
+  mutate(candidate);
+  if (validatePtzClient(candidate)) throw new Error(`PTZ client schema accepted ${label}`);
 }
 
 const eventWithBrokenReference = structuredClone(eventSchema);

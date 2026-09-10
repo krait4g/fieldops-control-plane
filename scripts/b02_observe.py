@@ -20,7 +20,21 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / ".fieldops-b02"
+
+
+def resolve_runtime(raw: str | None) -> Path:
+    candidate = Path(raw) if raw else Path(".fieldops-b02")
+    resolved = (candidate if candidate.is_absolute() else ROOT / candidate).resolve()
+    try:
+        relative = resolved.relative_to(ROOT.resolve())
+    except ValueError as error:
+        raise RuntimeError("FIELDOPS_B02_RUNTIME_DIR must stay inside the repository") from error
+    if relative == Path("."):
+        raise RuntimeError("FIELDOPS_B02_RUNTIME_DIR cannot be the repository root")
+    return resolved
+
+
+RUNTIME = resolve_runtime(os.environ.get("FIELDOPS_B02_RUNTIME_DIR"))
 LOGS = RUNTIME / "logs"
 MANIFEST = RUNTIME / "run-manifest.json"
 PROJECT = os.environ.get("FIELDOPS_B02_PROJECT", "fieldops-b02")
@@ -118,6 +132,9 @@ def ensure_runtime() -> dict[str, str]:
             "FIELDOPS_B02_PROJECT must be fieldops-b02 or a fieldops-b02-<lowercase-suffix> name"
         )
     PORTS["keycloak"] = resolve_keycloak_port(os.environ.get("B02_KEYCLOAK_PORT"))
+    extra_profiles = os.environ.get("FIELDOPS_B02_EXTRA_PROFILES", "").strip()
+    if extra_profiles and not re.fullmatch(r"[a-z0-9-]+(?:,[a-z0-9-]+)*", extra_profiles):
+        raise B02Error("FIELDOPS_B02_EXTRA_PROFILES must be comma-separated lowercase profile names")
     RUNTIME.mkdir(exist_ok=True)
     LOGS.mkdir(exist_ok=True)
 
@@ -183,7 +200,7 @@ def ensure_runtime() -> dict[str, str]:
         "B02_KEYCLOAK_CLIENT_SECRET": values["keycloakClient"],
         "B02_SERVER_PORT": str(PORTS["server"]),
         "B02_GATEWAY_PORT": str(PORTS["gateway"]),
-        "SPRING_PROFILES_ACTIVE": "local-observe",
+        "SPRING_PROFILES_ACTIVE": "local-observe" + (f",{extra_profiles}" if extra_profiles else ""),
         "NEXT_PUBLIC_FIELDOPS_DATA_MODE": "remote",
         "FIELDOPS_API_ORIGIN": f"http://127.0.0.1:{PORTS['server']}",
         "NODE_ENV": "production",
@@ -446,7 +463,10 @@ def action_up(_: argparse.Namespace) -> None:
 
 def simulator(env: dict[str, str], extra: list[str]) -> str:
     command = [java_executable(), "-jar", str(jar_for("simulator")), *extra]
-    return run(command, env=env, timeout=180, capture=True)
+    # The one-shot telemetry producer must stay on its own non-web profile even
+    # when a vertical slice adds profiles to the long-running B02 services.
+    return run(command, env=env | {"SPRING_PROFILES_ACTIVE": "local-observe"},
+               timeout=180, capture=True)
 
 
 def action_demo(args: argparse.Namespace) -> None:

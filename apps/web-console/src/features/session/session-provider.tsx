@@ -23,16 +23,18 @@ import { SessionContext, type SessionContextValue } from "./session-context";
 import { useSessionQuery } from "./use-session";
 import { membershipForTenant, resolveContext, type ResolvedContext } from "./context-resolution";
 import { parseRange } from "./url-state";
+import { cameraCopy } from "@/shared/lib/camera-copy";
 import { useSiteEvents } from "@/shared/realtime/use-site-events";
 import {
   RequiredSnapshotProvider,
   useRequiredSnapshotCoordinator,
 } from "@/shared/realtime/snapshot-coordinator";
 
-function buildNavigation(permissions: string[], messages: CopyCatalog): NavigationItemView[] {
+function buildNavigation(permissions: string[], messages: CopyCatalog, cameraLabel: string): NavigationItemView[] {
   const entries = [
     { id: "overview", label: messages.navigation.overview, href: "/overview", iconName: "overview", required: "OVERVIEW_READ" },
     { id: "devices", label: messages.navigation.devices, href: "/devices", iconName: "devices", required: "DEVICE_READ" },
+    { id: "cameras", label: cameraLabel, href: "/cameras", iconName: "cameras", required: "CAMERA_READ" },
     { id: "members", label: messages.navigation.members, href: "/admin/members", iconName: "members", required: "MEMBER_READ" },
   ];
   return entries.map((entry) => ({
@@ -85,7 +87,7 @@ function AuthedShell({
   children,
 }: AuthedShellProps) {
   const router = useRouter();
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const { snapshotReady, revalidateRequiredSnapshot } = useRequiredSnapshotCoordinator();
 
   const realtime = useSiteEvents({
@@ -179,6 +181,8 @@ function AuthedShell({
 
   const sectionLabel = pathname.startsWith("/admin/members")
     ? messages.navigation.members
+    : pathname.startsWith("/cameras")
+      ? cameraCopy[locale].navigation
     : pathname.startsWith("/devices")
       ? messages.navigation.devices
       : messages.navigation.overview;
@@ -203,7 +207,7 @@ function AuthedShell({
   return (
     <SessionContext.Provider value={value}>
       <AppShell
-        navigation={buildNavigation(membership.permissions, messages)}
+        navigation={buildNavigation(membership.permissions, messages, cameraCopy[locale].navigation)}
         breadcrumb={[{ label: sectionLabel }]}
         tenants={tenants}
         sites={sites}

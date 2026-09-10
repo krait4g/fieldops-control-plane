@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "generate:api": "openapi-typescript ../../contracts/openapi/fieldops-m1-ui.yaml -o src/shared/api/generated/fieldops-m1.d.ts",
+    "generate:api": "openapi-typescript ../../contracts/openapi/fieldops-m1-ui.yaml -o src/shared/api/generated/fieldops-m1.d.ts && openapi-typescript ../../contracts/openapi/fieldops-m2-camera.yaml -o src/shared/api/generated/fieldops-m2-camera.d.ts",
     "check:api": "node scripts/check-generated-api.mjs",
     "check:mock-build-rejected": "node scripts/check-mock-build-rejected.mjs"
   },

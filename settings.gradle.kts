@@ -22,5 +22,6 @@ include(
     ":apps:fieldops-worker",
     ":apps:simulator",
     ":modules:telemetry-domain",
-    ":modules:telemetry-application"
+    ":modules:telemetry-application",
+    ":modules:camera-control"
 )

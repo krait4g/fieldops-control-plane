@@ -50,6 +50,7 @@ secrets/
 # Local infrastructure
 infra/compose/volumes/
 .fieldops-b02/
+.fieldops-b04/
 
 # Temporary files
 .tmp/

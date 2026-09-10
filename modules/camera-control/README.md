@@ -10,4 +10,7 @@ Protocol-neutral camera capability and control-session policy.
 
 ONVIF and RTSP implementation details remain outside the domain model. Realtime joystick input is not replayed through the durable command path.
 
-Current status: design boundary only.
+Current status: the B04 synthetic camera slice implements the realtime control
+session boundary, latest-wins buffering, lease generation fencing, and PTZ
+dead-man timeout policy. Durable commands and vendor-wide ONVIF compatibility
+remain outside this slice.

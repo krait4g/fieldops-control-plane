@@ -6,3 +6,4 @@
 | [Modular monorepo](0002-modular-monorepo.md) | One repository with separate Java and web build graphs |
 | [Safe command execution](0003-safe-command-execution.md) | Durable command ledger and explicit uncertainty |
 | [Thin web console](0004-thin-web-console.md) | Next.js UI without duplicated domain authority |
+| [Synthetic camera and realtime PTZ](0015-b04-camera-preview-ptz-boundary.md) | WebRTC media, Redis-fenced control sessions, and finite-stop safety boundaries |

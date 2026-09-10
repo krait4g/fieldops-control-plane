@@ -1,0 +1,50 @@
+asyncapi: 3.0.0
+info:
+  title: FieldOps B04 realtime PTZ control
+  version: 1.0.0
+  description: |
+    Ephemeral, non-durable WebSocket control channel. Messages are never sent to
+    Kafka, persisted, or replayed. A REST-acquired lease and generation fence are
+    required before every device command.
+servers:
+  local:
+    host: localhost:3000
+    pathname: /api/v1
+    protocol: wss
+    description: Same local web-console origin; ws is used for the localhost preview.
+channels:
+  cameraPtz:
+    address: /cameras/{cameraId}/ptz
+    parameters:
+      cameraId:
+        description: Authorized camera identifier.
+    messages:
+      clientCommand:
+        $ref: "#/components/messages/ClientCommand"
+      serverEvent:
+        $ref: "#/components/messages/ServerEvent"
+operations:
+  receivePtzCommand:
+    action: receive
+    channel: { $ref: "#/channels/cameraPtz" }
+    messages:
+      - $ref: "#/channels/cameraPtz/messages/clientCommand"
+  sendPtzEvent:
+    action: send
+    channel: { $ref: "#/channels/cameraPtz" }
+    messages:
+      - $ref: "#/channels/cameraPtz/messages/serverEvent"
+components:
+  messages:
+    ClientCommand:
+      name: ptz.client.v1
+      title: Browser PTZ command
+      contentType: application/json
+      payload:
+        $ref: "../json-schema/ptz-client-message-v1.schema.json"
+    ServerEvent:
+      name: ptz.server.v1
+      title: PTZ acknowledgement, pose, or control loss
+      contentType: application/json
+      payload:
+        $ref: "../json-schema/ptz-server-message-v1.schema.json"
