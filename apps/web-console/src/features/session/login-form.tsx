@@ -5,11 +5,12 @@ import { usesMock } from "@/shared/api/bootstrap";
 import { setSessionScenario, type SessionScenario } from "@/shared/api/mock/session-store";
 import { Button } from "@/shared/ui/button";
 import { useI18n } from "@/shared/i18n";
+import { demoAuthCopy } from "@/shared/lib/demo-auth-copy";
 
 export function LoginForm({ returnTo }: { returnTo: string }) {
   const router = useRouter();
   const isMock = usesMock();
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const scenarios: Array<{ value: SessionScenario; label: string; description: string }> = [
     { value: "admin", label: messages.login.tenantAdmin, description: messages.login.tenantAdminDescription },
     { value: "viewer", label: messages.login.tenantViewer, description: messages.login.tenantViewerDescription },
@@ -36,8 +37,11 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
 
       {isMock ? (
         <div className="space-y-3" data-testid="fixture-session-selector">
+          <h2 className="text-base font-semibold text-text-primary">
+            {demoAuthCopy[locale].fixtureTitle}
+          </h2>
           <p className="text-xs text-text-muted">
-            {messages.login.fixtureIntro}
+            {demoAuthCopy[locale].fixtureIntro}
           </p>
           {scenarios.map((scenario) => (
             <button

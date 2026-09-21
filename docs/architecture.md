@@ -1,6 +1,6 @@
 # FieldOps 아키텍처
 
-상태: 목표 설계, 실제 통합 검증 전. 첫 원격 버전은 단일 실행 환경과 제한된 복구를 선택합니다. 이 문서의 설계 선택을 구현 보장으로 읽지 않습니다.
+상태: v0.2 Local Observe, v0.3 Camera/PTZ, v0.4 Durable Command, v0.5 Measured Performance/Resilience를 localhost Synthetic 범위에서 통합 검증했습니다. Production·HA·모든 Vendor 보장을 뜻하지 않습니다.
 
 ## 1. 핵심 책임
 
@@ -50,14 +50,14 @@ Redis 적용 직후 종료 또는 Kafka 발행 실패를 입력 Offset Commit과
 
 첫 Redis 복구는 유지보수 모드입니다. 마지막 DB Snapshot을 Stale로 제공하고 Projector 소유권·새 상태 세대·Replay 입력 범위·목표 Offset을 확인해 재구축합니다. 보관 범위가 부족하면 복구 불가를 명시하며 빈 상태를 정상으로 서비스하지 않습니다. Snapshot 최적화와 무중단 교체는 실제 비용이 문제가 될 때 추가합니다.
 
-## 6. 후속 Command와 PTZ
+## 6. Realtime PTZ와 Durable Command
 
-일반 명령은 한 종류의 멱등 Set부터 구현하고 승인·원장·Outbox·중복·Deadline·결과 확인을 검증합니다. 같은 키의 다른 Payload는 충돌입니다. 승인 후 실제 Dispatch 직전에 상태와 권한을 재검증합니다. ACK와 Reported State를 구분하고 불확실한 결과는 UNKNOWN으로 남깁니다.
+Synthetic Valve OPEN/CLOSE는 API idempotency, 요청자/승인자 분리, PostgreSQL ledger, `FOR UPDATE SKIP LOCKED` claim, Gateway dedup, Deadline과 실제 상태 확인을 검증했습니다. 같은 key의 다른 payload는 충돌이며, ACK와 성공을 구분하고 불확실한 결과는 `UNKNOWN`으로 남겨 자동 재전송하지 않습니다.
 
-PTZ는 오래된 입력을 Durable Queue로 Replay하지 않습니다. Owner/Lease/Fencing/Sequence와 최종 Gateway 전송 순서를 확인하며 지연된 과거 Stop도 처리합니다. 지원 장비의 Timeout/Watchdog가 확인되지 않은 환경에 물리적 정지 보장을 주장하지 않습니다. 초기에는 단일 Gateway/Simulator 또는 검증된 장비로 제한합니다.
+PTZ는 오래된 입력을 Durable Queue로 replay하지 않습니다. 단일 Synthetic Camera에서 Owner/Lease/Generation/Sequence, Gateway 최종 재검증, priority stop, server dead-man, device finite timeout을 확인했습니다. 이 localhost 검증을 실제 Vendor 전체 호환이나 물리적 정지 보장으로 확대하지 않습니다.
 
 ## 7. 확인할 증거
 
-첫 관측 제품은 MQTT→History/State/UI, Cross-tenant 차단, Snapshot-구독 사이 단발 변경, REST/SSE 역전, 중복, Redis 장애 중 History 지속과 제한된 복구로 검증합니다. 기본 처리·오류·지연 지표를 기록합니다. 고가용성·종합 부하·모든 Vendor 테스트는 첫 완료 조건이 아닙니다.
+MQTT→History/State/UI, cross-tenant 차단, snapshot/SSE 수렴, 중복·역순, Redis 장애 중 History 지속과 복구를 검증했습니다. Camera/PTZ와 Durable Command는 각각 G1-G10으로 실패 경계를 닫았고, B06은 단일 로컬 환경에서 반복 측정과 Worker/Redis recovery drill을 수행했습니다. 고가용성·모든 Vendor·Production capacity는 검증 범위가 아닙니다.
 
 [Frontend/Backend](frontend-backend.md) · [로드맵](product/ROADMAP.ko.md) · [현재 상태](project-status.md)
