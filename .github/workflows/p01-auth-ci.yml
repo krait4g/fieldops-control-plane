@@ -1,0 +1,91 @@
+name: P01 Auth Acceptance
+
+on:
+  push:
+    paths:
+      - "apps/web-console/**"
+      - "scripts/b02_observe.py"
+      - "infra/b02/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/p01-auth-ci.yml"
+  pull_request:
+    paths:
+      - "apps/web-console/**"
+      - "scripts/b02_observe.py"
+      - "infra/b02/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/p01-auth-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p01-auth-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromium-auth:
+    name: Mock switch and real Keycloak logout
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.25.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @fieldops/web-console exec playwright install --with-deps chromium
+
+      - name: Verify mock user switching
+        run: >-
+          pnpm --filter @fieldops/web-console exec playwright test
+          --config playwright.p01.mock.config.ts
+          tests/m1-journey.spec.ts
+          --grep "mock admin switches"
+
+      - name: Start actual Local Observe runtime
+        run: python3 scripts/b02_observe.py up
+
+      - name: Verify real Keycloak logout and session invalidation
+        shell: bash
+        run: |
+          credential="$(python3 -c 'import json; print(json.load(open(".fieldops-b02/demo-credentials.json", encoding="utf-8"))["password"])')"
+          echo "::add-mask::$credential"
+          B02_BROWSER_USERNAME=b02-admin-a \
+          B02_BROWSER_PASSWORD="$credential" \
+          pnpm --filter @fieldops/web-console exec playwright test \
+            --config playwright.p01.real.config.ts
+
+      - name: Stop task-owned Local Observe resources
+        if: always() && hashFiles('scripts/b02_observe.py') != ''
+        run: python3 scripts/b02_observe.py down

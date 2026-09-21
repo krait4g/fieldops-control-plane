@@ -141,6 +141,39 @@ test.describe("M1 fixture product journey", () => {
     await expect(page.getByRole("link", { name: "Members & Access" })).toHaveCount(0);
   });
 
+  test("mock admin switches to viewer and no-site without calling real logout", async ({ page }) => {
+    let logoutRequests = 0;
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/api/v1/auth/logout") logoutRequests += 1;
+    });
+
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: "Choose a demo user" })).toBeVisible();
+    await page.getByRole("button", { name: /Tenant admin/ }).click();
+    await expect(page.getByTestId("overview-page")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Members & Access" })).toBeVisible();
+
+    await page.getByRole("button", { name: /Open user menu for/ }).click();
+    await expect(page.getByRole("menuitem", { name: "Sign out" })).toHaveCount(0);
+    await page.getByRole("menuitem", { name: "Switch demo user" }).click();
+    await expect(page).toHaveURL(/\/login\?returnTo=%2Foverview/);
+    await expect(page.getByTestId("fixture-session-selector")).toBeVisible();
+    expect(logoutRequests).toBe(0);
+
+    await page.getByRole("button", { name: /Tenant viewer/ }).click();
+    await expect(page.getByTestId("overview-page")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Members & Access" })).toHaveCount(0);
+    await page.getByRole("button", { name: /Open user menu for/ }).click();
+    await page.getByRole("menuitem", { name: "Switch demo user" }).click();
+
+    await page.getByRole("button", { name: /No site access/ }).click();
+    await expect(page.getByText("You do not have access to this resource", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Your account has no accessible site. Contact your administrator for access."),
+    ).toBeVisible();
+    expect(logoutRequests).toBe(0);
+  });
+
   test("initial snapshot completes before the stream can become live", async ({ page }) => {
     await page.addInitScript(() => {
       (window as unknown as { __fieldopsFixtureScenario?: string }).__fieldopsFixtureScenario =

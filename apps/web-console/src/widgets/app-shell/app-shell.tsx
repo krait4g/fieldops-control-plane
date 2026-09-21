@@ -11,6 +11,7 @@ import { useI18n } from "@/shared/i18n";
 export interface AppShellFullProps extends AppShellProps {
   onRetryLive?: () => void;
   onLogout?: () => void;
+  onSwitchDemoUser?: () => void;
   dataModeLabel?: string;
   snapshotStale?: boolean;
 }
@@ -31,6 +32,7 @@ export function AppShell({
   onRangeChange,
   onRetryLive,
   onLogout,
+  onSwitchDemoUser,
   dataModeLabel,
   snapshotStale,
   children,
@@ -156,6 +158,7 @@ export function AppShell({
           user={user}
           onRetryLive={onRetryLive}
           onLogout={onLogout}
+          onSwitchDemoUser={onSwitchDemoUser}
           dataModeLabel={dataModeLabel}
           onOpenNavigation={() => setNavigationOpen(true)}
           navigationButtonRef={navigationButtonRef}

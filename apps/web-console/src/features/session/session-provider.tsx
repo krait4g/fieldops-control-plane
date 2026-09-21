@@ -94,6 +94,7 @@ function AuthedShell({
   children,
 }: AuthedShellProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { locale, messages } = useI18n();
   const { snapshotReady, revalidateRequiredSnapshot } = useRequiredSnapshotCoordinator();
 
@@ -119,6 +120,14 @@ function AuthedShell({
       router.replace("/login");
     }
   }, [router, realtime]);
+
+  const switchDemoUser = useCallback(() => {
+    realtime.close();
+    getQueryClient().clear();
+    const query = searchParams.toString();
+    const returnTo = encodeURIComponent(pathname + (query ? `?${query}` : ""));
+    router.replace(`/login?returnTo=${returnTo}`);
+  }, [pathname, router, searchParams, realtime]);
 
   const user: AppShellUserView = {
     displayName: session.user.displayName,
@@ -232,6 +241,7 @@ function AuthedShell({
         onRangeChange={setRange}
         onRetryLive={realtime.retry}
         onLogout={usesMock() ? undefined : logout}
+        onSwitchDemoUser={usesMock() ? switchDemoUser : undefined}
         snapshotStale={realtime.snapshotStale}
         dataModeLabel={usesMock() ? messages.shell.demoData : undefined}
       >

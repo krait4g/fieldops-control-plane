@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Languages, LogOut } from "lucide-react";
+import { Check, Languages, LogOut, UserRoundCog } from "lucide-react";
 import type { AppShellUserView } from "@/shared/lib/view-models";
 import { useI18n } from "@/shared/i18n";
 import { formatCopy, type Locale } from "@/shared/lib/copy";
+import { demoAuthCopy } from "@/shared/lib/demo-auth-copy";
 
 export function UserMenu({
   user,
   onLogout,
+  onSwitchDemoUser,
 }: {
   user: AppShellUserView;
   onLogout?: () => void;
+  onSwitchDemoUser?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -98,6 +101,19 @@ export function UserMenu({
             >
               <LogOut className="size-4" aria-hidden="true" />
               {messages.actions.signOut}
+            </button>
+          ) : onSwitchDemoUser ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onSwitchDemoUser();
+              }}
+              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-console-surface-2 hover:text-text-primary"
+            >
+              <UserRoundCog className="size-4" aria-hidden="true" />
+              {demoAuthCopy[locale].switchUser}
             </button>
           ) : null}
         </div>

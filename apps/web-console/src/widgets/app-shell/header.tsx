@@ -14,6 +14,7 @@ export interface HeaderProps {
   user: AppShellUserView;
   onRetryLive?: () => void;
   onLogout?: () => void;
+  onSwitchDemoUser?: () => void;
   dataModeLabel?: string;
   onOpenNavigation?: () => void;
   navigationButtonRef?: RefObject<HTMLButtonElement | null>;
@@ -25,6 +26,7 @@ export function Header({
   user,
   onRetryLive,
   onLogout,
+  onSwitchDemoUser,
   dataModeLabel,
   onOpenNavigation,
   navigationButtonRef,
@@ -77,7 +79,11 @@ export function Header({
           </span>
         ) : null}
         <LiveIndicator status={liveStatus} onRetry={onRetryLive} />
-        <UserMenu user={user} onLogout={onLogout} />
+        <UserMenu
+          user={user}
+          onLogout={onLogout}
+          onSwitchDemoUser={onSwitchDemoUser}
+        />
       </div>
     </header>
   );
