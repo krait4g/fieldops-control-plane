@@ -17,6 +17,15 @@ Device Gateway는 MQTT QoS 1 telemetry를 raw Kafka topic에 발행하고 Worker
 - [Architecture](architecture.md)
 - [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md)
 
+## If you care about protocol integration
+
+The TCP/Binary slice reads arbitrary stream chunks, performs bounded incremental framing and fail-closed CRC/version/length/type checks, then converges on the same `RawTelemetry` Kafka contract without refactoring the measured MQTT path. Its ACK means Kafka raw acceptance—not History commit—and reconnect preserves the frame's logical session until a simulated reboot.
+
+- [TCP/Binary protocol](TCP_BINARY_PROTOCOL.md)
+- [TCP/Binary Quick Start](TCP_BINARY_QUICKSTART.md)
+- [Gateway adapter source](../apps/device-gateway/src/main/java/io/krait/fieldops/gateway/tcp/TcpBinaryTelemetryAdapter.java)
+- [Framing ADR](adr/0018-b07-tcp-binary-framing.md)
+
 ## If you care about consistency and idempotency
 
 PostgreSQL은 영구 History와 command ledger의 원장이고 Redis는 재구축 가능한 latest-state read model입니다. Global exactly-once 대신 event/API idempotency, partition-local order, exclusive claim, Gateway receipt dedup, 명시적 `UNKNOWN`으로 중복과 불확실성을 다룹니다.
@@ -46,12 +55,13 @@ Canonical 숫자는 GitHub runner가 아니라 같은 로컬 호스트에서 각
 
 ## Run locally
 
-가장 짧은 검토 경로는 Local Observe입니다. Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose를 준비한 뒤 `up → status → demo → verify → down`을 실행합니다. Camera/PTZ와 Durable Command는 각각 자신의 Quick Start와 checkout-scoped runtime을 사용합니다.
+가장 짧은 검토 경로는 Local Observe입니다. Java 21, Node.js 24, pnpm 11.25.0, Python 3.13, Docker Compose를 준비한 뒤 `up → status → demo → verify → down`을 실행합니다. Camera/PTZ, Durable Command, TCP/Binary Adapter는 각각 자신의 Quick Start와 checkout-scoped runtime을 사용합니다.
 
 - [Local Observe Quick Start](LOCAL_OBSERVE_QUICKSTART.md)
 - [Camera/PTZ Quick Start](CAMERA_PTZ_QUICKSTART.md)
 - [Durable Command Quick Start](COMMAND_QUICKSTART.md)
 - [Performance Quick Start](PERFORMANCE_QUICKSTART.md)
+- [TCP/Binary Quick Start](TCP_BINARY_QUICKSTART.md)
 
 ## Known limits
 

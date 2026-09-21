@@ -24,3 +24,4 @@ jobs:
           python tests/repository-tests/test_b04_camera.py
           python tests/repository-tests/test_b05_command.py
           python tests/repository-tests/test_b06_perf.py
+          python tests/repository-tests/test_b07_tcp_binary.py

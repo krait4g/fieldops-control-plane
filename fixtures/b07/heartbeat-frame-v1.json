@@ -1,0 +1,13 @@
+{
+  "name": "heartbeat-v1",
+  "hex": "464f010200000000002b000001977420dc00000001977420dfe898ac8e62",
+  "crc32": "98ac8e62",
+  "expected": {
+    "version": 1,
+    "type": 2,
+    "payloadLength": 0,
+    "sequence": 43,
+    "sessionStartedAtMillis": 1750000000000,
+    "observedAtMillis": 1750000001000
+  }
+}

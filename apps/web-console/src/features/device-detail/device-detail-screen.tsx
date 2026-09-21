@@ -133,7 +133,9 @@ export function DeviceDetailScreen({ deviceId }: { deviceId: string }) {
           <HeaderRow label={messages.deviceDetail.type}>{device.typeLabel}</HeaderRow>
           <HeaderRow label={messages.deviceDetail.site}>{device.siteLabel}</HeaderRow>
           <HeaderRow label={messages.deviceDetail.zone}>{device.zoneLabel ?? "—"}</HeaderRow>
-          <HeaderRow label={messages.deviceDetail.protocol}>{device.protocol.replace("_", " ")}</HeaderRow>
+          <HeaderRow label={messages.deviceDetail.protocol}>
+            {device.protocol === "TCP_BINARY" ? "TCP/Binary" : device.protocol.replace("_", " ")}
+          </HeaderRow>
           <HeaderRow label={messages.deviceDetail.lastReceived}>{device.receivedAt?.relativeLabel ?? "—"}</HeaderRow>
           <HeaderRow label={messages.deviceDetail.stateVersion}>
             <span className="mono">{device.stateVersion ?? "—"}</span>

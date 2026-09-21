@@ -9,7 +9,7 @@ public class FieldOpsSimulatorApplication {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(FieldOpsSimulatorApplication.class, args);
-        if (!context.getEnvironment().matchesProfiles("b04-camera", "b05-command")) {
+        if (!context.getEnvironment().matchesProfiles("b04-camera", "b05-command", "b07-tcp-device")) {
             int exitCode = SpringApplication.exit(context);
             System.exit(exitCode);
         }
