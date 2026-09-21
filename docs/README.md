@@ -13,6 +13,7 @@
 
 ## 기술 문서
 
+- [`REVIEWER_GUIDE.md`](REVIEWER_GUIDE.md) — 채용·기술 검토 관심사별 빠른 source/evidence 경로
 - [`architecture.md`](architecture.md) — 전체 아키텍처와 데이터 책임
 - [`frontend-backend.md`](frontend-backend.md) — Frontend·Backend 경계
 - [`roadmap.md`](roadmap.md) — 기술 마일스톤
@@ -20,6 +21,8 @@
 - [`LOCAL_OBSERVE_QUICKSTART.md`](LOCAL_OBSERVE_QUICKSTART.md) — localhost Synthetic Preview 실행 방법
 - [`CAMERA_PTZ_QUICKSTART.md`](CAMERA_PTZ_QUICKSTART.md) — Synthetic WebRTC Camera와 realtime PTZ 실행 방법
 - [`COMMAND_QUICKSTART.md`](COMMAND_QUICKSTART.md) — Synthetic Valve durable command와 분리 승인 실행 방법
+- [`PERFORMANCE_RESILIENCE.md`](PERFORMANCE_RESILIENCE.md) — 동일 로컬 환경의 반복 측정과 복구 결과
+- [`PERFORMANCE_QUICKSTART.md`](PERFORMANCE_QUICKSTART.md) — B06 low-rate harness 재현 방법
 - [`runnable-snapshot.md`](runnable-snapshot.md) — 공개 실행 소스 범위와 제외 항목
 - [`decisions/README.md`](decisions/README.md) — 주요 Architecture Decision
 

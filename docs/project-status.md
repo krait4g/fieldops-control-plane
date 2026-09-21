@@ -1,6 +1,6 @@
 # 현재 공개 상태
 
-마지막 업데이트: 2026-09-10. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
+마지막 업데이트: 2026-09-21. 공개 PRD 문서 버전: 0.7.0. 이 문서 버전은 실행 가능한 제품의 Release Tag가 아닙니다.
 
 ## 한눈에 보는 현재 상태
 
@@ -18,6 +18,7 @@
 | 한국어/영어 UI | 한국어 기본 + English 전환 구현·검증, 실제 Remote 화면 공개 완료 |
 | Public 실행 소스 | Local Observe + Camera/PTZ + Durable Command 최소 실행 폐쇄와 Quick Start 공개 완료 |
 | Public runnable validation | 동일 Public head에서 B06 low-rate smoke, Ubuntu B02/B04/B05와 actual Chromium journey `PASS` |
+| Reviewer path | Recruiter-first README, Reviewer Guide, Mock demo-user switch, actual Keycloak logout 검증 |
 | 장비 제어 | Synthetic Camera PTZ와 Synthetic Valve 승인형 durable command 검증 완료. alarm·preset은 후속 범위 |
 | AI·과금 | 후속 또는 선택 범위 |
 | 성능·복구 근거 | 동일 로컬 호스트 반복 측정과 Worker/Redis 복구 evidence 공개. Production capacity나 최대 TPS를 주장하지 않음 |
@@ -98,8 +99,9 @@ Public Repository는 채용 검토 시점에도 현재 작업 상태가 보이�
 4. **Synthetic Camera/PTZ 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 3장을 같은 Public head에 반영
 5. **Durable Command/Approval 공개 — 완료** — 실행 소스, Quick Start, CI, 실제 화면 2장을 같은 Public head에 반영
 6. **Measured Performance/Resilience 공개 — 완료** — 동일 로컬 환경의 반복 측정 summary, 단일 최적화 before/after, Worker/Redis 복구 evidence를 공개
-7. **다음 제품 Slice 공개** — TCP/Polling, Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
-8. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
+7. **Reviewer packaging — 완료** — recruiter-first README, Reviewer Guide, Mock/Real auth acceptance를 같은 Public head에 반영
+8. **다음 제품 Slice 공개** — TCP/Polling, Alarm 등은 각각 검증된 Vertical Slice 단위로 추가
+9. **Public Release/Tag** — Release Gate와 알려진 제한을 분리해 검토한 뒤 수행
 
 Public 동기화를 빠르게 하기 위해 미완성 기능 수를 늘리기보다, 이미 검증된 Slice의 코드·실행 방법·Evidence를 우선 공개합니다.
 

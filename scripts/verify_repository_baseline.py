@@ -29,6 +29,12 @@ IMPLEMENTATION_IMAGES = {
     "docs/assets/implementation/command-succeeded-timeline-ko.png":
         "0678e0e72e0a604aa56ce00da70fd5298428c2453365857b32f8ac2f33c3d8fd",
 }
+README_IMPLEMENTATION_IMAGES = (
+    "docs/assets/implementation/local-observe-overview-ko.png",
+    "docs/assets/implementation/camera-ptz-control-ko.png",
+    "docs/assets/implementation/command-succeeded-timeline-ko.png",
+    "docs/assets/implementation/performance-before-after.svg",
+)
 REQUIRED = [
     "README.md", "LICENSE", "CONTRIBUTING.md", "SECURITY.md",
     ".editorconfig", ".gitattributes", ".gitignore", ".env.example",
@@ -85,7 +91,8 @@ TEXT_SUFFIXES = {
 }
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
 IGNORED_TREE_PARTS = {
-    ".git", ".gradle", ".next", ".fieldops-b02", ".fieldops-b04", ".fieldops-b05", "node_modules", "build", "out",
+    ".git", ".gradle", ".next", ".fieldops-b02", ".fieldops-b04", ".fieldops-b05", ".fieldops-b06",
+    "node_modules", "build", "out",
     "coverage", "playwright-report", "test-results", "__pycache__",
 }
 errors: list[str] = []
@@ -162,8 +169,6 @@ for value, owners in ports.items():
 
 readme = read("README.md")
 for rel in IMAGES:
-    if rel not in readme:
-        errors.append(f"README must reference current concept image: {rel}")
     path = ROOT / rel
     if path.exists():
         with path.open("rb") as stream:
@@ -171,8 +176,6 @@ for rel in IMAGES:
         if not (header[:4] == b"RIFF" and header[8:12] == b"WEBP"):
             errors.append(f"concept asset is not a WebP container: {rel}")
 for rel, expected_sha256 in IMPLEMENTATION_IMAGES.items():
-    if rel not in readme:
-        errors.append(f"README must reference B04 implementation image: {rel}")
     path = ROOT / rel
     if path.exists():
         if path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
@@ -180,8 +183,21 @@ for rel, expected_sha256 in IMPLEMENTATION_IMAGES.items():
         actual_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
         if actual_sha256 != expected_sha256:
             errors.append(f"implementation asset hash mismatch: {rel}")
-if "콘셉트 이미지" not in readme or "구현 완료 스크린샷" not in readme:
-    errors.append("README must distinguish concept and implementation screenshots")
+for rel in README_IMPLEMENTATION_IMAGES:
+    if rel not in readme:
+        errors.append(f"README must reference representative implementation evidence: {rel}")
+implementation_count = readme.count('src="docs/assets/implementation/')
+if implementation_count > 4:
+    errors.append(f"README must keep representative implementation images to at most 4: {implementation_count}")
+actual_screens = readme.find("## Actual Screens")
+if actual_screens < 0:
+    errors.append("README must identify the Actual Screens section")
+for rel in IMAGES:
+    concept_position = readme.find(rel)
+    if concept_position >= 0 and (actual_screens < 0 or concept_position < actual_screens):
+        errors.append(f"README concept image must follow actual screens: {rel}")
+if "Production capacity가 아니라 명시된 단일 로컬 benchmark 환경" not in readme:
+    errors.append("README must preserve the measured-performance claim boundary")
 version = re.search(r"(?m)^> 버전: `([^`]+)`", read("docs/product/PRD.ko.md"))
 if not version:
     errors.append("PRD must declare a version")
@@ -213,6 +229,7 @@ if '"--hostname", "127.0.0.1"' not in read("scripts/b02_observe.py"):
 # This is deliberately not a network crawler, Markdown renderer, or app test.
 DOCS = (
     "README.md", "docs/project-status.md", "docs/architecture.md", "docs/frontend-backend.md",
+    "docs/REVIEWER_GUIDE.md",
     "docs/roadmap.md", "docs/product/PRD.ko.md", "docs/product/ROADMAP.ko.md",
     "docs/product/UX_DESIGN.ko.md", "docs/product/PRD_CHANGELOG.ko.md",
 )
