@@ -1,0 +1,8 @@
+fieldops:
+  b07:
+    device-port: ${B07_TCP_DEVICE_PORT:28087}
+    scenario: ${B07_TCP_SCENARIO:normal}
+
+logging:
+  level:
+    io.krait.fieldops.simulator.tcp: INFO

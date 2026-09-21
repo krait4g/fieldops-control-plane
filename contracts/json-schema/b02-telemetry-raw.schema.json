@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://fieldops.dev/schemas/b02-telemetry-raw.schema.json",
   "title": "FieldOps B02 Raw Telemetry Envelope",
-  "description": "Gateway-validated MQTT sample published to fieldops.telemetry.raw.v1.",
+  "description": "Gateway-validated telemetry sample from a registered ingress adapter, published to fieldops.telemetry.raw.v1.",
   "type": "object",
   "additionalProperties": false,
   "required": [

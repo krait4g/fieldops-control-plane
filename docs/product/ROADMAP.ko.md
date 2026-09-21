@@ -4,7 +4,7 @@
 
 ## v0.1 — UI Preview
 
-상태: **IMPLEMENTED / VERIFIED in Private Workbench · Public sync in progress**
+상태: **IMPLEMENTED / VERIFIED / PUBLISHED**
 
 Fixture Login → Overview → 장비 목록·상세·24h Chart → Members 조회를 실제 최종 UI에서 연결했습니다. Normal/Empty/Permission/Error/Partial/Stale/Reconnecting, 필터·URL·키보드·기본 모바일을 확인했습니다.
 
@@ -14,7 +14,7 @@ Backend, 전체 기반 Infra, Proxy 사용자 3명, 모든 브라우저·화면 
 
 ## v0.2 — 실제 관측 흐름
 
-상태: **IMPLEMENTED / VERIFIED_SCOPE: local-observe-preview · Public sync in progress**
+상태: **IMPLEMENTED / VERIFIED_SCOPE: local-observe-preview / PUBLISHED**
 
 ```text
 Synthetic MQTT → Kafka → PostgreSQL History / Redis Latest State
@@ -29,13 +29,13 @@ Synthetic MQTT → Kafka → PostgreSQL History / Redis Latest State
 
 실행 방법·실제 화면·핵심 테스트를 함께 Public에 동기화하면 하나의 공개 포트폴리오 완성본이 됩니다. 현재는 해당 Snapshot을 단계적으로 준비 중입니다.
 
-## v0.3 이후 — 차별화 기능을 작게 추가
+## v0.3–v0.6 — 검증된 독립 Slice
 
-TCP/Binary 프레이밍 또는 HTTP Polling 한 종류부터 추가합니다. 분할/합쳐진 패킷 또는 Timeout/중복 Poll 등 해당 Adapter의 실패 조건을 보여줍니다. 모든 Protocol을 동시에 완성할 필요는 없습니다.
+Camera/PTZ, Durable Command, Measured Performance/Resilience, TCP/Binary Adapter를 각각 독립 acceptance와 Quick Start로 공개했습니다. TCP/Binary는 fragmented/coalesced stream, fail-closed validation, Kafka-accepted ACK, reconnect/reboot 경계를 기존 telemetry contract에 수렴시켰고 HTTP Polling·Modbus·UDP는 구현하지 않았습니다.
 
 Camera는 Preview와 상태부터, 일반 명령은 한 종류의 멱등 Set과 승인·결과 확인부터 추가합니다. 각각 독립적으로 공개할 수 있습니다. PTZ는 단일 Gateway와 지원 장비/Simulator의 제어권·Timeout 조건이 확인된 뒤 별도 증분으로 제공합니다. 범용 엔진이나 모든 Vendor 지원은 만들지 않습니다.
 
-현재 다음 제품 Slice의 우선순위는 기존 Observe 기반 위에 실제 장비 연동·제어 역량을 드러내는 기능입니다. 다만 이미 검증한 v0.2 Public Snapshot 공개를 늦추지 않습니다.
+다음 Slice는 실제 필요와 별도 승인에 따라 선택하며, 이미 검증된 Public runnable이나 Release blocker를 흐리지 않습니다.
 
 ## 이후 개선
 

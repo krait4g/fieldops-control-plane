@@ -1,0 +1,13 @@
+fieldops:
+  b07:
+    host: 127.0.0.1
+    port: ${B07_TCP_DEVICE_PORT:28087}
+    tenant-id: tenant-a
+    site-id: site-a
+    device-id: device-a-soil-tcp-01
+    max-payload-bytes: 64
+    heartbeat-timeout: 3s
+
+logging:
+  level:
+    io.krait.fieldops.gateway.tcp: INFO

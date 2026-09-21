@@ -1,0 +1,13 @@
+{
+  "name": "ack-v1",
+  "hex": "464f018100000000002a000001977420dc00000001977420e1dc020aa1b4",
+  "crc32": "020aa1b4",
+  "expected": {
+    "version": 1,
+    "type": 129,
+    "payloadLength": 0,
+    "sequence": 42,
+    "sessionStartedAtMillis": 1750000000000,
+    "observedAtMillis": 1750000001500
+  }
+}

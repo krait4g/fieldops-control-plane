@@ -12,6 +12,7 @@
 ## Verified Highlights
 
 - **Realtime Observe** — MQTT QoS 1 → Kafka → PostgreSQL History + Redis Latest → REST/SSE를 6개 Synthetic device로 실제 연결했습니다.
+- **TCP/Binary Adapter** — incremental framing, CRC/version/length/type 검증, Kafka-accepted ACK 경계와 reconnect/retransmit을 기존 telemetry pipeline에 수렴시켰습니다.
 - **Camera / PTZ** — RTSP → MediaMTX → WebRTC 영상과 Redis generation fencing → WebSocket → Gateway 최종 재검증 → Synthetic ONVIF 제어를 분리했습니다.
 - **Durable Command** — 요청·분리 승인, API idempotency, PostgreSQL `FOR UPDATE SKIP LOCKED`, Gateway `commandId` dedup, `UNKNOWN` 경계를 구현했습니다.
 - **Measured Performance** — 같은 로컬 환경의 3회 median에서 100 EPS backlog drain을 **42.4초 → 5.7초**로 줄였습니다.
@@ -24,6 +25,7 @@
 ```mermaid
 flowchart LR
   SENSOR[Synthetic Sensors] -->|MQTT QoS 1| GW[Device Gateway]
+  SOIL[Synthetic TCP Soil Device] -->|TCP/Binary v1| GW
   GW -->|raw| K[(Kafka)]
   K --> WORKER[Telemetry Worker]
   WORKER --> PG[(PostgreSQL History)]
@@ -87,8 +89,8 @@ flowchart LR
 ## Deep Dive
 
 - **처음 검토한다면:** [Reviewer Guide](docs/REVIEWER_GUIDE.md)
-- **직접 실행한다면:** [Local Observe](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ](docs/CAMERA_PTZ_QUICKSTART.md) · [Durable Command](docs/COMMAND_QUICKSTART.md) · [Performance smoke](docs/PERFORMANCE_QUICKSTART.md)
-- **설계를 본다면:** [Architecture](docs/architecture.md) · [Durable Command ADR](docs/adr/0016-b05-durable-command-dispatch.md) · [Performance ADR](docs/adr/0017-b06-performance-characterization.md)
+- **직접 실행한다면:** [Local Observe](docs/LOCAL_OBSERVE_QUICKSTART.md) · [Camera/PTZ](docs/CAMERA_PTZ_QUICKSTART.md) · [Durable Command](docs/COMMAND_QUICKSTART.md) · [Performance smoke](docs/PERFORMANCE_QUICKSTART.md) · [TCP/Binary](docs/TCP_BINARY_QUICKSTART.md)
+- **설계를 본다면:** [Architecture](docs/architecture.md) · [Durable Command ADR](docs/adr/0016-b05-durable-command-dispatch.md) · [Performance ADR](docs/adr/0017-b06-performance-characterization.md) · [TCP framing ADR](docs/adr/0018-b07-tcp-binary-framing.md)
 - **근거를 본다면:** [Measured Performance & Recovery](docs/PERFORMANCE_RESILIENCE.md) · [Runnable Source Scope](docs/runnable-snapshot.md)
 - **현재 경계를 본다면:** [Project Status](docs/project-status.md) · [Roadmap](docs/product/ROADMAP.ko.md)
 
@@ -104,7 +106,7 @@ py -3 scripts/b02_observe.py verify
 py -3 scripts/b02_observe.py down
 ```
 
-Linux에서는 `py -3` 대신 `python3`를 사용합니다. 생성된 localhost-only Synthetic credential은 `.fieldops-b02/demo-credentials.json`에 있습니다. 자세한 절차와 Camera/Command 실행은 위 Quick Start를 따르세요.
+Linux에서는 `py -3` 대신 `python3`를 사용합니다. 생성된 localhost-only Synthetic credential은 `.fieldops-b02/demo-credentials.json`에 있습니다. 자세한 절차와 Camera/Command/TCP Adapter 실행은 위 Quick Start를 따르세요.
 
 ## Known boundaries
 

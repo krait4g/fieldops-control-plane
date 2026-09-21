@@ -1,0 +1,15 @@
+{
+  "name": "telemetry-v1",
+  "hex": "464f010100040000002a000001977420dc00000001977420dc7b00bb00f6fdb2b39d",
+  "crc32": "fdb2b39d",
+  "expected": {
+    "version": 1,
+    "type": 1,
+    "payloadLength": 4,
+    "sequence": 42,
+    "sessionStartedAtMillis": 1750000000000,
+    "observedAtMillis": 1750000000123,
+    "moisture": 18.7,
+    "temperature": 24.6
+  }
+}
