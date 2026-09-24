@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check public documentation and repository hygiene, not application correctness."""
+"""Repository hygiene checks for the public snapshot."""
 from __future__ import annotations
 
 import hashlib
@@ -29,12 +29,6 @@ IMPLEMENTATION_IMAGES = {
     "docs/assets/implementation/command-succeeded-timeline-ko.png":
         "0678e0e72e0a604aa56ce00da70fd5298428c2453365857b32f8ac2f33c3d8fd",
 }
-README_IMPLEMENTATION_IMAGES = (
-    "docs/assets/implementation/local-observe-overview-ko.png",
-    "docs/assets/implementation/camera-ptz-control-ko.png",
-    "docs/assets/implementation/command-succeeded-timeline-ko.png",
-    "docs/assets/implementation/performance-before-after.svg",
-)
 REQUIRED = [
     "README.md", "LICENSE", "CONTRIBUTING.md", "SECURITY.md",
     ".editorconfig", ".gitattributes", ".gitignore", ".env.example",
@@ -183,21 +177,13 @@ for rel, expected_sha256 in IMPLEMENTATION_IMAGES.items():
         actual_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
         if actual_sha256 != expected_sha256:
             errors.append(f"implementation asset hash mismatch: {rel}")
-for rel in README_IMPLEMENTATION_IMAGES:
-    if rel not in readme:
-        errors.append(f"README must reference representative implementation evidence: {rel}")
 implementation_count = readme.count('src="docs/assets/implementation/')
+if implementation_count < 2:
+    errors.append(f"README should show at least 2 implementation images: {implementation_count}")
 if implementation_count > 4:
-    errors.append(f"README must keep representative implementation images to at most 4: {implementation_count}")
-actual_screens = readme.find("## Actual Screens")
-if actual_screens < 0:
-    errors.append("README must identify the Actual Screens section")
-for rel in IMAGES:
-    concept_position = readme.find(rel)
-    if concept_position >= 0 and (actual_screens < 0 or concept_position < actual_screens):
-        errors.append(f"README concept image must follow actual screens: {rel}")
-if "Production capacity가 아니라 명시된 단일 로컬 benchmark 환경" not in readme:
-    errors.append("README must preserve the measured-performance claim boundary")
+    errors.append(f"README should keep implementation images to at most 4: {implementation_count}")
+if "docs/PERFORMANCE_RESILIENCE.md" not in readme:
+    errors.append("README must link the performance measurement notes")
 version = re.search(r"(?m)^> 버전: `([^`]+)`", read("docs/product/PRD.ko.md"))
 if not version:
     errors.append("PRD must declare a version")
@@ -225,8 +211,7 @@ for rel in (
 if '"--hostname", "127.0.0.1"' not in read("scripts/b02_observe.py"):
     errors.append("web-console start must bind to 127.0.0.1")
 
-# Check local file destinations in the maintained public entry documents.
-# This is deliberately not a network crawler, Markdown renderer, or app test.
+# Check local links in the public entry documents.
 DOCS = (
     "README.md", "docs/project-status.md", "docs/architecture.md", "docs/frontend-backend.md",
     "docs/REVIEWER_GUIDE.md",

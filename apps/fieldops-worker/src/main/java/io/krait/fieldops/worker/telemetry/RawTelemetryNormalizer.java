@@ -54,7 +54,7 @@ public class RawTelemetryNormalizer {
             accepted.increment();
         } catch (IllegalArgumentException | tools.jackson.core.JacksonException error) {
             rejected.increment();
-            LOGGER.warn("Rejected B02 raw telemetry at offset {}: {}", record.offset(), error.getMessage());
+            LOGGER.warn("Rejected raw telemetry at offset {}: {}", record.offset(), error.getMessage());
             acknowledgment.acknowledge();
         } finally {
             sample.stop(duration);

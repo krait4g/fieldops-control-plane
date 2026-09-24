@@ -1,4 +1,4 @@
-name: P01 Auth Acceptance
+name: Authentication
 
 on:
   push:
@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: p01-auth-${{ github.workflow }}-${{ github.ref }}
+  group: auth-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -73,7 +73,7 @@ jobs:
           tests/m1-journey.spec.ts
           --grep "mock admin switches"
 
-      - name: Start actual Local Observe runtime
+      - name: Start Local Observe runtime
         run: python3 scripts/b02_observe.py up
 
       - name: Verify real Keycloak logout and session invalidation
@@ -86,6 +86,6 @@ jobs:
           pnpm --filter @fieldops/web-console exec playwright test \
             --config playwright.p01.real.config.ts
 
-      - name: Stop task-owned Local Observe resources
+      - name: Stop Local Observe runtime
         if: always() && hashFiles('scripts/b02_observe.py') != ''
         run: python3 scripts/b02_observe.py down

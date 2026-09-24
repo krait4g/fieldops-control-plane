@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Task-owned B05 durable command/approval orchestrator with checkout isolation."""
+"""Durable command demo runtime helper."""
 
 from __future__ import annotations
 
@@ -113,7 +113,7 @@ def action_up(_: argparse.Namespace) -> None:
     existing = load_manifest()
     if existing.get("status") == "running" and all(
             b02.process_alive(item) for item in existing.get("processes", {}).values()):
-        print("B05 is already running; no duplicate processes were started.")
+        print("Command demo is already running.")
         action_status(argparse.Namespace())
         return
     requested = {**b02.PORTS, **PORTS}
@@ -153,7 +153,7 @@ def action_up(_: argparse.Namespace) -> None:
         except Exception:
             pass
         raise
-    print(f"B05 ready at http://localhost:{b02.PORTS['web']}/commands?tenant=tenant-a&site=site-a")
+    print(f"Command demo ready at http://localhost:{b02.PORTS['web']}/commands?tenant=tenant-a&site=site-a")
 
 
 def action_status(_: argparse.Namespace) -> None:
@@ -228,7 +228,7 @@ def action_demo(_: argparse.Namespace) -> None:
     env = ensure_runtime()
     require_running()
     run_browser(env)
-    print("B05 operator → approver → ACKNOWLEDGED → SUCCEEDED browser demo PASS")
+    print("Command flow completed in Chromium: request → approval → acknowledged → succeeded")
 
 
 def require_running() -> None:
@@ -253,7 +253,7 @@ def action_verify(_: argparse.Namespace) -> None:
         raise B05Error("approver-rejected command reached the Gateway")
     results.update({f"G{number}": "PASS" for number in range(1, 5)})
 
-    # G5: two live workers contend for six independently approved rows.
+    # Exercise concurrent claims with two workers.
     concurrent = [uuid.uuid4() for _ in range(6)]
     for command_id in concurrent:
         insert_approved(env, command_id, "SUCCESS")
@@ -267,7 +267,7 @@ def action_verify(_: argparse.Namespace) -> None:
         raise B05Error("concurrent dispatcher created duplicate/missing claim transitions")
     results["G5"] = "PASS"
 
-    # G6: a repeated Gateway delivery returns one persisted receipt and one actuation.
+    # Repeat the same delivery and verify one persisted receipt and one actuation.
     duplicate_id = uuid.uuid4()
     digest = hashlib.sha256(b"tenant-a\nvalve-a-01\nOPEN\nSUCCESS").hexdigest()
     body = {"tenantId": "tenant-a", "deviceId": "valve-a-01", "type": "OPEN",
@@ -281,7 +281,7 @@ def action_verify(_: argparse.Namespace) -> None:
         raise B05Error("Gateway commandId deduplication failed")
     results["G6"] = "PASS"
 
-    # G7 is proven by the browser's observed ACKNOWLEDGED then later SUCCEEDED timeline.
+    # The browser run observes ACKNOWLEDGED before SUCCEEDED.
     results["G7"] = "PASS"
 
     rejected_id = uuid.uuid4()
@@ -341,7 +341,7 @@ def action_down(_: argparse.Namespace) -> None:
         manifest["stoppedAt"] = b02.now()
         manifest["b02VolumesPreserved"] = True
         write_manifest(manifest)
-    print("Owned B05/B02 processes and containers stopped; named volumes were preserved.")
+    print("Command demo stopped. Data volumes were preserved.")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -360,7 +360,7 @@ def main() -> int:
         return 0
     except (B05Error, b02.B02Error, subprocess.TimeoutExpired, OSError,
             json.JSONDecodeError) as error:
-        print(f"B05 ERROR: {error}", file=sys.stderr)
+        print(f"Command demo error: {error}", file=sys.stderr)
         return 1
 
 

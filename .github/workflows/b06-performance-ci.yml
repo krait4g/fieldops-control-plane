@@ -1,4 +1,4 @@
-name: B06 Performance Harness
+name: Performance Smoke
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   b06-correctness-smoke:
-    name: Ubuntu low-rate metrics/correctness smoke
+    name: Low-rate metrics and correctness
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -40,20 +40,20 @@ jobs:
         with:
           python-version: "3.13"
       - run: pnpm install --frozen-lockfile
-      - name: Verify parser and ownership guards
+      - name: Check performance harness
         run: python tests/repository-tests/test_b06_perf.py
-      - name: Start isolated B06 correctness runtime
+      - name: Start performance runtime
         run: python scripts/b06_perf.py up
-      - name: Run low-rate correctness smoke only
+      - name: Run low-rate smoke
         run: python scripts/b06_perf.py smoke
-      - name: Stop only B06-owned runtime
+      - name: Stop performance runtime
         if: always()
         run: python scripts/b06_perf.py down
-      - name: Publish low-rate correctness evidence
+      - name: Upload smoke output
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v7
         with:
-          name: b06-low-rate-smoke-${{ github.run_attempt }}
+          name: performance-smoke-${{ github.run_attempt }}
           if-no-files-found: error
           retention-days: 14
           path: .fieldops-b06/results/smoke-*.json

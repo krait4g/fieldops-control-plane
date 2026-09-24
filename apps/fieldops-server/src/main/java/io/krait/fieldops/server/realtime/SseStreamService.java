@@ -57,7 +57,7 @@ public class SseStreamService implements ApplicationListener<SessionDestroyedEve
         SseEmitter emitter = new SseEmitter(Duration.ofMinutes(5).toMillis());
         Subscriber subscriber = new Subscriber(id, user, tenantId, siteId, sessionId, emitter);
         subscribers.put(id, subscriber);
-        LOGGER.info("B02 SSE subscribed tenant={} site={} active={}", tenantId, siteId, subscribers.size());
+        LOGGER.info("SSE client connected tenant={} site={} active={}", tenantId, siteId, subscribers.size());
         emitter.onCompletion(() -> remove(id));
         emitter.onTimeout(() -> remove(id));
         emitter.onError(error -> remove(id));
@@ -113,7 +113,7 @@ public class SseStreamService implements ApplicationListener<SessionDestroyedEve
                 enqueue(subscriber, event);
             }
         }
-        LOGGER.info("B02 SSE source event={} tenant={} site={} matched={}",
+        LOGGER.info("SSE event={} tenant={} site={} subscribers={}",
                 event.id(), tenantId, siteId, matched);
     }
 
@@ -155,7 +155,7 @@ public class SseStreamService implements ApplicationListener<SessionDestroyedEve
     }
 
     private void fail(Subscriber subscriber, Throwable error) {
-        LOGGER.warn("B02 SSE subscriber failed tenant={} site={} cause={}",
+        LOGGER.warn("SSE client closed tenant={} site={} cause={}",
                 subscriber.tenantId, subscriber.siteId, error.toString());
         remove(subscriber.id);
         subscriber.emitter.completeWithError(error);

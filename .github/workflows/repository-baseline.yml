@@ -1,4 +1,4 @@
-name: Repository Baseline
+name: Repository Checks
 
 on:
   push:

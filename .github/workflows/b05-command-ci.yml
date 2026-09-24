@@ -1,4 +1,4 @@
-name: B05 Durable Command
+name: Durable Command
 
 on:
   push:
@@ -36,7 +36,7 @@ permissions:
 
 jobs:
   b05-command-gate:
-    name: Ubuntu PostgreSQL/Chromium G1-G10
+    name: Command flow on Ubuntu and Chromium
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -57,20 +57,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Install actual Chromium
         run: pnpm --filter @fieldops/web-console exec playwright install --with-deps chromium
-      - name: Start isolated B05 runtime
+      - name: Start command runtime
         run: python3 scripts/b05_command.py up
-      - name: Inspect B05 runtime status
+      - name: Check command runtime
         run: python3 scripts/b05_command.py status
-      - name: Verify B05 G1-G10
+      - name: Verify command scenarios
         run: python3 scripts/b05_command.py verify
-      - name: Stop only B05-owned runtime
+      - name: Stop command runtime
         if: always()
         run: python3 scripts/b05_command.py down
-      - name: Publish B05 canonical evidence
+      - name: Upload command test output
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v7
         with:
-          name: b05-command-evidence-${{ github.run_attempt }}
+          name: command-checks-${{ github.run_attempt }}
           if-no-files-found: error
           retention-days: 14
           path: |

@@ -50,7 +50,7 @@ public class SyntheticTcpBinaryDeviceServer implements SmartLifecycle {
         try (ServerSocket listener = new ServerSocket(port, 1, InetAddress.getByName("127.0.0.1"))) {
             server = listener;
             listener.setReuseAddress(true);
-            LOGGER.info("B07 synthetic TCP device listening on localhost:{} scenario={}", port, scenario);
+            LOGGER.info("Synthetic TCP device listening on localhost:{} scenario={}", port, scenario);
             boolean firstConnection = true;
             while (running.get()) {
                 try (Socket accepted = listener.accept()) {
@@ -61,7 +61,7 @@ public class SyntheticTcpBinaryDeviceServer implements SmartLifecycle {
                 } catch (SocketTimeoutException ignored) {
                     // A missing ACK closes this device connection; the adapter reconnects.
                 } catch (IOException error) {
-                    if (running.get()) LOGGER.warn("B07 synthetic connection ended: {}", error.getMessage());
+                    if (running.get()) LOGGER.warn("Synthetic TCP connection ended: {}", error.getMessage());
                 } finally { client = null; }
             }
         } catch (IOException error) {

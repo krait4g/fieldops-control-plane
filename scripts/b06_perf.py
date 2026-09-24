@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""B06 task-owned local performance and recovery characterization harness."""
+"""Local performance and recovery harness."""
 
 from __future__ import annotations
 
@@ -401,7 +401,7 @@ def wait_process_stopped(record: dict[str, Any], timeout: int = 15) -> None:
 
 
 def reset_measurement_state(env: dict[str, str]) -> None:
-    """Reset only B06 telemetry state and measurement processes between runs."""
+    """Reset the benchmark state between runs."""
     manifest = b02.load_manifest()
     if manifest.get("project") != PROJECT or manifest.get("status") != "running":
         raise B06Error("measurement reset requires the exact running B06 project")
@@ -846,7 +846,7 @@ Gateway queue saturation and Normalizer lag were both present while CPU utilizat
 - Worker restart: healthy in {worker["recoveryToHealthyMs"]} ms including the five-second stop, lag drained in {worker["recoveryToLagDrainMs"]} ms, History missing {worker["historyMissing"]}, Redis {worker["redisDevices"]}/6.
 - Redis outage: healthy in {redis["recoveryToHealthyMs"]} ms including the five-second stop, History continued, History missing {redis["historyMissing"]}, Redis converged {redis["redisDevices"]}/6.
 
-## Gate state
+## Checks
 
 G1-G9 PASS. G10 B02/B04/B05 regression is completed by the final acceptance gates.
 ''', encoding="utf-8")
@@ -903,7 +903,7 @@ def main() -> int:
         return 0
     except (B06Error, b02.B02Error, OSError, ValueError, json.JSONDecodeError,
             subprocess.TimeoutExpired) as error:
-        print(f"B06 ERROR: {error}", file=sys.stderr)
+        print(f"Performance harness error: {error}", file=sys.stderr)
         return 1
 
 
