@@ -11,12 +11,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.backoff.ExponentialBackOff;
 
-/**
- * Keeps a transient store or broker outage from hot-looping a listener while
- * preserving the record for later redelivery. Each delivery cycle has a
- * finite retry budget; exhaustion raises a payload-free exception so the
- * container can seek and begin a new bounded cycle after its pause.
- */
+/** Pauses transient listener failures between bounded retry cycles. */
 @Configuration(proxyBeanMethods = false)
 @Profile("local-observe")
 public class B02KafkaRetryConfiguration {

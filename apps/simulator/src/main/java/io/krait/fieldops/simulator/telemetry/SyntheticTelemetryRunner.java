@@ -221,13 +221,13 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
             byte[] payload = mapper.writeValueAsBytes(sample);
             publish(client, device, payload);
             if (firstPayload == null) firstPayload = payload;
-            LOGGER.info("B02_SIMULATOR eventId={} tenant={} device={} sequence={}",
+            LOGGER.info("SIMULATOR eventId={} tenant={} device={} sequence={}",
                     sample.eventId(), sample.tenantId(), sample.deviceId(), sample.sequence());
             if (options.intervalMillis() > 0) Thread.sleep(options.intervalMillis());
         }
         if (options.duplicate() && firstPayload != null) {
             publish(client, device, firstPayload);
-            LOGGER.info("B02_SIMULATOR duplicate tenant={} device={}", device.tenantId(), device.deviceId());
+            LOGGER.info("SIMULATOR duplicate tenant={} device={}", device.tenantId(), device.deviceId());
         }
         if (options.pauseMillis() > 0) Thread.sleep(options.pauseMillis());
     }
@@ -250,13 +250,13 @@ public class SyntheticTelemetryRunner implements ApplicationRunner {
             byte[] payload = mapper.writeValueAsBytes(sample);
             publish(client, device, payload);
             if (firstPayload == null) firstPayload = payload;
-            LOGGER.info("B02_SIMULATOR scenario=portfolio eventId={} tenant={} device={} sequence={}",
+            LOGGER.info("SIMULATOR scenario=portfolio eventId={} tenant={} device={} sequence={}",
                     sample.eventId(), sample.tenantId(), sample.deviceId(), sample.sequence());
             if (options.intervalMillis() > 0) Thread.sleep(options.intervalMillis());
         }
         if (options.duplicate() && firstPayload != null) {
             publish(client, device, firstPayload);
-            LOGGER.info("B02_SIMULATOR scenario=portfolio duplicate tenant={} device={}",
+            LOGGER.info("SIMULATOR scenario=portfolio duplicate tenant={} device={}",
                     device.tenantId(), device.deviceId());
         }
         if (options.pauseMillis() > 0) Thread.sleep(options.pauseMillis());

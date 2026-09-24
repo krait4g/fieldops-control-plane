@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Task-owned B02 localhost orchestrator; never deletes volumes or global services."""
+"""Local Observe runtime helper."""
 
 from __future__ import annotations
 
@@ -399,7 +399,7 @@ def action_up(_: argparse.Namespace) -> None:
         )
     if existing.get("status") == "running" and all(
             process_alive(record) for record in existing.get("processes", {}).values()):
-        print("B02 is already running; no duplicate processes were started.")
+        print("Local Observe is already running.")
         action_status(argparse.Namespace())
         return
     validate_compose(env)
@@ -462,13 +462,12 @@ def action_up(_: argparse.Namespace) -> None:
         for name in reversed(list(manifest["processes"])):
             terminate_process(manifest["processes"][name])
         raise
-    print(f"B02 ready at http://localhost:{PORTS['web']} (credentials: {RUNTIME / 'demo-credentials.json'})")
+    print(f"Local Observe ready at http://localhost:{PORTS['web']} (credentials: {RUNTIME / 'demo-credentials.json'})")
 
 
 def simulator(env: dict[str, str], extra: list[str]) -> str:
     command = [java_executable(), "-jar", str(jar_for("simulator")), *extra]
-    # The one-shot telemetry producer must stay on its own non-web profile even
-    # when a vertical slice adds profiles to the long-running B02 services.
+    # One-shot telemetry uses only the observe profile.
     return run(command, env=env | {"SPRING_PROFILES_ACTIVE": "local-observe"},
                timeout=180, capture=True)
 
@@ -509,7 +508,7 @@ def action_verify(_: argparse.Namespace) -> None:
             process_alive(record) for record in manifest.get("processes", {}).values()):
         raise B02Error("all B02 processes must be running before verify")
     output = simulator(env, ["--device=device-a-soil-01", "--count=1", "--seed=20260908", "--interval-ms=0"])
-    match = re.search(r"B02_SIMULATOR eventId=([^ ]+)", output)
+    match = re.search(r"SIMULATOR eventId=([^ ]+)", output)
     if not match:
         raise B02Error("simulator did not report its synthetic eventId")
     event_id = match.group(1)
@@ -568,7 +567,7 @@ def action_down(_: argparse.Namespace) -> None:
         manifest["stoppedAt"] = now()
         manifest["volumesPreserved"] = True
         write_manifest(manifest)
-    print("Owned B02 processes and project containers stopped; named volumes were preserved.")
+    print("Local Observe stopped. Data volumes were preserved.")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -597,7 +596,7 @@ def main() -> int:
         args.handler(args)
         return 0
     except (B02Error, subprocess.TimeoutExpired, OSError, json.JSONDecodeError) as error:
-        print(f"B02 ERROR: {error}", file=sys.stderr)
+        print(f"Local Observe error: {error}", file=sys.stderr)
         return 1
 
 

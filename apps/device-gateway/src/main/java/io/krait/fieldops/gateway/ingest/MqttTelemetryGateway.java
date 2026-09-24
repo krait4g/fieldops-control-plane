@@ -125,21 +125,21 @@ public class MqttTelemetryGateway implements SmartLifecycle {
             options.setReceiveMaximum(256);
             mqtt.connect(options);
             mqtt.subscribe(TELEMETRY_TOPIC, 1).waitForCompletion(10_000);
-            LOGGER.info("B02 MQTT gateway subscribed to localhost broker");
+            LOGGER.info("MQTT subscription ready: {}", TELEMETRY_TOPIC);
         } catch (MqttException error) {
             running.set(false);
             client = null;
-            throw new IllegalStateException("Unable to start B02 MQTT gateway", error);
+            throw new IllegalStateException("Unable to start MQTT gateway", error);
         }
     }
 
     private MqttCallback callback() {
         return new MqttCallback() {
             @Override public void disconnected(MqttDisconnectResponse response) {
-                LOGGER.warn("B02 MQTT gateway disconnected: {}", response.getReasonString());
+                LOGGER.warn("MQTT disconnected: {}", response.getReasonString());
             }
             @Override public void mqttErrorOccurred(MqttException exception) {
-                LOGGER.error("B02 MQTT error", exception);
+                LOGGER.error("MQTT client error", exception);
             }
             @Override public void messageArrived(String topic, MqttMessage message) {
                 long generation = connectionGeneration.get();
@@ -181,7 +181,7 @@ public class MqttTelemetryGateway implements SmartLifecycle {
             rejectAndAcknowledge(message, error.getMessage());
         } catch (Exception error) {
             brokerErrors.increment();
-            LOGGER.error("B02 raw Kafka publish exhausted bounded retries; MQTT message remains unacknowledged", error);
+            LOGGER.error("Kafka publish failed after retries; leaving MQTT message unacknowledged", error);
         } finally {
             ingestSample.stop(ingestDuration);
         }
@@ -199,7 +199,7 @@ public class MqttTelemetryGateway implements SmartLifecycle {
         }
         Set<String> codes = sample.metrics().stream().map(metric -> metric.code()).collect(java.util.stream.Collectors.toSet());
         if (sample.metrics().size() != 2 || !codes.equals(REQUIRED_METRICS)) {
-            throw new IllegalArgumentException("incomplete B02 sample");
+            throw new IllegalArgumentException("sample must contain both soil metrics");
         }
         int deviceCount = jdbc.sql("""
                 SELECT COUNT(*) FROM b02_device
@@ -215,11 +215,11 @@ public class MqttTelemetryGateway implements SmartLifecycle {
 
     private void rejectAndAcknowledge(MqttMessage message, String reason) {
         rejected.increment();
-        LOGGER.warn("Rejected B02 MQTT sample: {}", reason);
+        LOGGER.warn("Rejected MQTT sample: {}", reason);
         try {
             acknowledge(message, connectionGeneration.get());
         } catch (MqttException error) {
-            LOGGER.warn("Failed to acknowledge rejected MQTT sample", error);
+            LOGGER.warn("Could not acknowledge rejected MQTT sample", error);
         }
     }
 
@@ -263,9 +263,9 @@ public class MqttTelemetryGateway implements SmartLifecycle {
         if (mqtt == null) return;
         try {
             mqtt.subscribe(TELEMETRY_TOPIC, 1).waitForCompletion(10_000);
-            LOGGER.info("B02 MQTT gateway restored telemetry subscription after reconnect");
+            LOGGER.info("MQTT subscription restored after reconnect");
         } catch (MqttException error) {
-            LOGGER.error("B02 MQTT gateway failed to restore telemetry subscription", error);
+            LOGGER.error("Could not restore MQTT subscription", error);
         }
     }
 
@@ -287,7 +287,7 @@ public class MqttTelemetryGateway implements SmartLifecycle {
             if (mqtt.isConnected()) mqtt.disconnect();
             mqtt.close();
         } catch (MqttException error) {
-            LOGGER.warn("Failed to close B02 MQTT gateway cleanly", error);
+            LOGGER.warn("Could not close MQTT client cleanly", error);
         }
     }
 

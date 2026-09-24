@@ -1,4 +1,4 @@
-name: B07 TCP Binary Adapter
+name: TCP Binary Adapter
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   b07-tcp-binary-gate:
-    name: Ubuntu TCP/Binary G1-G9 + Chromium
+    name: TCP/Binary scenarios and Chromium
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -47,13 +47,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Install actual Chromium
         run: pnpm --filter @fieldops/web-console exec playwright install --with-deps chromium
-      - name: Verify ownership and parser guards
+      - name: Check TCP/Binary helpers
         run: python3 tests/repository-tests/test_b07_tcp_binary.py
-      - name: Start isolated B07 runtime
+      - name: Start TCP/Binary runtime
         run: python3 scripts/b07_tcp_binary.py up
-      - name: Inspect B07 runtime status
+      - name: Check TCP/Binary runtime
         run: python3 scripts/b07_tcp_binary.py status
-      - name: Verify B07 G1-G9
+      - name: Verify TCP/Binary scenarios
         run: python3 scripts/b07_tcp_binary.py verify
       - name: Prepare synthetic browser credential
         shell: bash
@@ -62,16 +62,16 @@ jobs:
           echo "::add-mask::$credential"
           echo "B02_BROWSER_USERNAME=b02-admin-a" >> "$GITHUB_ENV"
           echo "B02_BROWSER_PASSWORD=$credential" >> "$GITHUB_ENV"
-      - name: Actual Chromium TCP device journey
+      - name: Run TCP device browser journey
         run: pnpm --filter @fieldops/web-console exec playwright test -c playwright.b07.config.ts
-      - name: Stop only B07-owned runtime
+      - name: Stop TCP/Binary runtime
         if: always()
         run: python3 scripts/b07_tcp_binary.py down
-      - name: Publish B07 canonical evidence
+      - name: Upload TCP/Binary test output
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v7
         with:
-          name: b07-tcp-binary-evidence-${{ github.run_attempt }}
+          name: tcp-binary-checks-${{ github.run_attempt }}
           if-no-files-found: error
           retention-days: 14
           path: .fieldops-b07/last-verify.json

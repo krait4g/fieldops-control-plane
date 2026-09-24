@@ -1,4 +1,4 @@
-name: Runnable Local Observe
+name: Local Observe
 
 on:
   push:
@@ -111,7 +111,7 @@ jobs:
       - name: Show Docker Compose version
         run: docker compose version
 
-      - name: Verify B02 process ownership regression
+      - name: Verify process ownership regression
         run: python tests/repository-tests/test_b02_observe.py
 
       - name: Start Local Observe

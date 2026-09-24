@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Task-owned B07 TCP/Binary adapter orchestrator with checkout isolation."""
+"""TCP/Binary adapter runtime helper."""
 
 from __future__ import annotations
 
@@ -56,14 +56,14 @@ class B07Error(RuntimeError):
 
 
 def print_safe_startup_diagnostics(max_lines: int = 80) -> None:
-    """Print bounded service log tails without exposing runtime credentials."""
+    """Print recent service logs with sensitive lines redacted."""
     log_root = RUNTIME / "b02" / "logs"
     for name in SAFE_DIAGNOSTIC_LOGS:
         path = log_root / name
         if not path.is_file():
             continue
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()[-max_lines:]
-        print(f"B07 safe diagnostic: {name} (last {len(lines)} lines)", file=sys.stderr)
+        print(f"startup log: {name} (last {len(lines)} lines)", file=sys.stderr)
         for line in lines:
             if SENSITIVE_LOG_LINE.search(line):
                 print("[REDACTED sensitive log line]", file=sys.stderr)
@@ -128,7 +128,7 @@ def start_device(env: dict[str, str], scenario: str) -> tuple[subprocess.Popen[A
               "scenario": scenario, "log": str(path.relative_to(ROOT)), "startedAt": b02.now()}
     time.sleep(1.2)
     if process.poll() is not None:
-        raise B07Error(f"B07 synthetic device exited with {process.returncode}; see {path}")
+        raise B07Error(f"synthetic TCP device exited with {process.returncode}; see {path}")
     return process, record
 
 
@@ -138,7 +138,7 @@ def wait_stopped(record: dict[str, Any], timeout: float = 10.0) -> None:
         if not device_running(record):
             return
         time.sleep(0.1)
-    raise B07Error("owned B07 device did not stop within bound")
+    raise B07Error("TCP device process did not stop in time")
 
 
 def linux_process_state(pid: int) -> str:
@@ -151,7 +151,7 @@ def linux_process_state(pid: int) -> str:
 
 
 def device_running(record: dict[str, Any]) -> bool:
-    """Keep the stable identity guard, but treat a terminated Linux zombie as stopped."""
+    """Return false for dead or zombie child processes."""
     if not b02.process_alive(record):
         return False
     if os.name == "nt":
@@ -163,7 +163,7 @@ def device_running(record: dict[str, Any]) -> bool:
 
 
 def stop_device(record: dict[str, Any]) -> None:
-    """Stop only the identity-guarded B07 child, escalating within a fixed bound on Linux."""
+    """Stop the owned device process, escalating if needed."""
     b02.terminate_process(record)
     try:
         wait_stopped(record, timeout=5.0)
@@ -211,7 +211,7 @@ def wait_history(env: dict[str, str], after: int, timeout: float = 12.0) -> int:
         if last > after:
             return last
         time.sleep(0.3)
-    raise B07Error(f"B07 history did not advance within bound; count={last}")
+    raise B07Error(f"TCP telemetry did not reach history in time; count={last}")
 
 
 def apply_seed(env: dict[str, str]) -> None:
@@ -223,7 +223,7 @@ def action_up(_: argparse.Namespace) -> None:
     env = ensure_runtime()
     existing = load_manifest()
     if existing.get("status") == "running" and b02.process_alive(existing.get("device", {})):
-        print("B07 is already running; no duplicate process was started.")
+        print("TCP/Binary adapter is already running.")
         action_status(argparse.Namespace())
         return
     occupied = [f"{name}:{port}" for name, port in ({**b02.PORTS, "tcpDevice": PORT}).items()
@@ -249,7 +249,7 @@ def action_up(_: argparse.Namespace) -> None:
         try: b02.action_down(argparse.Namespace())
         except Exception: pass
         raise
-    print(f"B07 ready at http://localhost:{b02.PORTS['web']}/devices/device-a-soil-tcp-01"
+    print(f"TCP/Binary adapter ready at http://localhost:{b02.PORTS['web']}/devices/device-a-soil-tcp-01"
           "?tenant=tenant-a&site=site-a")
 
 
@@ -293,9 +293,9 @@ def action_verify(_: argparse.Namespace) -> None:
     manifest = load_manifest()
     base = b02.load_manifest()
     if manifest.get("status") != "running" or not b02.process_alive(manifest.get("device", {})):
-        raise B07Error("B07 synthetic device is not running")
+        raise B07Error("synthetic TCP device is not running")
     if not all(b02.process_alive(record) for record in base.get("processes", {}).values()):
-        raise B07Error("B02 pipeline process is not fully running")
+        raise B07Error("base pipeline is not fully running")
     run([b02.executable("gradlew"), ":apps:device-gateway:test", ":apps:simulator:test", "--no-daemon"],
         env=env, timeout=600)
     results = [exercise_scenario(env, scenario) for scenario in SCENARIOS[1:]]
@@ -307,7 +307,7 @@ def action_verify(_: argparse.Namespace) -> None:
         "FROM b02_telemetry_history WHERE tenant_id='tenant-a' AND device_id='device-a-soil-tcp-01' "
         "GROUP BY session_id,sequence HAVING COUNT(*)>1) duplicates") or "0")
     if registration != "TCP_BINARY" or "device-a-soil-tcp-01" not in latest or duplicate_groups != 0:
-        raise B07Error("B07 registration/history/latest invariant failed")
+        raise B07Error("TCP/Binary state check failed")
     result = {"verifiedAt": b02.now(), "sourceHead": b02.source_head(), "gates": {f"G{i}": "PASS" for i in range(1, 10)},
               "scenarios": results, "registration": registration, "durableDuplicateGroups": duplicate_groups,
               "latest": "PASS"}
@@ -333,7 +333,7 @@ def action_down(_: argparse.Namespace) -> None:
     if manifest:
         manifest["status"] = "stopped"; manifest["stoppedAt"] = b02.now(); manifest["volumesPreserved"] = True
         write_manifest(manifest)
-    print("Owned B07 device, B02 processes, and checkout-scoped containers stopped; volumes preserved.")
+    print("TCP/Binary adapter stopped. Data volumes were preserved.")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -354,7 +354,7 @@ def main() -> int:
     try:
         args = parser().parse_args(); args.handler(args); return 0
     except (B07Error, b02.B02Error, OSError, ValueError, subprocess.TimeoutExpired) as error:
-        print(f"B07 ERROR: {error}", file=sys.stderr); return 1
+        print(f"TCP/Binary adapter error: {error}", file=sys.stderr); return 1
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-name: Runnable Camera PTZ
+name: Camera PTZ
 
 on:
   push:
@@ -83,7 +83,7 @@ jobs:
           cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
-      - name: Validate frozen M1 and B04 M2 contracts
+      - name: Validate frozen M1 and M2 contracts
         run: |
           pnpm contract:lint
           pnpm contract:test
@@ -139,7 +139,7 @@ jobs:
           format: table
 
   mediamtx-security:
-    name: B04 MediaMTX exact-digest scan
+    name: MediaMTX exact-digest scan
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

@@ -44,7 +44,7 @@ public class DurableCommandDispatcher {
                 ledger.transition(command.commandId(), CommandStatus.DISPATCHING,
                         CommandStatus.ACKNOWLEDGED, workerId, "GATEWAY_ACKNOWLEDGED");
             } else if (result.status().equals("SUCCEEDED")) {
-                // Even a very fast device must expose ACK as a distinct durable transition.
+                // Keep ACKNOWLEDGED observable before a terminal state.
                 ledger.transition(command.commandId(), CommandStatus.DISPATCHING,
                         CommandStatus.ACKNOWLEDGED, workerId, "GATEWAY_ACKNOWLEDGED");
             } else {

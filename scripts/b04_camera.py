@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Task-owned B04 camera preview/PTZ orchestrator with isolated runtime and safe cleanup."""
+"""Camera preview and PTZ runtime helper."""
 
 from __future__ import annotations
 
@@ -231,7 +231,7 @@ def action_up(_: argparse.Namespace) -> None:
     if (existing.get("status") == "running" and media_running(env)
             and set(owned) == {"onvif", "ffmpeg"}
             and all(b02.process_alive(record) for record in owned.values())):
-        print("B04 is already running; no duplicate processes were started.")
+        print("Camera/PTZ is already running.")
         action_status(argparse.Namespace())
         return
     preflight_ports()
@@ -261,7 +261,7 @@ def action_up(_: argparse.Namespace) -> None:
         try: b02.action_down(argparse.Namespace())
         except Exception: pass
         raise
-    print(f"B04 ready at http://localhost:{b02.PORTS['web']}/cameras?tenant=tenant-a&site=site-a")
+    print(f"Camera/PTZ ready at http://localhost:{b02.PORTS['web']}/cameras?tenant=tenant-a&site=site-a")
 
 
 def action_status(_: argparse.Namespace) -> None:
@@ -408,7 +408,7 @@ def action_down(_: argparse.Namespace) -> None:
         manifest["stoppedAt"] = b02.now()
         manifest["b02VolumesPreserved"] = True
         write_manifest(manifest)
-    print("Owned B04/B02 processes and containers stopped; B02 named volumes were preserved.")
+    print("Camera/PTZ stopped. Local Observe data volumes were preserved.")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -432,7 +432,7 @@ def main() -> int:
         return 0
     except (B04Error, b02.B02Error, subprocess.TimeoutExpired, OSError,
             json.JSONDecodeError) as error:
-        print(f"B04 ERROR: {error}", file=sys.stderr)
+        print(f"Camera/PTZ error: {error}", file=sys.stderr)
         return 1
 
 

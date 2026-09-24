@@ -46,7 +46,7 @@ public class TcpBinaryTelemetryAdapter implements SmartLifecycle {
             @Value("${fieldops.b07.max-payload-bytes:64}") int maxPayload,
             @Value("${fieldops.b07.heartbeat-timeout:3s}") Duration heartbeatTimeout) {
         if (!"127.0.0.1".equals(host) && !"localhost".equals(host)) {
-            throw new IllegalArgumentException("B07 TCP endpoint must be localhost-only");
+            throw new IllegalArgumentException("TCP device endpoint must be localhost");
         }
         this.publisher = publisher; this.meters = meters; this.host = host; this.port = port;
         this.maxPayload = maxPayload; this.heartbeatTimeoutMillis = heartbeatTimeout.toMillis();
@@ -59,7 +59,7 @@ public class TcpBinaryTelemetryAdapter implements SmartLifecycle {
 
     @Override public void start() {
         if (!running.compareAndSet(false, true)) return;
-        reader = new Thread(this::runLoop, "b07-tcp-adapter");
+        reader = new Thread(this::runLoop, "tcp-binary-adapter");
         reader.setDaemon(true);
         reader.start();
     }
@@ -95,9 +95,9 @@ public class TcpBinaryTelemetryAdapter implements SmartLifecycle {
                 }
             } catch (BinaryProtocolException error) {
                 meters.counter("fieldops.gateway.tcp.protocol.error", "reason", error.reason()).increment();
-                LOGGER.warn("B07 TCP protocol connection rejected: {}", error.reason());
+                LOGGER.warn("Rejected TCP frame: {}", error.reason());
             } catch (Exception error) {
-                if (running.get()) LOGGER.warn("B07 TCP connection ended: {}", bounded(error.getMessage()));
+                if (running.get()) LOGGER.warn("TCP device connection closed: {}", bounded(error.getMessage()));
             } finally {
                 connected.set(0); socket = null; decoder.reset();
             }
