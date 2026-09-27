@@ -20,21 +20,23 @@
 - [`project-status.md`](project-status.md) — 현재 공개 상태
 - [`LOCAL_OBSERVE_QUICKSTART.md`](LOCAL_OBSERVE_QUICKSTART.md) — localhost Synthetic Preview 실행 방법
 - [`CAMERA_PTZ_QUICKSTART.md`](CAMERA_PTZ_QUICKSTART.md) — Synthetic WebRTC Camera와 realtime PTZ 실행 방법
-- [`COMMAND_QUICKSTART.md`](COMMAND_QUICKSTART.md) — Synthetic Valve durable command와 분리 승인 실행 방법
+- [`COMMAND_QUICKSTART.md`](COMMAND_QUICKSTART.md) — Synthetic Valve Durable Command와 분리 승인 실행 방법
 - [`PERFORMANCE_RESILIENCE.md`](PERFORMANCE_RESILIENCE.md) — 동일 로컬 환경의 반복 측정과 복구 결과
 - [`PERFORMANCE_QUICKSTART.md`](PERFORMANCE_QUICKSTART.md) — B06 low-rate harness 재현 방법
+- [`TCP_BINARY_PROTOCOL.md`](TCP_BINARY_PROTOCOL.md) — TCP/Binary v1 framing 및 ACK 경계
+- [`TCP_BINARY_QUICKSTART.md`](TCP_BINARY_QUICKSTART.md) — TCP/Binary Adapter 실행 방법
 - [`runnable-snapshot.md`](runnable-snapshot.md) — 공개 실행 소스 범위와 제외 항목
 - [`decisions/README.md`](decisions/README.md) — 주요 Architecture Decision
 
 ## 이미지
 
-- [`assets/README.md`](assets/README.md) — Concept Image와 실제 Screenshot 구분 기준
+- [`assets/README.md`](assets/README.md) — 콘셉트 이미지와 실제 Screenshot 구분 기준
 
 ## 언어 원칙
 
-- 외부 설명, PRD, UX, 상태와 로드맵은 **한국어를 기본**으로 작성
+- 외부 설명, PRD, UX, 상태, 로드맵은 **한국어를 기본**으로 작성
 - Class, API, Event, Protocol, Library와 코드 식별자는 원문 영문 유지
-- 영어가 더 정확한 용어는 한국어 설명과 함께 사용
+- 한국 개발 현장에서 일반적으로 쓰는 용어는 억지로 번역하지 않고 문맥에 맞게 사용
 - 해외 공개가 필요해지면 영어 요약 문서를 추가하되 한국어 정본을 대체하지 않음
 
 ## 상태 원칙
@@ -47,4 +49,4 @@ DESIGNED
   → RELEASED
 ```
 
-문서와 Concept Image만으로 구현·검증 완료를 주장하지 않습니다.
+문서와 콘셉트 이미지만으로 구현·검증 완료를 주장하지 않습니다.

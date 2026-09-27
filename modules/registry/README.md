@@ -1,3 +1,3 @@
 # registry
 
-Tenant, Site, Zone, Device and Capability registry domain and ports. It does not implement telemetry transport or Redis projection.
+Tenant, Site, Zone, Device, Capability registry domain과 port를 정의합니다. Telemetry transport나 Redis projection을 직접 구현하지 않습니다.

@@ -1,3 +1,3 @@
 # Observability
 
-Prometheus, Grafana, Tempo, Loki and OpenTelemetry Collector configuration is added with the runtime that emits each signal.
+Prometheus, Grafana, Tempo, Loki, OpenTelemetry Collector 설정은 각 signal을 실제로 발생시키는 runtime과 함께 추가합니다.

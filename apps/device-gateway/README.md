@@ -1,6 +1,6 @@
 # device-gateway
 
-Southbound integration runtime.
+Southbound 장비 연동 runtime입니다.
 
 - MQTT 5
 - Netty TCP/Binary
@@ -8,6 +8,6 @@ Southbound integration runtime.
 - ONVIF Camera control
 - Durable Command dispatch
 - Realtime PTZ adapter
-- Connection health and capability discovery
+- 연결 상태와 capability discovery
 
-Business workflow와 Dashboard Query를 소유하지 않는다.
+비즈니스 workflow와 Dashboard Query를 소유하지 않습니다.

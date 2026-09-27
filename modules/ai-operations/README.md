@@ -1,3 +1,3 @@
 # ai-operations
 
-Read-only context tools, structured recommendation and deterministic policy validation. Direct SQL, Redis, Kafka and device access are forbidden.
+읽기 전용 context tool, 구조화된 recommendation, deterministic policy validation을 담당합니다. Direct SQL, Redis, Kafka, device 접근은 금지합니다.

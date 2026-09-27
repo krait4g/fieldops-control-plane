@@ -1,3 +1,3 @@
 # telemetry-infrastructure
 
-Kafka, MQTT, PostgreSQL and schema-adapter implementations for telemetry application ports.
+Telemetry application port를 구현하는 Kafka, MQTT, PostgreSQL, schema adapter를 담당합니다.

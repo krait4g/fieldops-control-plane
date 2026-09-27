@@ -1,3 +1,3 @@
 # telemetry-domain
 
-Canonical telemetry value objects, device session and freshness policy. No Kafka, Redis, JPA or web dependencies are allowed.
+Canonical telemetry value object, device session, freshness policy를 정의합니다. Kafka, Redis, JPA, Web dependency를 허용하지 않습니다.

@@ -1,32 +1,32 @@
-## Summary
+## 변경 요약
 
-Describe the user-visible or architectural change.
+사용자에게 보이는 변경 사항 또는 아키텍처 변경 사항을 설명합니다.
 
-## Scope
+## 변경 범위
 
-- [ ] Backend
-- [ ] Web console
-- [ ] Event contract
-- [ ] Database migration
-- [ ] Redis state projection
-- [ ] Infrastructure
-- [ ] Documentation only
+- [ ] 백엔드
+- [ ] 웹 콘솔
+- [ ] 이벤트 contract
+- [ ] DB migration
+- [ ] Redis 상태 projection
+- [ ] 인프라
+- [ ] 문서만 변경
 
-## Design alignment
+## 설계 정합성
 
-- Related public decision:
-- Contract or schema version affected:
+- 관련 공개 설계 결정:
+- 영향 받는 contract 또는 schema 버전:
 
-## Verification
+## 검증
 
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Contract tests
-- [ ] End-to-end tests
-- [ ] Failure-path tests
-- [ ] Documentation links checked
-- [ ] No secrets or private operational data included
+- [ ] 단위 테스트
+- [ ] 통합 테스트
+- [ ] Contract 테스트
+- [ ] E2E 테스트
+- [ ] 실패 경로 테스트
+- [ ] 문서 링크 확인
+- [ ] Secret 또는 비공개 운영 데이터가 포함되지 않았는지 확인
 
-## Evidence and risks
+## 근거 및 위험
 
-Provide reproducible commands, results, limitations and rollback impact.
+재현 가능한 명령, 실행 결과, 제한사항, 롤백 영향을 작성합니다.

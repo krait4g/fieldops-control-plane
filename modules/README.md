@@ -1,16 +1,16 @@
-# Java Modules
+# Java 모듈
 
-`modules/` contains reusable domain, application and infrastructure boundaries.
+`modules/`에는 재사용 가능한 domain, application, infrastructure 경계를 둡니다.
 
 ```text
 Domain ← Application ← Infrastructure ← Runtime
 ```
 
-Domain code cannot depend on Spring Web, Kafka, Redis, JPA, SQL mappers or device clients. Application modules define use cases and ports; infrastructure modules implement those ports. Runtime applications provide wiring.
+Domain code는 Spring Web, Kafka, Redis, JPA, SQL mapper, device client에 의존할 수 없습니다. Application module은 use case와 port를 정의하고 infrastructure module이 해당 port를 구현합니다. Runtime application은 wiring을 담당합니다.
 
-## Module groups
+## 모듈 구성
 
-| Group | Modules |
+| 구분 | 모듈 |
 |---|---|
 | Foundation | `common-kernel`, `tenancy`, `registry` |
 | Integration | `device-integration`, `camera-control` |
@@ -20,4 +20,4 @@ Domain code cannot depend on Spring Web, Kafka, Redis, JPA, SQL mappers or devic
 | Extensions | `ai-operations`, `usage-billing` |
 | Cross-cutting | `audit`, `observability` |
 
-A module name describes responsibility, not an automatic deployment unit. Runtime boundaries are documented under `apps/`.
+모듈 이름은 책임을 나타내며 자동으로 독립 배포 단위를 의미하지 않습니다. Runtime 경계는 `apps/` 문서에서 관리합니다.

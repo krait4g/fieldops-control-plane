@@ -1,15 +1,15 @@
-# Durable Command Quick Start
+# Durable Command 빠른 실행 가이드
 
-This local-only B05 slice demonstrates one synthetic valve command with real Keycloak sessions, approval separation, a PostgreSQL durable ledger, two competing `FOR UPDATE SKIP LOCKED` dispatchers, Gateway delivery deduplication, and a synthetic device outcome.
+이 localhost 전용 B05 slice는 실제 Keycloak session, 요청자/승인자 분리, PostgreSQL durable ledger, 서로 경쟁하는 두 개의 `FOR UPDATE SKIP LOCKED` dispatcher, Gateway delivery deduplication, Synthetic 장비 결과 확인을 이용해 하나의 Synthetic Valve 명령을 검증합니다.
 
-## Requirements
+## 사전 준비
 
-- Java 21, Node 24, pnpm 11
-- Docker with Compose
-- Chromium installed for Playwright (`pnpm --filter @fieldops/web-console exec playwright install chromium`)
-- localhost ports 3000, 21883, 25432, 26379, 28080–28082, 28085, and 29092–29093 free
+- Java 21, Node.js 24, pnpm 11
+- Docker 및 Compose
+- Playwright용 Chromium 설치(`pnpm --filter @fieldops/web-console exec playwright install chromium`)
+- localhost 포트 `3000`, `21883`, `25432`, `26379`, `28080`~`28082`, `28085`, `29092`~`29093` 사용 가능
 
-## Run
+## 실행
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -20,17 +20,17 @@ py -3 scripts/b05_command.py verify
 py -3 scripts/b05_command.py down
 ```
 
-On Linux use `python3` instead of `py -3`. Open `http://localhost:3000/commands?tenant=tenant-a&site=site-a`. Generated localhost credentials are stored under ignored `.fieldops-b05/b02/demo-credentials.json`; do not commit or print the password.
+Linux에서는 `py -3` 대신 `python3`를 사용합니다. <http://localhost:3000/commands?tenant=tenant-a&site=site-a>를 엽니다. localhost용으로 생성된 credential은 Git에서 제외되는 `.fieldops-b05/b02/demo-credentials.json`에 저장됩니다. 비밀번호를 commit하거나 로그에 출력하지 않습니다.
 
-Use `b05-operator-a` to request OPEN/CLOSE and `b05-approver-a` to approve or reject. `SUCCESS` acknowledges first and later confirms state; `REJECT` becomes FAILED after dispatch; `HANG` reaches UNKNOWN at the deadline and is not automatically retried.
+`b05-operator-a`로 OPEN/CLOSE를 요청하고 `b05-approver-a`로 승인 또는 반려합니다. `SUCCESS`는 먼저 ACK를 반환한 뒤 실제 상태를 확인합니다. `REJECT`는 dispatch 이후 `FAILED`가 되고, `HANG`은 deadline에서 `UNKNOWN`으로 끝나며 자동 재시도하지 않습니다.
 
-## Safety boundary
+## 안전 경계
 
-- B04 PTZ is separate and never enters this ledger.
-- Kafka is telemetry-only; B05 dispatch is PostgreSQL claim plus authenticated loopback HTTP.
-- Idempotency is API convergence, not exactly-once execution.
-- `ACKNOWLEDGED` is not success. Only observed valve state can produce `SUCCEEDED`.
-- `UNKNOWN` is terminal and requires an explicit later operator decision outside this slice.
-- `down` stops only identity-matched B05/B02 processes and the checkout-scoped Compose project. Named volumes and evidence remain.
+- B04 PTZ는 별도 경로이며 이 ledger에 들어오지 않습니다.
+- Kafka는 telemetry 전용입니다. B05 dispatch는 PostgreSQL claim과 인증된 loopback HTTP를 사용합니다.
+- Idempotency는 API 요청의 수렴을 보장하기 위한 것이며 exactly-once 실행을 의미하지 않습니다.
+- `ACKNOWLEDGED`는 성공이 아닙니다. 실제 Valve 상태가 확인되어야 `SUCCEEDED`로 전환됩니다.
+- `UNKNOWN`은 terminal 상태이며 이후 작업자의 명시적인 판단이 필요합니다.
+- `down`은 identity가 일치하는 B05/B02 프로세스와 해당 checkout 범위의 Compose project만 종료합니다. Named volume과 증빙 데이터는 유지합니다.
 
-This is a runnable synthetic portfolio slice, not production release, HA, device certification, or a waiver of S01.
+이 문서는 실행 가능한 Synthetic 포트폴리오 slice를 위한 것이며 프로덕션 Release, HA, 장비 인증 또는 S01 면제를 의미하지 않습니다.

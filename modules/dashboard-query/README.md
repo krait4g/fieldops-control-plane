@@ -1,13 +1,13 @@
 # dashboard-query
 
-Read models for the operations console.
+운영 콘솔용 read model을 구성합니다.
 
 - tenant/site overview
-- device and zone status summaries
-- active alarm and recent command projections
-- time-series query composition
-- partial-failure and source/freshness metadata
+- device와 zone 상태 요약
+- active alarm과 최근 command projection
+- time-series query 조합
+- partial failure와 source/freshness metadata
 
-This module composes query results for UI purposes but does not mutate domain aggregates or bypass authorization. PostgreSQL history and Redis latest state remain distinct sources and their freshness/source must be exposed to callers.
+UI에 필요한 조회 결과를 조합하지만 domain aggregate를 변경하거나 authorization을 우회하지 않습니다. PostgreSQL History와 Redis Latest State는 계속 서로 다른 source로 유지하고, caller에게 source와 freshness 정보를 노출해야 합니다.
 
-Current status: design boundary only.
+현재 상태: 설계 경계만 정의.

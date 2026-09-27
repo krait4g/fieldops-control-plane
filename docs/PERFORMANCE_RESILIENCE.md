@@ -1,37 +1,24 @@
-# Measured Performance and Resilience
+# 성능 측정 및 복구 검증 결과
 
-B06 characterizes the existing Local Observe telemetry pipeline on one stated local
-machine. It does not claim production capacity or maximum TPS.
+B06은 명시된 단일 로컬 머신에서 기존 Local Observe telemetry pipeline의 성능 특성을 측정합니다. 이 결과를 프로덕션 처리 용량이나 최대 TPS로 해석하지 않습니다.
 
-The canonical run used six synthetic devices, a 10-second warmup, a 30-second
-measurement window, controlled offered rates, and three repetitions at both selected
-anchors. Medians are reported; no best-run selection is used.
+기준 측정은 Synthetic 장비 6대, warmup 10초, 측정 구간 30초, 제어된 입력 부하를 사용했습니다. 선택한 두 부하 지점에서 각각 3회 반복 측정하고 중앙값을 사용했습니다. 가장 좋은 1회 결과를 선별하지 않았습니다.
 
-## Result
+## 측정 결과
 
-- Baseline sustainable rate: 100 events/s.
-- First baseline knee candidate: 250 events/s.
-- One accepted optimization: B06-only bounded pipeline concurrency alignment.
-- 100 events/s median drain time: 42.391 s → 5.719 s.
-- 250 events/s median History completeness: 59.49% → 100%.
-- Candidate runs: processing errors 0, final Redis 6/6, final consumer lag 0.
+- 기준 지속 처리율: 100 events/s
+- 최초 성능 저하 구간 후보: 250 events/s
+- 적용한 최적화: B06 profile에 한해 bounded pipeline concurrency 조정
+- 100 events/s backlog 소진 시간 중앙값: 42.391초 → 5.719초
+- 250 events/s History 저장 완전성 중앙값: 59.49% → 100%
+- 개선 후 측정: processing error 0건, 최종 Redis 6/6 수렴, 최종 consumer lag 0
 
-The diagnosis combined two independent signals: Gateway queue saturation at 253/256
-and Normalizer lag while CPU utilization and Hikari pending remained low. The accepted
-change activates the existing bounded Gateway pool at four core workers and uses three
-Worker listeners for three Kafka partitions only under `b06-perf`. Default B02/B04/B05
-profiles retain their original concurrency.
+병목 진단에는 두 개의 독립적인 신호를 함께 사용했습니다. Gateway queue가 256 중 253까지 차는 동시에 Normalizer lag가 증가했지만 CPU 사용률과 Hikari pending은 낮게 유지됐습니다. 이를 근거로 `b06-perf`에서만 기존 bounded Gateway pool의 core worker를 4개로 활성화하고, Kafka partition 3개에 맞춰 Worker listener를 3개로 조정했습니다. 기본 B02/B04/B05 profile의 concurrency 설정은 변경하지 않았습니다.
 
-## Recovery
+## 복구 검증
 
-At 65 events/s, the owned Worker was stopped for about five seconds and restarted.
-It became healthy in 16.891 seconds including the stop, drained lag, preserved all
-4,225 History rows, and converged Redis for all six devices.
+65 events/s 부하에서 B06 소유 Worker를 약 5초간 중단한 뒤 재시작했습니다. 중단 시간을 포함해 16.891초 후 health가 정상화됐고, 누적 lag를 모두 소진했으며 History 4,225건을 모두 보존하고 6개 장비의 Redis 최신 상태가 최종 수렴했습니다.
 
-In a separate run, the B06-owned Redis service was stopped for about five seconds.
-History continued, health recovered in 9.594 seconds including the stop, all 4,225
-History rows remained present, and Redis converged for all six devices.
+별도 실험에서는 B06 소유 Redis service를 약 5초간 중단했습니다. Redis 장애 중에도 History 저장은 계속됐고, 중단 시간을 포함해 9.594초 후 health가 복구됐습니다. History 4,225건은 모두 유지됐으며 6개 장비의 Redis 최신 상태가 최종 수렴했습니다.
 
-Canonical machine-readable evidence is in
-[`docs/performance/b06-summary.json`](performance/b06-summary.json).
-The charts are generated from the measured JSON rather than manually entered values.
+기계 판독 가능한 기준 근거는 [`docs/performance/b06-summary.json`](performance/b06-summary.json)에 있습니다. 차트의 값도 수동 입력이 아니라 실제 측정 JSON에서 생성합니다.

@@ -1,23 +1,23 @@
-# Contributing
+# 기여 가이드
 
-## Development principles
+## 개발 원칙
 
-- Keep PostgreSQL, Kafka and Redis responsibilities distinct.
-- Treat event delivery as at-least-once and make consumers idempotent.
-- Keep business authorization and state transitions in the Spring backend.
-- Keep the Next.js application focused on presentation, session and API interaction.
-- Include tenant scope in APIs, events, persistence and Redis keys.
-- Do not use a Redis lock as the sole safety mechanism for physical commands.
-- Update machine-readable contracts and architecture documents with behavior changes.
+- PostgreSQL, Kafka, Redis의 책임을 명확히 분리합니다.
+- 이벤트 전달은 at-least-once를 전제로 하고 consumer는 멱등하게 구현합니다.
+- 비즈니스 권한 검증과 상태 전이는 Spring 백엔드에서 처리합니다.
+- Next.js 애플리케이션은 화면 표현, 세션, API 연동에 집중합니다.
+- API, 이벤트, 영속화 데이터, Redis key에 tenant scope를 포함합니다.
+- Redis lock 하나만으로 물리 장비 명령의 안전성을 보장하지 않습니다.
+- 동작이 바뀌면 기계 판독 가능한 contract와 아키텍처 문서도 함께 갱신합니다.
 
-## Pull requests
+## Pull Request
 
-A pull request should describe its design reference, tests, failure behavior and rollback impact. Avoid mixing unrelated milestones. Do not claim an implementation or measurement level that the included evidence does not support.
+Pull Request에는 관련 설계 근거, 테스트, 실패 시 동작, 롤백 영향을 작성합니다. 서로 관련 없는 마일스톤을 한 PR에 섞지 않습니다. 저장소에 포함된 근거가 뒷받침하지 못하는 구현 수준이나 측정 결과를 과장해 작성하지 않습니다.
 
-## Local setup
+## 로컬 환경 구성
 
-Executable setup commands will be published with the M0 foundation. Until then, the repository contains the approved directory and design baseline only.
+실행 가능한 환경 구성 명령은 M0 기반 작업과 함께 제공합니다. 그 전까지 저장소에는 합의된 디렉터리 구조와 설계 기준만 포함합니다.
 
-## Security
+## 보안
 
-Follow [`SECURITY.md`](SECURITY.md). Do not disclose credentials, private device information or exploitable details in a public issue.
+[`SECURITY.md`](SECURITY.md)를 따릅니다. 공개 Issue에 credential, 비공개 장비 정보, 악용 가능한 상세 정보 등을 올리지 않습니다.

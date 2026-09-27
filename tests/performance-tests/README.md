@@ -1,3 +1,3 @@
-# Performance Tests
+# 성능 테스트
 
-Reproducible k6 and simulator profiles with environment, seed, duration and percentile metadata.
+환경, seed, duration, percentile metadata를 함께 기록하는 재현 가능한 k6 및 simulator load profile을 관리합니다.

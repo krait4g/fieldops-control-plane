@@ -1,9 +1,9 @@
-# Architecture Decisions
+# 주요 Architecture Decision
 
-| Decision | Summary |
+| 결정 | 요약 |
 |---|---|
-| [Data responsibilities](0001-data-responsibilities.md) | PostgreSQL as system of record, Kafka as event backbone, Redis as rebuildable hot state |
-| [Modular monorepo](0002-modular-monorepo.md) | One repository with separate Java and web build graphs |
-| [Safe command execution](0003-safe-command-execution.md) | Durable command ledger and explicit uncertainty |
-| [Thin web console](0004-thin-web-console.md) | Next.js UI without duplicated domain authority |
-| [Synthetic camera and realtime PTZ](0015-b04-camera-preview-ptz-boundary.md) | WebRTC media, Redis-fenced control sessions, and finite-stop safety boundaries |
+| [데이터 저장소별 책임](0001-data-responsibilities.md) | PostgreSQL은 system of record, Kafka는 event backbone, Redis는 재구축 가능한 hot state |
+| [Modular Monorepo](0002-modular-monorepo.md) | Java와 Web build graph를 분리하되 하나의 저장소에서 관리 |
+| [안전한 Command 실행](0003-safe-command-execution.md) | Durable command ledger와 명시적인 불확실성 처리 |
+| [Thin Web Console](0004-thin-web-console.md) | Domain authority를 중복하지 않는 Next.js UI |
+| [Synthetic Camera와 Realtime PTZ](0015-b04-camera-preview-ptz-boundary.md) | WebRTC media, Redis-fenced control session, finite-stop 안전 경계 |

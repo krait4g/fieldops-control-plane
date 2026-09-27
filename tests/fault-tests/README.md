@@ -1,3 +1,3 @@
-# Fault Tests
+# 장애 시나리오 테스트
 
-Redis, Kafka and PostgreSQL latency, restart, data-loss and consumer-recovery scenarios.
+Redis, Kafka, PostgreSQL의 latency, restart, data loss, consumer recovery 시나리오를 검증합니다.

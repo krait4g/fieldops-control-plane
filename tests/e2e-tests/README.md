@@ -1,3 +1,3 @@
-# End-to-end Tests
+# E2E 테스트
 
-Product workflows spanning simulator, backend, state stores and web console.
+Simulator, backend, state store, web console을 가로지르는 제품 workflow를 검증합니다.
